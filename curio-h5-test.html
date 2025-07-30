@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curio H5 Test - Basic Structure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .mobile-container {
+            width: 393px;
+            height: 852px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #333;
+        }
+        
+        /* First Page Styles */
+        .page-1 {
+            background: #221400;
+            opacity: 1;
+        }
+        
+        .page-1 .bg-image {
+            background-image: url('./src/assets/5fc9e58748a0fa615330e68c877a6fb860ab55a4.png');
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- First Page - Test Structure -->
+        <div id="page1" class="page-1 absolute inset-0 w-full h-full">
+            <!-- Status bar -->
+            <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-[393px] z-10">
+                <div class="h-11 relative w-full bg-black bg-opacity-20">
+                    <div class="absolute h-[22px] left-[26px] top-[15px] w-[54px]">
+                        <div class="absolute font-semibold text-white text-[17px] text-center top-1/2 transform -translate-y-1/2 left-0 right-0">
+                            <p class="leading-[22px]">12:15</p>
+                        </div>
+                    </div>
+                    <div class="absolute right-[26.339px] top-[19.333px] w-[27.328px] h-[13px]">
+                        <div class="bg-white rounded-sm w-full h-full opacity-80"></div>
+                    </div>
+                    <div class="absolute right-[61px] top-5 w-[17px] h-3">
+                        <div class="bg-white rounded-sm w-full h-full opacity-80"></div>
+                    </div>
+                    <div class="absolute right-[85.4px] top-5 w-[19.2px] h-3">
+                        <div class="bg-white rounded-sm w-full h-full opacity-80"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Background Museum Image -->
+            <div class="bg-image absolute h-[852px] left-[-133px] top-0 w-[642px]"></div>
+            
+            <!-- Test Content -->
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+                <div class="bg-black bg-opacity-50 p-4 rounded-lg text-white text-center">
+                    <h1 class="text-2xl font-bold mb-2">CURIO TEST</h1>
+                    <p class="mb-2">If you can see this, basic structure works</p>
+                    <button id="testBtn" class="bg-blue-500 px-4 py-2 rounded text-white">Click Test</button>
+                </div>
+            </div>
+            
+            <!-- Home Indicator -->
+            <div class="absolute bottom-0 left-0 w-full h-[34px] flex items-center justify-center">
+                <div class="w-[134px] h-[5px] bg-[#919191] rounded-[2.5px]"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('Test page loaded successfully');
+        
+        document.getElementById('testBtn').addEventListener('click', function() {
+            alert('JavaScript is working!');
+            console.log('Button clicked - JavaScript working');
+        });
+        
+        // Test if basic DOM manipulation works
+        setTimeout(() => {
+            console.log('DOM ready - all elements found:', {
+                page1: !!document.getElementById('page1'),
+                testBtn: !!document.getElementById('testBtn'),
+                mobileContainer: !!document.querySelector('.mobile-container')
+            });
+        }, 100);
+    </script>
+</body>
+</html>
