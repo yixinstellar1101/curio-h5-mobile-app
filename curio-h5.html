@@ -195,6 +195,21 @@
             }
         }
 
+        /* Settings Modal */
+        .page-5 {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .page-5.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .page-5.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
         /* Character Preferences Modal */
         .character-preferences-modal {
             transition: opacity 0.3s ease, transform 0.3s ease;
@@ -239,6 +254,15 @@
         .image-upload-modal.hide {
             opacity: 0;
             transform: translateY(20px);
+        }
+        
+        /* General utility classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .show {
+            display: block !important;
         }
         
         /* Page visibility */
@@ -730,7 +754,7 @@
             </div>
 
             <!-- Settings Icon -->
-            <div id="settingsIcon" class="absolute left-[341px] top-[58px] w-[26px] h-[26px] cursor-pointer settings-hover transition-transform duration-200" style="z-index: 100;">
+            <div id="settingsIcon" class="absolute left-[341px] top-[58px] w-[26px] h-[26px] cursor-pointer settings-hover transition-transform duration-200" style="z-index: 100;" onclick="console.log('Settings clicked on page 3!'); handleSettings(); event.stopPropagation();">
                 <div class="relative w-full h-full">
                     <div class="absolute bottom-[5.313%] left-[2.812%] right-[2.713%] top-[5.312%]">
                         <img alt="Settings" class="block max-w-none w-full h-full" src="./src/assets/1009f07f9dd6944bb263d745bad2a94943c5a897.svg" />
@@ -788,7 +812,7 @@
             </div>
 
             <!-- Settings Icon -->
-            <div class="absolute left-[341px] top-[58px] w-[26px] h-[26px] cursor-pointer settings-hover transition-transform duration-200" onclick="console.log('Settings clicked on page 4!'); handleSettings(); event.stopPropagation();">
+            <div class="absolute left-[341px] top-[58px] w-[26px] h-[26px] cursor-pointer settings-hover transition-transform duration-200" style="z-index: 100;" onclick="console.log('Settings clicked on page 4!'); handleSettings(); event.stopPropagation();">
                 <img alt="Settings" class="block max-w-none w-full h-full" src="./src/assets/93a02d26a502971a89c3344708fc357ec3d89403.svg" />
             </div>
 
@@ -799,9 +823,9 @@
         </div>
 
         <!-- Fifth Page - Settings Modal -->
-        <div id="page5" class="page-5 absolute inset-0 w-full h-full">
+        <div id="page5" class="page-5 absolute inset-0 w-full h-full hidden">
             <!-- Background with overlay -->
-            <div class="absolute inset-0 settings-overlay"></div>
+            <div class="absolute inset-0 bg-[rgba(0,0,0,0.3)] backdrop-blur-[2.5px]"></div>
             
             <!-- Blurred background content -->
             <div class="absolute inset-0" style="filter: blur(2px);">
@@ -809,7 +833,7 @@
                 <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-[393px] z-10">
                     <div class="h-11 relative w-full">
                         <div class="absolute h-[22px] left-[26px] top-[15px] w-[54px]">
-                            <div class="absolute font-semibold text-white text-[17px] text-center top-1/2 transform -translate-y-1/2 left-0 right-0">
+                            <div class="absolute font-semibold text-white text-[17px] text-center top-1/2 transform -translate-y-1/2 left-0 right-0" style="font-family: 'SF Pro Text', sans-serif;">
                                 <p class="leading-[22px]">12:15</p>
                             </div>
                         </div>
@@ -826,17 +850,17 @@
                 </div>
 
                 <!-- Background Museum Image -->
-                <div class="absolute inset-0 opacity-70" style="background-image: url('./src/assets/cc8c0a6205dd7253e86ab080322dec689122ecb2.png'); background-size: cover; background-position: center;"></div>
+                <div class="absolute w-[479px] h-[852px] top-0 left-[-41px] opacity-70" style="background-image: url('./src/assets/cc8c0a6205dd7253e86ab080322dec689122ecb2.png'); background-size: cover; background-position: center;"></div>
 
                 <!-- Upload Button -->
-                <div class="absolute top-[649px] left-1/2 transform -translate-x-1/2 w-[222px] h-[55px] flex items-center justify-center px-[23px] rounded-[20px] upload-button">
-                    <p class="text-white text-[20px] font-medium text-center whitespace-nowrap">Upload an image</p>
+                <div class="absolute top-[649px] left-1/2 transform -translate-x-1/2 w-[222px] h-[55px] bg-[rgba(255,255,255,0.3)] backdrop-blur-[2.5px] border border-[#c5c5c5] rounded-[20px] flex items-center justify-center px-[23px]">
+                    <p class="text-white text-[20px] font-medium text-center whitespace-nowrap" style="font-family: 'ABC Ginto Plus Variable', sans-serif;">Upload an image</p>
                 </div>
 
                 <!-- Picture Frames -->
                 <div class="absolute left-14 top-[158px] flex flex-row gap-[23px] items-center">
-                    <div class="bg-center bg-cover bg-no-repeat w-[281px] h-[421px] shadow-2xl" style="background-image: url('./src/assets/dff6fe23fdbc66a95b73bccee1330324b70d1957.png');"></div>
-                    <div class="bg-center bg-cover bg-no-repeat w-[33px] h-[339px] opacity-70 shadow-2xl" style="background-image: url('./src/assets/e956d03147a1ec74c8563980180fa452db51f275.png'); background-size: 949.05% 130.58%; background-position: 12.08% 51.25%;"></div>
+                    <div class="bg-center bg-cover bg-no-repeat w-[281px] h-[421px]" style="background-image: url('./src/assets/dff6fe23fdbc66a95b73bccee1330324b70d1957.png'); box-shadow: 82px 201px 61px 0px rgba(0,0,0,0.01), 53px 128px 56px 0px rgba(0,0,0,0.06), 30px 72px 47px 0px rgba(0,0,0,0.2), 13px 32px 35px 0px rgba(0,0,0,0.34), 3px 8px 19px 0px rgba(0,0,0,0.39);"></div>
+                    <div class="bg-[12.08%_51.25%] bg-no-repeat bg-size-[949.05%_130.58%] w-[33px] h-[339px] opacity-70" style="background-image: url('./src/assets/e956d03147a1ec74c8563980180fa452db51f275.png'); box-shadow: 82px 201px 61px 0px rgba(0,0,0,0.01), 53px 128px 56px 0px rgba(0,0,0,0.06), 30px 72px 47px 0px rgba(0,0,0,0.2), 13px 32px 35px 0px rgba(0,0,0,0.34), 3px 8px 19px 0px rgba(0,0,0,0.39);"></div>
                 </div>
 
                 <!-- Settings Icon -->
@@ -851,7 +875,7 @@
             </div>
 
             <!-- Settings Modal -->
-            <div class="settings-modal z-20">
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[306px] h-[310px] bg-[#fffaf4] rounded-[20px] z-20">
                 <!-- Back Button -->
                 <div class="absolute left-[9px] top-[9px] w-9 h-9 cursor-pointer" onclick="handleBackFromSettings()">
                     <img alt="Back" class="block max-w-none w-full h-full" src="./src/assets/d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" />
@@ -864,10 +888,10 @@
 
                 <!-- User Info -->
                 <div class="absolute left-[109px] top-[63px] w-[123px]">
-                    <div class="text-[#232323] text-[18px] font-medium opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
+                    <div class="text-[#232323] text-[18px] font-medium opacity-90 min-w-full" style="font-family: 'Avenir LT Std', sans-serif; width: min-content;">
                         <p class="leading-[1.45]">Stellar</p>
                     </div>
-                    <div class="text-[#868686] text-[12px] opacity-90 mt-1" style="font-family: 'Avenir LT Std', sans-serif;">
+                    <div class="text-[#868686] text-[12px] opacity-90 w-[123px] mt-1" style="font-family: 'Avenir LT Std', sans-serif;">
                         <p class="leading-[1.45]">yixin_xia@outlook.com</p>
                     </div>
                 </div>
@@ -882,14 +906,14 @@
                     <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
                         <p class="leading-[1.45]">Language</p>
                     </div>
-                    <button id="languageToggle" class="text-[#474747] text-[15px] opacity-90 cursor-pointer" style="font-family: 'Avenir LT Std', sans-serif;" onclick="handleLanguageChange()">
-                        <p class="leading-[1.45]">English</p>
+                    <button id="languageToggle" class="text-[#474747] text-[15px] opacity-90 cursor-pointer h-[22px] w-[49px]" style="font-family: 'Avenir LT Std', sans-serif;" onclick="handleLanguageChange()">
+                        <p class="leading-[1.45] text-left">English</p>
                     </button>
                 </div>
 
                 <!-- Character Preferences Label -->
                 <div class="absolute left-[30px] top-[185px]">
-                    <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
+                    <div class="text-[#232323] text-[15px] opacity-90 cursor-pointer" style="font-family: 'Avenir LT Std', sans-serif;" onclick="showCharacterPreferences()">
                         <p class="leading-[1.45]">Character preferences</p>
                     </div>
                 </div>
@@ -899,46 +923,43 @@
                     <!-- Persistent Character -->
                     <div class="flex flex-col items-center gap-[3px] w-[52px] cursor-pointer" onclick="selectCharacter('persistent')">
                         <div class="w-[34px] h-[34px]">
-                            <img alt="Persistent Character" class="block max-w-none w-full h-full rounded-full" src="./src/assets/b1dd7f79b12cdc736f7de02e2fb9af5799c2c6aa.png" />
+                            <img alt="Persistent Character" class="block max-w-none w-full h-full" src="./src/assets/b1dd7f79b12cdc736f7de02e2fb9af5799c2c6aa.png" />
                         </div>
-                        <div class="text-[#9d9c9b] text-[12px] opacity-90 text-center" style="font-family: 'Avenir LT Std', sans-serif;">
+                        <div class="text-[#9d9c9b] text-[12px] opacity-90 text-center w-[53px]" style="font-family: 'Avenir LT Std', sans-serif;">
                             <p class="leading-[1.45]">Persistent</p>
                         </div>
                     </div>
 
                     <!-- Random Characters -->
                     <div class="flex flex-col items-center gap-[3px] w-[45px] cursor-pointer" onclick="selectCharacter('random1')">
-                        <div class="w-[34px] h-[34px] relative">
-                            <img alt="Random Character" class="block max-w-none w-full h-full" src="./src/assets/4251c25d3b77e31096c925cbc8eb8af6e31c1e6b.svg" />
-                            <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5">
-                                <img alt="Edit" class="block max-w-none w-full h-full" src="./src/assets/314f250c49c7bd146ce6979b5d747c2a6b215215.svg" />
+                        <div class="w-[34px] h-[34px] bg-[#d9d9d9] rounded-[17px] flex items-center justify-center p-[10px]">
+                            <div class="w-3.5 h-3.5">
+                                <img alt="Edit" class="block max-w-none w-full h-full" src="./src/assets/8841b1f2c088840aaa77a574202015e5db962382.svg" />
                             </div>
                         </div>
-                        <div class="text-[#9d9c9b] text-[12px] opacity-90 text-center" style="font-family: 'Avenir LT Std', sans-serif;">
+                        <div class="text-[#9d9c9b] text-[12px] opacity-90 text-center min-w-full" style="font-family: 'Avenir LT Std', sans-serif; width: min-content;">
                             <p class="leading-[1.45]">Random</p>
                         </div>
                     </div>
 
                     <div class="flex flex-col items-center gap-[3px] w-[45px] cursor-pointer" onclick="selectCharacter('random2')">
-                        <div class="w-[34px] h-[34px] relative">
-                            <img alt="Random Character" class="block max-w-none w-full h-full" src="./src/assets/4251c25d3b77e31096c925cbc8eb8af6e31c1e6b.svg" />
-                            <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5">
-                                <img alt="Edit" class="block max-w-none w-full h-full" src="./src/assets/314f250c49c7bd146ce6979b5d747c2a6b215215.svg" />
+                        <div class="w-[34px] h-[34px] bg-[#d9d9d9] rounded-[17px] flex items-center justify-center p-[10px]">
+                            <div class="w-3.5 h-3.5">
+                                <img alt="Edit" class="block max-w-none w-full h-full" src="./src/assets/8841b1f2c088840aaa77a574202015e5db962382.svg" />
                             </div>
                         </div>
-                        <div class="text-[#9d9c9b] text-[12px] opacity-90 text-center" style="font-family: 'Avenir LT Std', sans-serif;">
+                        <div class="text-[#9d9c9b] text-[12px] opacity-90 text-center min-w-full" style="font-family: 'Avenir LT Std', sans-serif; width: min-content;">
                             <p class="leading-[1.45]">Random</p>
                         </div>
                     </div>
 
                     <div class="flex flex-col items-center gap-[3px] w-[45px] cursor-pointer" onclick="selectCharacter('random3')">
-                        <div class="w-[34px] h-[34px] relative">
-                            <img alt="Random Character" class="block max-w-none w-full h-full" src="./src/assets/4251c25d3b77e31096c925cbc8eb8af6e31c1e6b.svg" />
-                            <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5">
-                                <img alt="Edit" class="block max-w-none w-full h-full" src="./src/assets/314f250c49c7bd146ce6979b5d747c2a6b215215.svg" />
+                        <div class="w-[34px] h-[34px] bg-[#d9d9d9] rounded-[17px] flex items-center justify-center p-[10px]">
+                            <div class="w-3.5 h-3.5">
+                                <img alt="Edit" class="block max-w-none w-full h-full" src="./src/assets/8841b1f2c088840aaa77a574202015e5db962382.svg" />
                             </div>
                         </div>
-                        <div class="text-[#9d9c9b] text-[12px] opacity-90 text-center" style="font-family: 'Avenir LT Std', sans-serif;">
+                        <div class="text-[#9d9c9b] text-[12px] opacity-90 text-center min-w-full" style="font-family: 'Avenir LT Std', sans-serif; width: min-content;">
                             <p class="leading-[1.45]">Random</p>
                         </div>
                     </div>
@@ -947,114 +968,159 @@
         </div>
     </div>
 
-    <!-- Sixth Page - Character Preferences (Modal overlay over Page 5 Settings) -->
-    <div id="page6" class="character-preferences-modal absolute inset-0 w-full h-full z-50 hidden">
-        <!-- Background blur overlay -->
-        <div class="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm"></div>
-        
-        <!-- Character Preferences Modal -->
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[306px] h-[363px] bg-[#fffaf4] rounded-[20px] overflow-hidden">
-            <!-- Back button -->
-            <div class="absolute left-2.5 top-2 w-9 h-9 cursor-pointer" onclick="handleBackFromCharacterPreferences()">
-                <img alt="Back" class="block max-w-none w-full h-full" src="./src/assets/2621e254e3919decc1af055e547ebfde75047248.svg" />
-            </div>
-
-            <!-- Character List -->
-            <div class="absolute left-1/2 top-[58px] transform -translate-x-1/2 w-[264px]">
-                <!-- Qianlong - Persistent -->
-                <div class="flex flex-row items-center justify-between w-full h-[35px] mb-[21px]">
-                    <div class="flex flex-row gap-[17px] items-center">
-                        <div class="w-[35px] h-[35px]">
-                            <img alt="Qianlong" class="block max-w-none w-full h-full" src="./src/assets/9e8da1aaa67380d9c1c0e5906f5b79026ff3167a.png" />
+        <!-- Sixth Page - Character Preferences (Modal overlay over Page 5 Settings) -->
+        <div id="page6" class="character-preferences-modal absolute inset-0 w-full h-full z-50 hidden">
+            <!-- Background with overlay -->
+            <div class="absolute inset-0 bg-[rgba(0,0,0,0.3)] backdrop-blur-[2.5px]"></div>
+            
+            <!-- Blurred background content -->
+            <div class="absolute inset-0" style="filter: blur(2px);">
+                <!-- Status bar -->
+                <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-[393px] z-10">
+                    <div class="h-11 relative w-full">
+                        <div class="absolute h-[22px] left-[26px] top-[15px] w-[54px]">
+                            <div class="absolute font-semibold text-white text-[17px] text-center top-1/2 transform -translate-y-1/2 left-0 right-0" style="font-family: 'SF Pro Text', sans-serif;">
+                                <p class="leading-[22px]">12:15</p>
+                            </div>
                         </div>
-                        <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
-                            <p class="leading-[1.45]">Qianlong</p>
+                        <div class="absolute right-[26.339px] top-[19.333px] w-[27.328px] h-[13px]">
+                            <img alt="Battery" class="block max-w-none w-full h-full" src="./src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg" />
+                        </div>
+                        <div class="absolute right-[61px] top-5 w-[17px] h-3">
+                            <img alt="Wifi" class="block max-w-none w-full h-full" src="./src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg" />
+                        </div>
+                        <div class="absolute right-[85.4px] top-5 w-[19.2px] h-3">
+                            <img alt="Cellular" class="block max-w-none w-full h-full" src="./src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg" />
                         </div>
                     </div>
-                    <button class="character-preference-btn text-[#414141] text-[14px] opacity-90 cursor-pointer persistent" style="font-family: 'Avenir LT Std', sans-serif;" data-character="qianlong" data-state="persistent" onclick="toggleCharacterPreference(this)">
-                        <p class="leading-[1.45]">Persistent</p>
-                    </button>
                 </div>
 
-                <!-- Lu Guimeng - Non-Persistent -->
-                <div class="flex flex-row items-center justify-between w-full h-[35px] mb-[21px]">
-                    <div class="flex flex-row gap-[17px] items-center">
-                        <div class="w-[35px] h-[35px]">
-                            <img alt="Lu Guimeng" class="block max-w-none w-full h-full" src="./src/assets/f38ee0e627dac5be13c6dd369debb8d215e09e11.png" />
-                        </div>
-                        <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
-                            <p class="leading-[1.45]">Lu Guimeng</p>
-                        </div>
-                    </div>
-                    <button class="character-preference-btn text-[#9d9c9b] text-[14px] opacity-90 cursor-pointer non-persistent" style="font-family: 'Avenir LT Std', sans-serif;" data-character="luguimeng" data-state="non-persistent" onclick="toggleCharacterPreference(this)">
-                        <p class="leading-[1.45]">Non-Persistent</p>
-                    </button>
+                <!-- Background Museum Image -->
+                <div class="absolute w-[479px] h-[852px] top-0 left-[-41px] opacity-70" style="background-image: url('./src/assets/cc8c0a6205dd7253e86ab080322dec689122ecb2.png'); background-size: cover; background-position: center;"></div>
+
+                <!-- Upload Button -->
+                <div class="absolute top-[649px] left-1/2 transform -translate-x-1/2 w-[222px] h-[55px] bg-[rgba(255,255,255,0.3)] backdrop-blur-[2.5px] border border-[#c5c5c5] rounded-[20px] flex items-center justify-center px-[23px]">
+                    <p class="text-white text-[20px] font-medium text-center whitespace-nowrap" style="font-family: 'ABC Ginto Plus Variable', sans-serif;">Upload an image</p>
                 </div>
 
-                <!-- Random Character 1 -->
-                <div class="flex flex-row items-center justify-between w-full h-[35px] mb-[21px]">
-                    <div class="flex flex-row gap-[17px] items-center">
-                        <div class="w-[35px] h-[35px]">
-                            <img alt="Random" class="block max-w-none w-full h-full" src="./src/assets/dbafd500e525fe7968cbb10e87c566d74c7cf348.svg" />
-                        </div>
-                        <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
-                            <p class="leading-[1.45]">Random</p>
-                        </div>
-                    </div>
-                    <button class="character-preference-btn text-[#9d9c9b] text-[14px] opacity-90 cursor-pointer non-persistent" style="font-family: 'Avenir LT Std', sans-serif;" data-character="random1" data-state="non-persistent" onclick="toggleCharacterPreference(this)">
-                        <p class="leading-[1.45]">Non-Persistent</p>
-                    </button>
+                <!-- Picture Frames -->
+                <div class="absolute left-14 top-[158px] flex flex-row gap-[23px] items-center">
+                    <div class="bg-center bg-cover bg-no-repeat w-[281px] h-[421px]" style="background-image: url('./src/assets/dff6fe23fdbc66a95b73bccee1330324b70d1957.png'); box-shadow: 82px 201px 61px 0px rgba(0,0,0,0.01), 53px 128px 56px 0px rgba(0,0,0,0.06), 30px 72px 47px 0px rgba(0,0,0,0.2), 13px 32px 35px 0px rgba(0,0,0,0.34), 3px 8px 19px 0px rgba(0,0,0,0.39);"></div>
+                    <div class="bg-[66.1%_51.25%] bg-no-repeat bg-size-[119.54%_130.58%] w-[262px] h-[339px] opacity-70" style="background-image: url('./src/assets/e956d03147a1ec74c8563980180fa452db51f275.png'); box-shadow: 82px 201px 61px 0px rgba(0,0,0,0.01), 53px 128px 56px 0px rgba(0,0,0,0.06), 30px 72px 47px 0px rgba(0,0,0,0.2), 13px 32px 35px 0px rgba(0,0,0,0.34), 3px 8px 19px 0px rgba(0,0,0,0.39);"></div>
                 </div>
 
-                <!-- Random Character 2 -->
-                <div class="flex flex-row items-center justify-between w-full h-[35px] mb-[21px]">
-                    <div class="flex flex-row gap-[17px] items-center">
-                        <div class="w-[35px] h-[35px]">
-                            <img alt="Random" class="block max-w-none w-full h-full" src="./src/assets/dbafd500e525fe7968cbb10e87c566d74c7cf348.svg" />
-                        </div>
-                        <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
-                            <p class="leading-[1.45]">Random</p>
-                        </div>
-                    </div>
-                    <button class="character-preference-btn text-[#9d9c9b] text-[14px] opacity-90 cursor-pointer non-persistent" style="font-family: 'Avenir LT Std', sans-serif;" data-character="random2" data-state="non-persistent" onclick="toggleCharacterPreference(this)">
-                        <p class="leading-[1.45]">Non-Persistent</p>
-                    </button>
+                <!-- Settings Icon -->
+                <div class="absolute left-[341px] top-[58px] w-[26px] h-[26px]">
+                    <img alt="Settings" class="block max-w-none w-full h-full" src="./src/assets/93a02d26a502971a89c3344708fc357ec3d89403.svg" />
                 </div>
 
-                <!-- Random Character 3 -->
-                <div class="flex flex-row items-center justify-between w-full h-[35px] mb-[21px]">
-                    <div class="flex flex-row gap-[17px] items-center">
-                        <div class="w-[35px] h-[35px]">
-                            <img alt="Random" class="block max-w-none w-full h-full" src="./src/assets/dbafd500e525fe7968cbb10e87c566d74c7cf348.svg" />
-                        </div>
-                        <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
-                            <p class="leading-[1.45]">Random</p>
-                        </div>
-                    </div>
-                    <button class="character-preference-btn text-[#9d9c9b] text-[14px] opacity-90 cursor-pointer non-persistent" style="font-family: 'Avenir LT Std', sans-serif;" data-character="random3" data-state="non-persistent" onclick="toggleCharacterPreference(this)">
-                        <p class="leading-[1.45]">Non-Persistent</p>
-                    </button>
-                </div>
-
-                <!-- Random Character 4 -->
-                <div class="flex flex-row items-center justify-between w-full h-[35px]">
-                    <div class="flex flex-row gap-[17px] items-center">
-                        <div class="w-[35px] h-[35px]">
-                            <img alt="Random" class="block max-w-none w-full h-full" src="./src/assets/dbafd500e525fe7968cbb10e87c566d74c7cf348.svg" />
-                        </div>
-                        <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
-                            <p class="leading-[1.45]">Random</p>
-                        </div>
-                    </div>
-                    <button class="character-preference-btn text-[#9d9c9b] text-[14px] opacity-90 cursor-pointer non-persistent" style="font-family: 'Avenir LT Std', sans-serif;" data-character="random4" data-state="non-persistent" onclick="toggleCharacterPreference(this)">
-                        <p class="leading-[1.45]">Non-Persistent</p>
-                    </button>
+                <!-- Home Indicator -->
+                <div class="absolute bottom-0 left-0 w-full h-[34px] flex items-center justify-center">
+                    <div class="w-[134px] h-[5px] bg-[#919191] rounded-[2.5px]"></div>
                 </div>
             </div>
-        </div>
-    </div>
+            
+            <!-- Character Preferences Modal -->
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[306px] h-[363px] bg-[#fffaf4] rounded-[20px] overflow-hidden z-20">
+                <!-- Back button -->
+                <div class="absolute left-2.5 top-2 w-9 h-9 cursor-pointer" onclick="handleBackFromCharacterPreferences()">
+                    <img alt="Back" class="block max-w-none w-full h-full" src="./src/assets/2621e254e3919decc1af055e547ebfde75047248.svg" />
+                </div>
 
-    <!-- Seventh Page - Image Upload Options (Mobile Scale 393x852px) -->
+                <!-- Character List -->
+                <div class="absolute left-1/2 top-[58px] transform -translate-x-1/2 w-[264px]">
+                    <!-- Qianlong - Persistent -->
+                    <div class="flex flex-row items-center justify-between w-full h-[35px] mb-[21px]">
+                        <div class="flex flex-row gap-[17px] items-center">
+                            <div class="w-[35px] h-[35px]">
+                                <img alt="Qianlong" class="block max-w-none w-full h-full" src="./src/assets/9e8da1aaa67380d9c1c0e5906f5b79026ff3167a.png" />
+                            </div>
+                            <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
+                                <p class="leading-[1.45]">Qianlong</p>
+                            </div>
+                        </div>
+                        <button class="character-preference-btn text-[#414141] text-[14px] opacity-90 cursor-pointer persistent h-5 w-[62px]" style="font-family: 'Avenir LT Std', sans-serif;" data-character="qianlong" data-state="persistent" onclick="toggleCharacterPreference(this)">
+                            <p class="leading-[1.45] text-left">Persistent</p>
+                        </button>
+                    </div>
+
+                    <!-- Lu Guimeng - Non-Persistent -->
+                    <div class="flex flex-row items-center justify-between w-full h-[35px] mb-[21px]">
+                        <div class="flex flex-row gap-[17px] items-center">
+                            <div class="w-[35px] h-[35px]">
+                                <img alt="Lu Guimeng" class="block max-w-none w-full h-full" src="./src/assets/f38ee0e627dac5be13c6dd369debb8d215e09e11.png" />
+                            </div>
+                            <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
+                                <p class="leading-[1.45]">Lu Guimeng</p>
+                            </div>
+                        </div>
+                        <button class="character-preference-btn text-[#9d9c9b] text-[14px] opacity-90 cursor-pointer non-persistent h-5 w-[94px]" style="font-family: 'Avenir LT Std', sans-serif;" data-character="luguimeng" data-state="non-persistent" onclick="toggleCharacterPreference(this)">
+                            <p class="leading-[1.45] text-left">Non-Persistent</p>
+                        </button>
+                    </div>
+
+                    <!-- Random Character 1 -->
+                    <div class="flex flex-row items-center justify-between w-full h-[35px] mb-[21px]">
+                        <div class="flex flex-row gap-[17px] items-center">
+                            <div class="w-[35px] h-[35px]">
+                                <img alt="Random" class="block max-w-none w-full h-full" src="./src/assets/dbafd500e525fe7968cbb10e87c566d74c7cf348.svg" />
+                            </div>
+                            <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
+                                <p class="leading-[1.45]">Random</p>
+                            </div>
+                        </div>
+                        <button class="character-preference-btn text-[#9d9c9b] text-[14px] opacity-90 cursor-pointer non-persistent h-5 w-[94px]" style="font-family: 'Avenir LT Std', sans-serif;" data-character="random1" data-state="non-persistent" onclick="toggleCharacterPreference(this)">
+                            <p class="leading-[1.45] text-left">Non-Persistent</p>
+                        </button>
+                    </div>
+
+                    <!-- Random Character 2 -->
+                    <div class="flex flex-row items-center justify-between w-full h-[35px] mb-[21px]">
+                        <div class="flex flex-row gap-[17px] items-center">
+                            <div class="w-[35px] h-[35px]">
+                                <img alt="Random" class="block max-w-none w-full h-full" src="./src/assets/dbafd500e525fe7968cbb10e87c566d74c7cf348.svg" />
+                            </div>
+                            <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
+                                <p class="leading-[1.45]">Random</p>
+                            </div>
+                        </div>
+                        <button class="character-preference-btn text-[#9d9c9b] text-[14px] opacity-90 cursor-pointer non-persistent h-5 w-[94px]" style="font-family: 'Avenir LT Std', sans-serif;" data-character="random2" data-state="non-persistent" onclick="toggleCharacterPreference(this)">
+                            <p class="leading-[1.45] text-left">Non-Persistent</p>
+                        </button>
+                    </div>
+
+                    <!-- Random Character 3 -->
+                    <div class="flex flex-row items-center justify-between w-full h-[35px] mb-[21px]">
+                        <div class="flex flex-row gap-[17px] items-center">
+                            <div class="w-[35px] h-[35px]">
+                                <img alt="Random" class="block max-w-none w-full h-full" src="./src/assets/dbafd500e525fe7968cbb10e87c566d74c7cf348.svg" />
+                            </div>
+                            <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
+                                <p class="leading-[1.45]">Random</p>
+                            </div>
+                        </div>
+                        <button class="character-preference-btn text-[#9d9c9b] text-[14px] opacity-90 cursor-pointer non-persistent h-5 w-[94px]" style="font-family: 'Avenir LT Std', sans-serif;" data-character="random3" data-state="non-persistent" onclick="toggleCharacterPreference(this)">
+                            <p class="leading-[1.45] text-left">Non-Persistent</p>
+                        </button>
+                    </div>
+
+                    <!-- Random Character 4 -->
+                    <div class="flex flex-row items-center justify-between w-full h-[35px]">
+                        <div class="flex flex-row gap-[17px] items-center">
+                            <div class="w-[35px] h-[35px]">
+                                <img alt="Random" class="block max-w-none w-full h-full" src="./src/assets/dbafd500e525fe7968cbb10e87c566d74c7cf348.svg" />
+                            </div>
+                            <div class="text-[#232323] text-[15px] opacity-90" style="font-family: 'Avenir LT Std', sans-serif;">
+                                <p class="leading-[1.45]">Random</p>
+                            </div>
+                        </div>
+                        <button class="character-preference-btn text-[#9d9c9b] text-[14px] opacity-90 cursor-pointer non-persistent h-5 w-[94px]" style="font-family: 'Avenir LT Std', sans-serif;" data-character="random4" data-state="non-persistent" onclick="toggleCharacterPreference(this)">
+                            <p class="leading-[1.45] text-left">Non-Persistent</p>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>    <!-- Seventh Page - Image Upload Options (Mobile Scale 393x852px) -->
     <div id="page7" class="mobile-container absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 hidden" style="width: 393px; height: 852px;">
         <!-- Dark overlay background -->
         <div class="absolute inset-0 z-10" style="background-image: url('./src/assets/9b6dc444b0feeb650edd472c766d9b00af5ddbb8.svg'); background-size: cover; background-position: center;"></div>
@@ -1127,10 +1193,9 @@
 
     <!-- Eighth Page - Camera - Position artwork in frame -->
     <div id="page8" class="mobile-container absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 hidden" style="width: 393px; height: 852px;">
-        <!-- Background -->
-        <div class="absolute inset-0 bg-[#221400]">
-            <!-- Camera Background Image with exact Figma specifications -->
-            <div class="absolute w-[393px] h-[852px] top-0 left-0" style="background-image: url('./src/assets/4cfe7919ebce84e71fd1ea6e26cf431e62f5d972.png'); background-size: 318.51% 100%; background-position: 39.33% 0%; background-repeat: no-repeat;"></div>
+        <!-- Background - Solid color initially, camera feed will be inserted here -->
+        <div class="absolute inset-0 bg-[#1a1a1a]">
+            <!-- Camera feed will be dynamically inserted here -->
         </div>
         
         <!-- Status bar -->
@@ -1158,17 +1223,28 @@
             <img alt="Back" class="block max-w-none w-full h-full" src="./src/assets/40807933db102c5ddfe145202e96cb747d9662c5.svg" />
         </div>
 
+        <!-- Camera Switch Button (Front/Back) - REMOVED per user request -->
+
         <!-- Frame Overlay with exact Figma positioning -->
-        <div class="absolute left-[47px] top-[217px] w-[299px] h-[336px] z-15">
+        <div class="absolute left-[47px] top-[217px] w-[299px] h-[336px] z-30 pointer-events-none">
             <div class="absolute bottom-[-0.744%] left-[-0.836%] right-[-0.836%] top-[-0.744%]">
-                <img alt="Frame" class="block max-w-none w-full h-full" src="./src/assets/0e1f6ae202d8cf3833e6f998dceea28458ca1bc6.svg" />
+                <img alt="Frame" class="block max-w-none w-full h-full" src="./src/assets/a50b78e69bd84e986612b63ceaef3914b979e32f.svg" />
             </div>
+            <!-- Fallback border if image fails to load -->
+            <div class="absolute inset-0 border-4 border-white rounded-lg opacity-20" style="border-color: rgba(255,255,255,0.3);"></div>
         </div>
 
         <!-- Position artwork in frame text with exact Figma specifications -->
         <div class="absolute left-1/2 transform -translate-x-1/2 translate-y-[-50%] w-[163px] h-8 z-20" style="top: calc(50% + 200px);">
             <div class="bg-[rgba(0,0,0,0.5)] rounded-[20px] px-[19px] py-[3px] flex items-center justify-center h-full">
                 <p class="text-white text-[16px] opacity-90 text-center" style="font-family: 'Avenir LT Std', sans-serif; font-weight: 500; line-height: 1.6; width: 125px;">Position in frame</p>
+            </div>
+        </div>
+
+        <!-- Initializing camera text (shown during initialization) -->
+        <div id="initializingText" class="absolute left-1/2 top-[426px] transform -translate-x-1/2 z-40 hidden">
+            <div class="bg-black bg-opacity-50 rounded-[20px] px-7 py-[5px]">
+                <p class="text-white text-[16px] font-medium opacity-90 text-center whitespace-nowrap" style="font-family: 'Avenir LT Std', sans-serif; line-height: 1.6;">Initializing camera...</p>
             </div>
         </div>
 
@@ -1237,8 +1313,10 @@
                 </div>
 
                 <!-- Frame Overlay -->
-                <div class="absolute left-[47px] top-[217px] w-[299px] h-[336px] z-15">
+                <div class="absolute left-[47px] top-[217px] w-[299px] h-[336px] z-30 pointer-events-none">
                     <img alt="Frame" class="block max-w-none w-full h-full" src="./src/assets/7f7f4e9c0ff1336f239a058ecfbcb93598e33f94.svg" />
+                    <!-- Fallback border if image fails to load -->
+                    <div class="absolute inset-0 border-4 border-white rounded-lg opacity-20" style="border-color: rgba(255,255,255,0.3);"></div>
                 </div>
 
                 <!-- Camera Capture Button (Disabled State) -->
@@ -1339,8 +1417,10 @@
         </div>
 
         <!-- Frame Overlay -->
-        <div class="absolute left-[47px] top-[217px] w-[299px] h-[336px] z-15">
+        <div class="absolute left-[47px] top-[217px] w-[299px] h-[336px] z-30 pointer-events-none">
             <img alt="Frame" class="block max-w-none w-full h-full" src="./src/assets/7f7f4e9c0ff1336f239a058ecfbcb93598e33f94.svg" />
+            <!-- Fallback border if image fails to load -->
+            <div class="absolute inset-0 border-4 border-white rounded-lg opacity-20" style="border-color: rgba(255,255,255,0.3);"></div>
         </div>
 
         <!-- Camera Capture Button (Analyzed State) -->
@@ -2404,6 +2484,18 @@
 
         // Add debug indicator
         function showDebugInfo(message) {
+            // Check if we're currently on camera pages (8, 9, 10) or if any camera pages are visible
+            const cameraPages = ['page8', 'page9', 'page10'];
+            const isCameraPageActive = cameraPages.some(pageId => {
+                const page = document.getElementById(pageId);
+                return page && !page.classList.contains('hidden');
+            });
+            
+            // Don't show debug info on camera pages per user request
+            if (isCameraPageActive) {
+                return;
+            }
+            
             let debugDiv = document.getElementById('debug-info');
             if (!debugDiv) {
                 debugDiv = document.createElement('div');
@@ -2616,23 +2708,16 @@
 
         function handleSettings() {
             console.log('🔧 handleSettings function called, currentPage:', currentPage);
-            showDebugInfo(`Settings clicked on page ${currentPage}`);
             
-            // Add debugging for page state
-            const page3 = document.getElementById('page3');
-            const page3Classes = page3.classList.toString();
-            console.log('Page 3 classes:', page3Classes);
-            console.log('Page 3 visible?', page3.classList.contains('page-active'));
-            
-            if (currentPage < 3) {
-                console.log('❌ Settings not allowed on page', currentPage);
-                showDebugInfo(`Settings blocked - currently on page ${currentPage}`);
-                return; // Only allow settings on page 3 and 4
+            // Show Page 5 (Settings modal)
+            const page5 = document.getElementById('page5');
+            if (page5) {
+                page5.classList.remove('hidden');
+                page5.classList.add('show');
+                console.log('✅ Successfully opened Settings page (Page 5)');
+            } else {
+                console.error('❌ Could not find page5 element!');
             }
-            
-            console.log('✅ Settings clicked - proceeding to page 5');
-            showPage(5); // Go to settings page
-            showDebugInfo(`Opened settings page! 🎉`);
         }
 
         // Make functions available globally
@@ -2641,10 +2726,13 @@
 
         function handleBackFromSettings() {
             console.log('handleBackFromSettings called');
-            // Go back to the page we came from (page 3 or 4)
-            const previousPage = currentPage === 5 ? 3 : currentPage;
-            showPage(previousPage);
-            showDebugInfo(`Back from settings to page ${previousPage}`);
+            // Hide Page 5 (Settings modal)
+            const page5 = document.getElementById('page5');
+            if (page5) {
+                page5.classList.add('hidden');
+                page5.classList.remove('show');
+                console.log('✅ Successfully closed Settings page (Page 5)');
+            }
         }
 
         function handleLanguageChange() {
@@ -2677,21 +2765,26 @@
 
         function showCharacterPreferences() {
             console.log('showCharacterPreferences called');
-            const modal = document.getElementById('page6');
-            modal.classList.remove('hidden');
-            modal.classList.add('show');
-            showDebugInfo(`Character preferences opened`);
+            // Show Page 6 (Character Preferences modal)
+            const page6 = document.getElementById('page6');
+            if (page6) {
+                page6.classList.remove('hidden');
+                page6.classList.add('show');
+                console.log('✅ Successfully opened Character Preferences page (Page 6)');
+            } else {
+                console.error('❌ Could not find page6 element!');
+            }
         }
 
         function handleBackFromCharacterPreferences() {
             console.log('handleBackFromCharacterPreferences called');
-            const modal = document.getElementById('page6');
-            modal.classList.add('hide');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                modal.classList.remove('show', 'hide');
-            }, 300);
-            showDebugInfo(`Back from character preferences`);
+            // Hide Page 6 (Character Preferences modal)
+            const page6 = document.getElementById('page6');
+            if (page6) {
+                page6.classList.add('hidden');
+                page6.classList.remove('show');
+                console.log('✅ Successfully closed Character Preferences page (Page 6)');
+            }
         }
 
         function toggleCharacterPreference(button) {
@@ -2745,18 +2838,158 @@
             input.onchange = (e) => {
                 const file = e.target.files[0];
                 if (file) {
-                    console.log('Selected file:', file.name);
-                    showDebugInfo(`File selected: ${file.name}`);
+                    // Validate file type
+                    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                    if (!validTypes.includes(file.type)) {
+                        showDebugInfo('⚠️ Please select a valid image file (JPG, PNG, GIF, WebP)');
+                        return;
+                    }
+                    
+                    // Validate file size (max 10MB)
+                    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+                    if (file.size > maxSize) {
+                        showDebugInfo('⚠️ Image file too large. Please select an image smaller than 10MB');
+                        return;
+                    }
+                    
+                    console.log('Selected file:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+                    showDebugInfo(`File selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+                    
                     // Close the upload modal
                     handleCancelUpload();
-                    // Here you would handle the file upload
-                    alert('File selected: ' + file.name + '\n(Upload functionality will be implemented)');
+                    
+                    // Automatically redirect to Page 11 (loading screen) then to Page 4
+                    handleFileUploadFlow(file);
                 }
             };
             input.click();
         }
 
-        function handleCamera() {
+        function handleFileUploadFlow(file) {
+            console.log('🚀 Starting file upload flow for:', file.name);
+            
+            // Store the uploaded file for potential later use
+            uploadedFile = file;
+            
+            // Create a preview URL for the uploaded image (optional for future use)
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImagePreview = e.target.result;
+                    console.log('✅ Image preview generated for:', file.name);
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            // Clean up camera resources if coming from camera page
+            const cameraPage = document.getElementById('page8');
+            if (cameraPage && !cameraPage.classList.contains('hidden')) {
+                console.log('🧹 Cleaning up camera resources before file upload flow');
+                stopCamera();
+                cleanupCameraElements();
+                cameraPage.classList.add('hidden');
+                cameraPage.classList.remove('show');
+            }
+            
+            // Ensure all other pages are hidden
+            const allPages = ['page3', 'page4', 'page7', 'page8', 'page9', 'page10'];
+            console.log('🧹 Hiding all pages:', allPages);
+            allPages.forEach(pageId => {
+                const page = document.getElementById(pageId);
+                if (page) {
+                    page.classList.remove('page-active', 'show');
+                    page.classList.add('page-hidden', 'hidden');
+                    console.log(`  - Hidden ${pageId}`);
+                }
+            });
+            
+            // Show Page 11 (loading screen) immediately
+            console.log('📋 Attempting to show Page 11...');
+            const galleryPage = document.getElementById('page11');
+            if (galleryPage) {
+                galleryPage.classList.remove('hidden');
+                galleryPage.classList.add('show');
+                
+                // Start the gallery loading spinner
+                const gallerySpinner = document.getElementById('gallerySpinner');
+                if (gallerySpinner) {
+                    gallerySpinner.style.animation = 'spin 1s linear infinite';
+                    console.log('🌀 Gallery spinner started');
+                }
+                
+                console.log('✅ Page 11 (Gallery Loading) shown successfully');
+                showDebugInfo(`Processing uploaded image: ${file.name} 📸`);
+            } else {
+                console.error('❌ Could not find Page 11 element!');
+            }
+            
+            // Simulate processing time (2-3 seconds) then redirect to Page 4
+            setTimeout(() => {
+                console.log('⏰ Timeout completed, transitioning to Page 4...');
+                
+                // Hide Page 11
+                if (galleryPage) {
+                    galleryPage.classList.add('hidden');
+                    galleryPage.classList.remove('show');
+                    console.log('✅ Page 11 hidden');
+                }
+                
+                // Ensure all pages are properly hidden first
+                document.querySelectorAll('[id^="page"]').forEach(page => {
+                    if (page.id !== 'page4') {
+                        page.classList.remove('page-active', 'show');
+                        page.classList.add('page-hidden', 'hidden');
+                    }
+                });
+                
+                // Show Page 4 (Detail View) with proper classes
+                const page4 = document.getElementById('page4');
+                if (page4) {
+                    // Remove all hiding classes
+                    page4.classList.remove('page-hidden', 'hidden');
+                    // Add showing classes  
+                    page4.classList.add('page-active');
+                    // Force visibility with inline styles as backup
+                    page4.style.opacity = '1';
+                    page4.style.visibility = 'visible';
+                    page4.style.display = 'block';
+                    page4.style.zIndex = '10';
+                    
+                    console.log('✅ Page 4 classes:', page4.className);
+                    console.log('✅ Page 4 computed style opacity:', window.getComputedStyle(page4).opacity);
+                    console.log('✅ Page 4 computed style visibility:', window.getComputedStyle(page4).visibility);
+                    
+                    // Double check that it's actually visible
+                    setTimeout(() => {
+                        const isVisible = page4.offsetWidth > 0 && page4.offsetHeight > 0;
+                        console.log('✅ Page 4 is actually visible:', isVisible);
+                        if (!isVisible) {
+                            console.error('❌ Page 4 is still not visible! Checking all elements...');
+                            console.error('Page 4 dimensions:', page4.offsetWidth, 'x', page4.offsetHeight);
+                        }
+                    }, 100);
+                } else {
+                    console.error('❌ Could not find Page 4 element!');
+                }
+                
+                currentPage = 4;
+                
+                console.log('📄 Successfully transitioned to Page 4 (Detail View)');
+                showDebugInfo(`Image uploaded successfully! Now viewing detail page 🎉`);
+                
+            }, 2500); // 2.5 seconds loading time
+        }
+
+        // Camera functionality variables
+        let stream = null;
+        let capturedPhoto = null;
+        let currentFacingMode = 'environment'; // 'environment' for back camera, 'user' for front camera
+        
+        // File upload variables
+        let uploadedFile = null;
+        let uploadedImagePreview = null;
+
+        async function handleCamera() {
             console.log('Camera clicked');
             
             // Hide Page 7 modal and show Page 8 (Camera)
@@ -2766,18 +2999,205 @@
                 modal.classList.remove('show');
             }
             
-            // Show Page 8 (Camera)
+            // Show Page 8 (Camera) and start camera
             const cameraPage = document.getElementById('page8');
             if (cameraPage) {
                 cameraPage.classList.remove('hidden');
                 cameraPage.classList.add('show');
                 console.log('📷 Successfully showed Page 8 (Camera)');
-                showDebugInfo(`Opened Camera page! 📷`);
+                // Opened Camera page - debug info removed per user request
+                
+                // Initialize camera
+                await initializeCamera();
             }
+        }
+
+        async function initializeCamera() {
+            // Show loading indicator and initializing text
+            showCameraLoading(true);
+            showInitializingText(true);
+            
+            try {
+                // Request camera permission and access
+                const constraints = {
+                    video: {
+                        facingMode: currentFacingMode,
+                        width: { ideal: 393 },
+                        height: { ideal: 852 }
+                    }
+                };
+
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Get the video element or create one if it doesn't exist
+                let videoElement = document.getElementById('cameraVideo');
+                if (!videoElement) {
+                    videoElement = document.createElement('video');
+                    videoElement.id = 'cameraVideo';
+                    videoElement.autoplay = true;
+                    videoElement.playsInline = true;
+                    videoElement.muted = true;
+                    videoElement.style.cssText = `
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        z-index: 5;
+                        opacity: 0;
+                        transition: opacity 0.5s ease-in-out;
+                    `;
+                    
+                    // Insert video into page 8 background (the solid color background)
+                    const page8Background = document.querySelector('#page8 .bg-\\[\\#1a1a1a\\]');
+                    if (page8Background) {
+                        page8Background.appendChild(videoElement);
+                    }
+                }
+                
+                videoElement.srcObject = stream;
+                
+                // Hide loading indicator and initializing text, fade in video when it starts playing
+                videoElement.onloadedmetadata = () => {
+                    showCameraLoading(false);
+                    showInitializingText(false);
+                    // Smooth transition from solid color to camera feed
+                    setTimeout(() => {
+                        videoElement.style.opacity = '1';
+                    }, 100);
+                    console.log('📷 Camera initialized successfully');
+                    // Camera is now active - removed debug info per user request
+                };
+                
+            } catch (error) {
+                showCameraLoading(false);
+                showInitializingText(false);
+                console.error('Camera initialization failed:', error);
+                
+                let errorMessage = 'Camera access denied or unavailable 📵';
+                
+                if (error.name === 'NotAllowedError') {
+                    errorMessage = 'Camera permission denied. Please allow camera access. 📵';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage = 'No camera found on this device 📵';
+                } else if (error.name === 'NotReadableError') {
+                    errorMessage = 'Camera is being used by another app 📵';
+                }
+                
+                // showDebugInfo(errorMessage); // Removed debug info per user request
+                
+                // Show error state with dark background instead of camera feed
+                const page8Background = document.querySelector('#page8 .bg-\\[\\#1a1a1a\\]');
+                if (page8Background && !document.getElementById('cameraErrorOverlay')) {
+                    const errorOverlay = document.createElement('div');
+                    errorOverlay.id = 'cameraErrorOverlay';
+                    errorOverlay.innerHTML = `
+                        <div style="
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            color: rgba(255, 255, 255, 0.7);
+                            text-align: center;
+                            z-index: 10;
+                        ">
+                            <div style="font-size: 48px; margin-bottom: 16px;">📵</div>
+                            <div style="font-size: 16px;">${errorMessage}</div>
+                        </div>
+                    `;
+                    page8Background.appendChild(errorOverlay);
+                }
+            }
+        }
+
+        function showCameraLoading(show) {
+            let loadingElement = document.getElementById('cameraLoading');
+            
+            if (show) {
+                if (!loadingElement) {
+                    loadingElement = document.createElement('div');
+                    loadingElement.id = 'cameraLoading';
+                    loadingElement.innerHTML = ``;
+                    
+                    // Insert into the new background structure
+                    const page8Background = document.querySelector('#page8 .bg-\\[\\#1a1a1a\\]');
+                    if (page8Background) {
+                        page8Background.appendChild(loadingElement);
+                    }
+                }
+                loadingElement.style.display = 'block';
+            } else {
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+            }
+        }
+
+        function showInitializingText(show) {
+            const initializingText = document.getElementById('initializingText');
+            if (initializingText) {
+                if (show) {
+                    initializingText.classList.remove('hidden');
+                } else {
+                    initializingText.classList.add('hidden');
+                }
+            }
+        }
+
+        async function switchCamera() {
+            console.log('Switching camera...');
+            // Switching camera - debug info removed per user request
+            
+            // Toggle facing mode
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            
+            // Fade out current video
+            const videoElement = document.getElementById('cameraVideo');
+            if (videoElement) {
+                videoElement.style.opacity = '0';
+                // Remove after fade out
+                setTimeout(() => {
+                    videoElement.remove();
+                }, 300);
+            }
+            
+            // Stop current stream
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Show brief loading state during switch
+            setTimeout(async () => {
+                await initializeCamera();
+                // Switched camera - debug info removed per user request
+            }, 300);
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                console.log('📷 Camera stopped');
+            }
+            
+            const videoElement = document.getElementById('cameraVideo');
+            if (videoElement) {
+                videoElement.remove();
+            }
+            
+            // Hide loading indicator
+            showCameraLoading(false);
         }
 
         function handleBackFromCamera() {
             console.log('Back from camera clicked');
+            
+            // Stop camera stream and clean up
+            stopCamera();
+            
+            // Clean up any captured photo backgrounds
+            cleanupCameraElements();
             
             // Hide Page 8 and return to Page 7
             const cameraPage = document.getElementById('page8');
@@ -2792,12 +3212,43 @@
                 modal.classList.remove('hidden');
                 modal.classList.add('show');
                 console.log('📄 Successfully returned to Page 7 (Upload modal)');
-                showDebugInfo(`Returned to upload page from camera`);
+                // showDebugInfo(`Returned to upload page from camera`); // Removed debug info per user request
             }
         }
 
-        function handleCameraCapture() {
+        function cleanupCameraElements() {
+            // Remove captured photo backgrounds from all pages
+            const capturedPhotoBg = document.getElementById('capturedPhotoBackground');
+            if (capturedPhotoBg) {
+                capturedPhotoBg.remove();
+            }
+            
+            const capturedPhotoBgPage10 = document.getElementById('capturedPhotoBackgroundPage10');
+            if (capturedPhotoBgPage10) {
+                capturedPhotoBgPage10.remove();
+            }
+            
+            // Remove error overlay if it exists
+            const errorOverlay = document.getElementById('cameraErrorOverlay');
+            if (errorOverlay) {
+                errorOverlay.remove();
+            }
+            
+            // Remove loading indicator
+            const loadingElement = document.getElementById('cameraLoading');
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+            
+            // Clear captured photo data
+            capturedPhoto = null;
+        }
+
+        async function handleCameraCapture() {
             console.log('Camera capture clicked - taking photo!');
+            
+            // Capture photo from video stream
+            await capturePhotoFromStream();
             
             // Hide Page 8 and show Page 9 with animation
             const cameraPage = document.getElementById('page8');
@@ -2806,11 +3257,14 @@
                 cameraPage.classList.remove('show');
             }
             
-            // Show Page 9 (Taking picture)
+            // Show Page 9 (Taking picture) with captured photo
             const takingPicturePage = document.getElementById('page9');
             if (takingPicturePage) {
                 takingPicturePage.classList.remove('hidden');
                 takingPicturePage.classList.add('show');
+                
+                // Set captured photo as background for page 9
+                await setupPage9WithCapturedPhoto();
                 
                 // Add flash effect
                 const flashEffect = document.getElementById('flashEffect');
@@ -2828,7 +3282,7 @@
                 }
                 
                 console.log('📸 Photo capture initiated - showing Page 9');
-                showDebugInfo(`Taking picture... 📸`);
+                // showDebugInfo(`Taking picture... 📸`); // Removed debug info per user request
                 
                 // After 2 seconds, navigate to next page or back to main
                 setTimeout(() => {
@@ -2836,6 +3290,116 @@
                     handlePhotoComplete();
                 }, 2000);
             }
+        }
+
+        async function capturePhotoFromStream() {
+            if (!stream) {
+                console.warn('No camera stream available for capture');
+                return;
+            }
+
+            try {
+                const videoElement = document.getElementById('cameraVideo');
+                if (!videoElement) {
+                    console.warn('No video element found for capture');
+                    return;
+                }
+
+                // Create canvas to capture the current frame
+                const canvas = document.createElement('canvas');
+                canvas.width = videoElement.videoWidth || 393;
+                canvas.height = videoElement.videoHeight || 852;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                
+                // Convert to blob/data URL
+                capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
+                
+                console.log('📸 Photo captured successfully');
+                
+            } catch (error) {
+                console.error('Failed to capture photo:', error);
+            }
+        }
+
+        async function setupPage9WithCapturedPhoto() {
+            if (!capturedPhoto) {
+                console.warn('No captured photo available');
+                return;
+            }
+
+            // Create or update the captured photo background in page 9
+            let photoElement = document.getElementById('capturedPhotoBackground');
+            if (!photoElement) {
+                photoElement = document.createElement('div');
+                photoElement.id = 'capturedPhotoBackground';
+                photoElement.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-size: cover;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    z-index: 1;
+                `;
+                
+                // Insert into page 9 background
+                const page9Background = document.querySelector('#page9 .bg-\\[\\#221400\\]');
+                if (page9Background) {
+                    // Insert before the camera overlay
+                    const cameraOverlay = page9Background.querySelector('.bg-\\[\\#221400\\].overflow-hidden');
+                    if (cameraOverlay) {
+                        page9Background.insertBefore(photoElement, cameraOverlay);
+                    } else {
+                        page9Background.appendChild(photoElement);
+                    }
+                }
+            }
+            
+            photoElement.style.backgroundImage = `url(${capturedPhoto})`;
+        }
+
+        function setupPage10WithCapturedPhoto() {
+            if (!capturedPhoto) {
+                console.warn('No captured photo available for page 10');
+                return;
+            }
+
+            // Create or update the captured photo background in page 10
+            let photoElement = document.getElementById('capturedPhotoBackgroundPage10');
+            if (!photoElement) {
+                photoElement = document.createElement('div');
+                photoElement.id = 'capturedPhotoBackgroundPage10';
+                photoElement.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-size: cover;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    z-index: 1;
+                `;
+                
+                // Insert into page 10 background
+                const page10Background = document.querySelector('#page10 .bg-\\[\\#221400\\]');
+                if (page10Background) {
+                    // Insert before the existing background image
+                    const existingBackground = page10Background.querySelector('[style*="background-image"]');
+                    if (existingBackground) {
+                        page10Background.insertBefore(photoElement, existingBackground);
+                    } else {
+                        page10Background.appendChild(photoElement);
+                    }
+                }
+            }
+            
+            photoElement.style.backgroundImage = `url(${capturedPhoto})`;
+            console.log('📸 Page 10 set up with captured photo');
         }
 
         function handlePhotoComplete() {
@@ -2858,9 +3422,12 @@
                 if (analyzingPage) {
                     analyzingPage.classList.remove('hidden');
                     analyzingPage.classList.add('show');
+                    
+                    // Set up page 10 with captured photo
+                    setupPage10WithCapturedPhoto();
                 }
                 
-                showDebugInfo(`Analysis phase - analyzing picture... 🔍`);
+                // showDebugInfo(`Analysis phase - analyzing picture... 🔍`); // Removed debug info per user request
                 
                 // After another 400ms, show Page 11 (Preparing Gallery) - increased delay
                 setTimeout(() => {
@@ -2877,7 +3444,7 @@
                         galleryPage.classList.add('show');
                     }
                     
-                    showDebugInfo(`Gallery phase - preparing gallery... 📸`);
+                    // showDebugInfo(`Gallery phase - preparing gallery... 📸`); // Removed debug info per user request
                     
                     // After another 400ms, go to Page 4 (Detail View) - increased delay
                     setTimeout(() => {
@@ -2892,7 +3459,7 @@
                         document.getElementById('page4').classList.add('page-active');
                         currentPage = 4;
                         
-                        showDebugInfo(`Animation complete! Now viewing detail page 🎉`);
+                        // showDebugInfo(`Animation complete! Now viewing detail page 🎉`); // Removed debug info per user request
                     }, 400);
                     
                 }, 400);
@@ -4609,11 +5176,16 @@
                     analyzingPage.classList.remove('show');
                 }
                 
-                // Show Page 8 (camera)
+                // Show Page 8 (camera) and reinitialize camera
                 const cameraPage = document.getElementById('page8');
                 if (cameraPage) {
                     cameraPage.classList.remove('hidden');
                     cameraPage.classList.add('show');
+                    
+                    // Reinitialize camera if it's not already running
+                    if (!stream) {
+                        initializeCamera();
+                    }
                 }
                 
                 showDebugInfo('Returned to camera from analysis');
@@ -4635,11 +5207,16 @@
                     galleryPage.classList.remove('show');
                 }
                 
-                // Show Page 8 (camera)
+                // Show Page 8 (camera) and reinitialize camera
                 const cameraPage = document.getElementById('page8');
                 if (cameraPage) {
                     cameraPage.classList.remove('hidden');
                     cameraPage.classList.add('show');
+                    
+                    // Reinitialize camera if it's not already running
+                    if (!stream) {
+                        initializeCamera();
+                    }
                 }
                 
                 showDebugInfo('Returned to camera from gallery prep');

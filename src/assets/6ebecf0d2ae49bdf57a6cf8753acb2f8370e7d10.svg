@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 16 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path id="Teeth" d="M0 0.5V0H16V0.5C16 1.05228 15.5523 1.5 15 1.5H1C0.447715 1.5 0 1.05228 0 0.5Z" fill="url(#paint0_linear_32_1417)"/>
+<defs>
+<linearGradient id="paint0_linear_32_1417" x1="8" y1="0" x2="8" y2="1.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="#ECCDFF"/>
+<stop offset="1" stop-color="white"/>
+</linearGradient>
+</defs>
+</svg>

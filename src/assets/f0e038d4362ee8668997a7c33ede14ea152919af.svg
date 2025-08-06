@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 7 4" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path id="Right Eye (Stroke)" fill-rule="evenodd" clip-rule="evenodd" d="M2.17878 2.16795C1.95921 2.37639 1.82675 2.64364 1.73789 2.86977C1.55611 3.33239 1.03372 3.56006 0.571095 3.37828C0.108472 3.1965 -0.119195 2.6741 0.0625879 2.21148C0.188621 1.89073 0.438971 1.33767 0.939487 0.862516C1.46272 0.365793 2.21173 0 3.22983 0C5.30446 0 6.12641 1.55438 6.39417 2.19231C6.58654 2.65063 6.37094 3.17812 5.91262 3.37049C5.4543 3.56286 4.92681 3.34726 4.73444 2.88894C4.54312 2.43312 4.16789 1.8 3.22983 1.8C2.68396 1.8 2.37562 1.98108 2.17878 2.16795Z" fill="url(#paint0_radial_32_1361)"/>
+<defs>
+<radialGradient id="paint0_radial_32_1361" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(3.23227 2.69443) rotate(-91.5327) scale(6.5392 9.16661)">
+<stop offset="0.166667" stop-color="#482641"/>
+<stop offset="0.276042" stop-color="#503A4A"/>
+<stop offset="0.401042" stop-color="#483637"/>
+</radialGradient>
+</defs>
+</svg>

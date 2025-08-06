@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 5 5" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path id="Confetti 2 (Stroke)" fill-rule="evenodd" clip-rule="evenodd" d="M3.75 0C4.16421 0 4.5 0.335786 4.5 0.75C4.5 2.94812 2.66796 4.5 0.75 4.5C0.335786 4.5 0 4.16421 0 3.75C0 3.33579 0.335786 3 0.75 3C1.90902 3 3 2.05188 3 0.75C3 0.335786 3.33579 0 3.75 0Z" fill="url(#paint0_radial_32_1363)"/>
+<defs>
+<radialGradient id="paint0_radial_32_1363" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(3.89062 3.91406) rotate(-129.912) scale(3.23894 13.7191)">
+<stop offset="0.359375" stop-color="#FF42B1"/>
+<stop offset="0.854167" stop-color="#F70A8D"/>
+<stop offset="1" stop-color="#CE336E"/>
+</radialGradient>
+</defs>
+</svg>

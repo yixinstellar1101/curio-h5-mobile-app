@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 4 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path id="Mouth" d="M1 0C0.447715 0 0 0.447715 0 1C0 1.55228 0.447715 2 1 2C1.16363 2 1.29547 2.13184 1.29547 2.29547C1.29547 2.4591 1.16363 2.59093 1 2.59093C0.447715 2.59093 0 3.03865 0 3.59093C0 3.59094 0 3.59092 0 3.59093C0 4.14322 0.447715 4.59096 1 4.59096C1.16363 4.59096 1.29547 4.7228 1.29547 4.88643C1.29547 5.05006 1.16363 5.1819 1 5.1819C0.447715 5.1819 0 5.62961 0 6.1819C0 6.73418 0.447715 7.1819 1 7.1819C2.2682 7.1819 3.29547 6.15463 3.29547 4.88643C3.29547 4.40571 3.14786 3.95961 2.89548 3.59095C3.14786 3.22229 3.29547 2.77619 3.29547 2.29547C3.29547 1.02727 2.2682 0 1 0Z" fill="url(#paint0_radial_32_1425)"/>
+<defs>
+<radialGradient id="paint0_radial_32_1425" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(7.06469e-07 3.59095) scale(5.92629 6.45766)">
+<stop stop-color="#3E3537"/>
+<stop offset="0.399715" stop-color="#442932"/>
+<stop offset="0.675586" stop-color="#6A5662"/>
+</radialGradient>
+</defs>
+</svg>
