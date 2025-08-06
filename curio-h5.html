@@ -197,10 +197,12 @@
 
         /* Settings Modal */
         .page-5 {
+            z-index: 9999;
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
         .page-5.show {
+            display: block !important;
             opacity: 1;
             transform: translateY(0);
         }
@@ -208,21 +210,25 @@
         .page-5.hidden {
             opacity: 0;
             transform: translateY(20px);
+            pointer-events: none;
         }
 
         /* Character Preferences Modal */
         .character-preferences-modal {
+            z-index: 10000;
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
         .character-preferences-modal.show {
+            display: block !important;
             opacity: 1;
             transform: translateY(0);
         }
 
-        .character-preferences-modal.hide {
+        .character-preferences-modal.hidden {
             opacity: 0;
             transform: translateY(20px);
+            pointer-events: none;
         }
 
         .character-preference-btn {
@@ -823,7 +829,7 @@
         </div>
 
         <!-- Fifth Page - Settings Modal -->
-        <div id="page5" class="page-5 absolute inset-0 w-full h-full hidden">
+        <div id="page5" class="page-5 absolute inset-0 w-full h-full hidden z-50">
             <!-- Background with overlay -->
             <div class="absolute inset-0 bg-[rgba(0,0,0,0.3)] backdrop-blur-[2.5px]"></div>
             
@@ -2714,7 +2720,11 @@
             if (page5) {
                 page5.classList.remove('hidden');
                 page5.classList.add('show');
+                page5.style.zIndex = '9999'; // Ensure it's on top
                 console.log('✅ Successfully opened Settings page (Page 5)');
+                console.log('Page5 classes:', page5.classList.toString());
+                console.log('Page5 display:', window.getComputedStyle(page5).display);
+                console.log('Page5 z-index:', window.getComputedStyle(page5).zIndex);
             } else {
                 console.error('❌ Could not find page5 element!');
             }
@@ -2770,7 +2780,10 @@
             if (page6) {
                 page6.classList.remove('hidden');
                 page6.classList.add('show');
+                page6.style.zIndex = '10000'; // Ensure it's on top of page5
                 console.log('✅ Successfully opened Character Preferences page (Page 6)');
+                console.log('Page6 classes:', page6.classList.toString());
+                console.log('Page6 display:', window.getComputedStyle(page6).display);
             } else {
                 console.error('❌ Could not find page6 element!');
             }
