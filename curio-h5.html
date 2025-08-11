@@ -197,38 +197,35 @@
 
         /* Settings Modal */
         .page-5 {
-            z-index: 9999;
             transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 1000;
         }
 
         .page-5.show {
-            display: block !important;
             opacity: 1;
             transform: translateY(0);
+            display: block;
         }
 
         .page-5.hidden {
             opacity: 0;
             transform: translateY(20px);
-            pointer-events: none;
+            display: none;
         }
 
         /* Character Preferences Modal */
         .character-preferences-modal {
-            z-index: 10000;
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
         .character-preferences-modal.show {
-            display: block !important;
             opacity: 1;
             transform: translateY(0);
         }
 
-        .character-preferences-modal.hidden {
+        .character-preferences-modal.hide {
             opacity: 0;
             transform: translateY(20px);
-            pointer-events: none;
         }
 
         .character-preference-btn {
@@ -829,7 +826,7 @@
         </div>
 
         <!-- Fifth Page - Settings Modal -->
-        <div id="page5" class="page-5 absolute inset-0 w-full h-full hidden z-50">
+        <div id="page5" class="page-5 absolute inset-0 w-full h-full hidden">
             <!-- Background with overlay -->
             <div class="absolute inset-0 bg-[rgba(0,0,0,0.3)] backdrop-blur-[2.5px]"></div>
             
@@ -2720,11 +2717,15 @@
             if (page5) {
                 page5.classList.remove('hidden');
                 page5.classList.add('show');
-                page5.style.zIndex = '9999'; // Ensure it's on top
                 console.log('✅ Successfully opened Settings page (Page 5)');
-                console.log('Page5 classes:', page5.classList.toString());
-                console.log('Page5 display:', window.getComputedStyle(page5).display);
-                console.log('Page5 z-index:', window.getComputedStyle(page5).zIndex);
+                
+                // Add click handler to close modal when clicking outside
+                setTimeout(() => {
+                    const modalBackground = page5.querySelector('.absolute.inset-0.bg-\\[rgba\\(0\\,0\\,0\\,0\\.3\\)\\]');
+                    if (modalBackground) {
+                        modalBackground.addEventListener('click', handleBackFromSettings);
+                    }
+                }, 100);
             } else {
                 console.error('❌ Could not find page5 element!');
             }
@@ -2744,6 +2745,9 @@
                 console.log('✅ Successfully closed Settings page (Page 5)');
             }
         }
+
+        // Make back function globally available
+        window.handleBackFromSettings = handleBackFromSettings;
 
         function handleLanguageChange() {
             console.log('Language button clicked');
@@ -2780,10 +2784,7 @@
             if (page6) {
                 page6.classList.remove('hidden');
                 page6.classList.add('show');
-                page6.style.zIndex = '10000'; // Ensure it's on top of page5
                 console.log('✅ Successfully opened Character Preferences page (Page 6)');
-                console.log('Page6 classes:', page6.classList.toString());
-                console.log('Page6 display:', window.getComputedStyle(page6).display);
             } else {
                 console.error('❌ Could not find page6 element!');
             }
@@ -5669,10 +5670,33 @@
         // Export showIntro to global scope
         window.showIntro = showIntro;
 
+        // Test settings functionality
+        function testSettingsModal() {
+            console.log('🧪 Testing settings modal functionality...');
+            
+            // Test opening settings
+            setTimeout(() => {
+                console.log('🔧 Testing handleSettings()...');
+                handleSettings();
+                
+                // Test closing settings after 2 seconds
+                setTimeout(() => {
+                    console.log('🔙 Testing handleBackFromSettings()...');
+                    handleBackFromSettings();
+                }, 2000);
+            }, 1000);
+        }
+
+        // Add global test function
+        window.testSettingsModal = testSettingsModal;
+
         // Initialize the app when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎬 DOM loaded - Starting opening sequence...');
             startOpeningSequence();
+            
+            // Optional: uncomment to test settings automatically
+            // setTimeout(testSettingsModal, 5000);
         });
     </script>
 </body>
