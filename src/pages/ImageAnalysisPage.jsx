@@ -1,311 +1,268 @@
 import React, { useState, useEffect } from 'react';
-import StatusBar from '../components/common/StatusBar';
-import HomeIndicator from '../components/common/HomeIndicator';
 import { PAGES } from '../constants/pages';
 
-/**
- * ImageAnalysisPage - Complete image processing pipeline
- * 1. Upload Phase: Upload to Azure Blob Storage
- * 2. Classification Phase: Azure OpenAI classification  
- * 3. Background & Music Selection: Map category to resources
- * 4. Metadata Generation: Create name, timestamp, description
- * 5. Post-processing: Append to gallery, prepare transition
- */
-const ImageAnalysisPage = ({ onNavigate, file, source }) => {
-  const [currentPhase, setCurrentPhase] = useState('upload');
-  const [progress, setProgress] = useState(0);
-  const [analysisResult, setAnalysisResult] = useState(null);
-  const [error, setError] = useState(null);
+// Asset imports from Figma
+const imgBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
+const imgWifi = "/src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg";
+const imgCellular = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
+const imgBackArrow = "/src/assets/40807933db102c5ddfe145202e96cb747d9662c5.svg";
+const imgAnalysisButton = "/src/assets/2314863aa5b98c3561bbba15a029ce5d6b01faa6.svg";
+const imgViewfinder = "/src/assets/db6877c52f8f212513e0ebd034674ef3aa25f15a.svg";
+const imgGallery = "/src/assets/01e1d6ae9f47430674fe0f46b61392a43f9c8519.svg";
 
-  // Phase states: upload, classification, background, metadata, complete
-  const phases = {
-    upload: { name: 'Uploading to Storage', duration: 2000 },
-    classification: { name: 'AI Classification', duration: 3000 },
-    background: { name: 'Background Selection', duration: 1500 },
-    metadata: { name: 'Generating Metadata', duration: 2000 },
-    complete: { name: 'Complete', duration: 500 }
+// Mock API service for image analysis
+const mockAnalyzeImage = async (file) => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // Mock analysis results
+  return {
+    success: true,
+    analysis: {
+      objects: ['chair', 'table', 'lamp'],
+      description: "This image shows a modern living room with a comfortable chair, wooden table, and elegant floor lamp. The furniture appears to be in good condition with contemporary design elements.",
+      confidence: 0.92,
+      suggestions: [
+        "Consider adding some colorful cushions to enhance the seating area",
+        "A small plant could bring more life to the space",
+        "The lighting creates a warm, welcoming atmosphere"
+      ],
+      metadata: {
+        dimensions: "1920x1080",
+        size: "2.4 MB",
+        format: "JPEG"
+      }
+    }
   };
+};
+
+// Loading Spinner Component - exact Figma design
+const AnalysisSpinner = () => {
+  return (
+    <div
+      className="absolute h-[116px] left-[140px] top-[291px] w-[114px] animate-spin"
+      data-name="Component 23"
+    >
+      <div className="absolute bg-[rgba(173,173,173,0.4)] bottom-[69.16%] left-[45.59%] right-[45.59%] rounded-[20px] top-0" />
+      <div className="absolute flex inset-[11.53%_60.44%_60.44%_11.53%] items-center justify-center">
+        <div className="flex-none h-[70px] rotate-[315deg] w-5">
+          <div className="bg-[rgba(173,173,173,0.2)] rounded-[20px] size-full" />
+        </div>
+      </div>
+      <div className="absolute flex inset-[11.53%_11.53%_60.44%_60.44%] items-center justify-center">
+        <div className="flex-none h-[70px] rotate-[45deg] w-5">
+          <div className="bg-[rgba(173,173,173,0.6)] rounded-[20px] size-full" />
+        </div>
+      </div>
+      <div className="absolute bottom-[45.59%] flex items-center justify-center left-[69.16%] right-0 top-[45.59%]">
+        <div className="flex-none h-[70px] rotate-[90deg] w-5">
+          <div className="bg-[rgba(173,173,173,0.8)] rounded-[20px] size-full" />
+        </div>
+      </div>
+      <div className="absolute bg-[#adadad] bottom-0 left-[45.59%] right-[45.59%] rounded-[20px] top-[69.16%]" />
+      <div className="absolute flex inset-[60.44%_11.53%_11.53%_60.44%] items-center justify-center">
+        <div className="flex-none h-[70px] rotate-[315deg] w-5">
+          <div className="bg-[#adadad] rounded-[20px] size-full" />
+        </div>
+      </div>
+      <div className="absolute flex inset-[60.44%_60.44%_11.53%_11.53%] items-center justify-center">
+        <div className="flex-none h-[70px] rotate-[45deg] w-5">
+          <div className="bg-[rgba(173,173,173,0)] rounded-[20px] size-full" />
+        </div>
+      </div>
+      <div className="absolute bottom-[45.59%] flex items-center justify-center left-0 right-[69.16%] top-[45.59%]">
+        <div className="flex-none h-[70px] rotate-[90deg] w-5">
+          <div className="bg-[rgba(173,173,173,0.1)] rounded-[20px] size-full" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * ImageAnalysisPage - Analyzes captured photo and shows results
+ */
+const ImageAnalysisPage = ({ onNavigate, data }) => {
+  const [analysisState, setAnalysisState] = useState('analyzing');
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const { file } = data || {};
 
   useEffect(() => {
     if (file) {
-      startAnalysis();
+      performAnalysis();
     }
   }, [file]);
 
-  const startAnalysis = async () => {
+  const performAnalysis = async () => {
     try {
-      // Phase 1: Upload Phase
-      await simulatePhase('upload');
+      setAnalysisState('analyzing');
       
-      // Phase 2: Classification Phase  
-      await simulatePhase('classification');
-      const category = await performClassification();
+      const progressTimer = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressTimer);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
+      const result = await mockAnalyzeImage(file);
       
-      // Phase 3: Background & Music Selection
-      await simulatePhase('background');
-      const backgroundMusic = await selectBackgroundMusic(category);
-      
-      // Phase 4: Metadata Generation
-      await simulatePhase('metadata');
-      const metadata = await generateMetadata(category);
-      
-      // Phase 5: Complete
-      setCurrentPhase('complete');
-      setAnalysisResult({
-        category,
-        backgroundMusic,
-        metadata,
-        imageUrl: URL.createObjectURL(file)
-      });
+      clearInterval(progressTimer);
+      setProgress(100);
       
       setTimeout(() => {
-        // Navigate to LiveRoomPage with analysis result
-        onNavigate && onNavigate(PAGES.LIVE_ROOM, { 
-          item: {
-            ...metadata,
-            category,
-            imageUrl: URL.createObjectURL(file)
-          }
-        });
-      }, 1500);
+        setAnalysisResult(result);
+        setAnalysisState('complete');
+      }, 500);
       
-    } catch (err) {
-      setError(err.message);
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      setAnalysisState('error');
     }
   };
 
-  const simulatePhase = (phaseName) => {
-    return new Promise((resolve) => {
-      setCurrentPhase(phaseName);
-      setProgress(0);
-      
-      const duration = phases[phaseName].duration;
-      const interval = duration / 100;
-      
-      let currentProgress = 0;
-      const progressTimer = setInterval(() => {
-        currentProgress += 1;
-        setProgress(currentProgress);
-        
-        if (currentProgress >= 100) {
-          clearInterval(progressTimer);
-          resolve();
-        }
-      }, interval);
+  const handleBack = () => {
+    onNavigate && onNavigate(PAGES.CAMERA_CAPTURE);
+  };
+
+  const handleRetake = () => {
+    onNavigate && onNavigate(PAGES.CAMERA_CAPTURE);
+  };
+
+  const handleContinue = () => {
+    onNavigate && onNavigate(PAGES.GALLERY, { 
+      analysis: analysisResult,
+      image: file 
     });
   };
 
-  const performClassification = async () => {
-    // Interface Call: analyzeImage(file, requestId) 
-    // Mock classification based on spec.md categories
-    const categories = [
-      { id: 1, name: 'Chinese Historical Artifact', mapping: 'Chinese' },
-      { id: 2, name: 'European Historical Artifact', mapping: 'European' },
-      { id: 3, name: 'Modern Product', mapping: 'Modern Product' },
-      { id: 4, name: 'Pet', mapping: 'European' },
-      { id: 5, name: 'Portrait / People', mapping: 'European' },
-      { id: 6, name: 'Chinese Painting / Calligraphy', mapping: 'Chinese' },
-      { id: 7, name: 'European Painting / Calligraphy', mapping: 'European' }
-    ];
-    
-    // Simulate AI classification
-    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-    return randomCategory;
+  const handleGallery = () => {
+    onNavigate && onNavigate(PAGES.GALLERY);
   };
-
-  const selectBackgroundMusic = async (category) => {
-    // Interface Call: getRandomMusic(category.mapping)
-    const musicByCategory = {
-      'Chinese': ['Traditional Chinese Melody', 'Guqin Harmony', 'Dynasty Echoes'],
-      'European': ['Classical Symphony', 'Baroque Chamber', 'Renaissance Lute'],
-      'Modern Product': ['Ambient Electronic', 'Minimalist Piano', 'Contemporary Jazz']
-    };
-    
-    const tracks = musicByCategory[category.mapping] || musicByCategory['European'];
-    const randomTrack = tracks[Math.floor(Math.random() * tracks.length)];
-    
-    return {
-      category: category.mapping,
-      selectedTrack: randomTrack,
-      backgroundImage: getBackgroundImage(category.mapping)
-    };
-  };
-
-  const getBackgroundImage = (categoryMapping) => {
-    const backgrounds = {
-      'Chinese': './src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png',
-      'European': './src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png', 
-      'Modern Product': './src/assets/cc8c0a6205dd7253e86ab080322dec689122ecb2.png'
-    };
-    
-    return backgrounds[categoryMapping] || backgrounds['European'];
-  };
-
-  const generateMetadata = async (category) => {
-    // Metadata Generation based on spec.md prompt
-    const currentDate = new Date();
-    const timestamp = currentDate.toISOString().slice(0, 16).replace('T', ' ');
-    
-    const sampleNames = {
-      1: ['Ming Dynasty Celestial Vase', 'Qing Dynasty Porcelain Bowl', 'Han Jade Pendant'],
-      2: ['Roman Bronze Helmet', 'Medieval Silver Goblet', 'Baroque Candleholder'], 
-      3: ['AirPods of Delphi', 'Modern Minimalist Mug', 'Contemporary Art Piece'],
-      4: ['Sir Whiskers, Duke of Purrington', 'Golden Retriever Portrait', 'Aristocratic Cat'],
-      5: ['Victorian Portrait Study', 'Renaissance Noble', 'Classical Figure'],
-      6: ['Landscape Scroll Painting', 'Calligraphy Masterwork', 'Ink Wash Mountains'],
-      7: ['European Oil Portrait', 'Impressionist Study', 'Classical Composition']
-    };
-    
-    const sampleDescriptions = {
-      1: 'This exquisite piece embodies the refined aesthetics of Chinese imperial craftsmanship, with intricate patterns that whisper tales of ancient dynasties.',
-      2: 'A testament to European artisanal excellence, this artifact carries the weight of history and the elegance of classical civilization.',
-      3: 'In the realm of modern design, this piece bridges contemporary innovation with timeless aesthetic principles.',
-      4: 'This beloved companion represents the enduring bond between humans and their cherished animal friends.',
-      5: 'A capturing of human essence through artistic vision, preserving a moment of dignity and grace.',
-      6: 'Traditional Chinese artistry flows through ink and brush, capturing the harmony between nature and spirit.',
-      7: 'European artistic tradition manifests in this work, showcasing mastery of light, form, and emotional expression.'
-    };
-    
-    const names = sampleNames[category.id] || sampleNames[3];
-    const descriptions = sampleDescriptions[category.id] || sampleDescriptions[3];
-    
-    return {
-      name: names[Math.floor(Math.random() * names.length)],
-      timestamp,
-      description: descriptions
-    };
-  };
-
-  if (error) {
-    return (
-      <div className="absolute inset-0 w-full h-full bg-red-900 flex flex-col items-center justify-center p-8">
-        <StatusBar />
-        
-        <div className="text-center">
-          <div className="text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-white mb-4">Analysis Failed</h2>
-          <p className="text-red-200 mb-6">{error}</p>
-          
-          <div className="space-y-3">
-            <button 
-              onClick={() => file && startAnalysis()}
-              className="block w-full bg-white text-red-900 font-semibold py-3 px-6 rounded-2xl hover:bg-gray-100 transition-colors"
-            >
-              Try Again
-            </button>
-            <button 
-              onClick={() => onNavigate && onNavigate(PAGES.IMAGE_UPLOAD)}
-              className="block w-full border-2 border-white text-white font-semibold py-3 px-6 rounded-2xl hover:bg-white/10 transition-colors"
-            >
-              Upload Different Image
-            </button>
-          </div>
-        </div>
-        
-        <HomeIndicator />
-      </div>
-    );
-  }
 
   return (
-    <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
-      <StatusBar />
-      
-      {/* Analysis Progress */}
-      <div className="flex flex-col items-center justify-center h-full p-8">
-        
-        {/* Current Phase Indicator */}
-        <div className="text-center mb-12">
-          <div className="text-6xl mb-4">
-            {currentPhase === 'upload' && '☁️'}
-            {currentPhase === 'classification' && '🤖'}
-            {currentPhase === 'background' && '🎨'}
-            {currentPhase === 'metadata' && '📝'}
-            {currentPhase === 'complete' && '✅'}
-          </div>
-          
-          <h2 className="text-2xl font-bold text-white mb-2">
-            {phases[currentPhase]?.name}
-          </h2>
-          
-          {currentPhase !== 'complete' && (
-            <p className="text-gray-300">
-              Analyzing your image with AI...
-            </p>
-          )}
-        </div>
-
-        {/* Progress Bar */}
-        {currentPhase !== 'complete' && (
-          <div className="w-full max-w-sm mb-8">
-            <div className="bg-white/20 rounded-full h-2 mb-2">
-              <div 
-                className="bg-gradient-to-r from-blue-400 to-purple-400 h-2 rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${progress}%` }}
-              />
+    <div className="bg-[#221400] relative size-full" data-name="ImageAnalysisPage">
+      {/* Status Bar */}
+      <div className="absolute box-border content-stretch flex flex-col items-start justify-start left-1/2 p-0 top-0 translate-x-[-50%] w-[393px] z-20">
+        <div className="h-11 relative shrink-0 w-full">
+          <div className="absolute h-[22px] left-[26px] top-[15px] w-[54px]">
+            <div className="absolute font-semibold leading-[0] left-0 not-italic right-0 text-[#ffffff] text-[17px] text-center" style={{ top: "calc(50% - 11px)" }}>
+              <p className="block leading-[22px]">12:15</p>
             </div>
-            <p className="text-center text-white text-sm">{progress}%</p>
           </div>
-        )}
-
-        {/* Preview Image */}
-        {file && (
-          <div className="w-48 h-48 rounded-2xl overflow-hidden shadow-xl mb-8">
-            <img 
-              src={URL.createObjectURL(file)} 
-              alt="Analyzing..." 
-              className="w-full h-full object-cover"
-            />
+          <div className="absolute h-[13px] right-[26.34px] top-[19.33px] w-[27.328px]">
+            <img alt="" className="block max-w-none size-full" src={imgBattery} />
           </div>
-        )}
-
-        {/* Phase Details */}
-        <div className="text-center text-gray-300 text-sm max-w-md">
-          {currentPhase === 'upload' && (
-            <p>Securely uploading your image to our cloud storage...</p>
-          )}
-          {currentPhase === 'classification' && (
-            <p>Our AI is examining your image and classifying it into one of 7 categories...</p>
-          )}
-          {currentPhase === 'background' && (
-            <p>Selecting the perfect background and music to complement your item...</p>
-          )}
-          {currentPhase === 'metadata' && (
-            <p>Creating a beautiful title and description for your artifact...</p>
-          )}
-          {currentPhase === 'complete' && analysisResult && (
-            <div className="text-center">
-              <p className="text-xl font-semibold text-white mb-2">
-                Analysis Complete!
-              </p>
-              <p className="text-lg text-blue-200 mb-1">
-                {analysisResult.metadata.name}
-              </p>
-              <p className="text-sm text-gray-400">
-                Category: {analysisResult.category.name}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Phase Progress Dots */}
-        <div className="flex space-x-3 mt-12">
-          {Object.keys(phases).map((phase, index) => (
-            <div 
-              key={phase}
-              className={`w-3 h-3 rounded-full transition-colors ${
-                phase === currentPhase 
-                  ? 'bg-white' 
-                  : Object.keys(phases).indexOf(currentPhase) > index
-                  ? 'bg-green-400'
-                  : 'bg-white/30'
-              }`}
-            />
-          ))}
+          <div className="absolute h-3 right-[61px] top-5 w-[17px]">
+            <img alt="" className="block max-w-none size-full" src={imgWifi} />
+          </div>
+          <div className="absolute h-3 right-[85.4px] top-5 w-[19.2px]">
+            <img alt="" className="block max-w-none size-full" src={imgCellular} />
+          </div>
         </div>
       </div>
-      
-      <HomeIndicator />
+
+      {/* Back Button */}
+      <button className="absolute left-5 size-[42px] top-[53px] z-20 cursor-pointer hover:scale-110 transition-transform duration-200" onClick={handleBack}>
+        <img alt="Back" className="block max-w-none size-full" src={imgBackArrow} />
+      </button>
+
+      {/* Viewfinder Frame */}
+      <div className="absolute h-[336px] left-[47px] top-[217px] w-[299px] z-10">
+        <div className="absolute inset-[-0.74%_-0.84%]">
+          <img alt="" className="block max-w-none size-full" src={imgViewfinder} />
+        </div>
+        {file && analysisState !== 'analyzing' && (
+          <div className="absolute inset-4 rounded-lg overflow-hidden bg-black/50">
+            <img src={URL.createObjectURL(file)} alt="Captured" className="w-full h-full object-cover opacity-80" />
+          </div>
+        )}
+      </div>
+
+      {/* Analysis Loading State */}
+      {analysisState === 'analyzing' && (
+        <>
+          <AnalysisSpinner />
+          <div className="absolute bg-[rgba(0,0,0,0.5)] box-border content-stretch flex flex-col gap-2.5 h-8 items-center justify-center left-1/2 px-[19px] py-[3px] rounded-[20px] translate-x-[-50%] translate-y-[-50%] w-[179px] z-20" style={{ top: "calc(50% + 47px)" }}>
+            <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0 w-full">
+              <div className="[grid-area:1_/_1] font-medium h-[22px] ml-0 mt-0 not-italic opacity-90 relative text-[#ffffff] text-[16px] text-left w-[141px]">
+                <p className="block leading-[1.6]">Analyzing picture...</p>
+              </div>
+            </div>
+          </div>
+          <div className="absolute left-1/2 translate-x-[-50%] w-48 h-1 bg-gray-600 rounded-full overflow-hidden z-20" style={{ top: "calc(50% + 90px)" }}>
+            <div className="h-full bg-white transition-all duration-200 ease-out rounded-full" style={{ width: `${progress}%` }} />
+          </div>
+        </>
+      )}
+
+      {/* Analysis Complete State */}
+      {analysisState === 'complete' && analysisResult && (
+        <div className="absolute left-1/2 translate-x-[-50%] translate-y-[-50%] w-80 bg-black/80 backdrop-blur-sm rounded-2xl p-6 z-30" style={{ top: "calc(50% + 100px)" }}>
+          <h3 className="text-white text-lg font-semibold mb-3">Analysis Complete</h3>
+          <div className="text-white/80 text-sm space-y-2">
+            <p><strong>Objects detected:</strong> {analysisResult.analysis.objects.join(', ')}</p>
+            <p><strong>Description:</strong> {analysisResult.analysis.description}</p>
+            <p><strong>Confidence:</strong> {Math.round(analysisResult.analysis.confidence * 100)}%</p>
+          </div>
+          <div className="flex gap-3 mt-4">
+            <button onClick={handleRetake} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors">
+              Retake
+            </button>
+            <button onClick={handleContinue} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {analysisState === 'error' && (
+        <div className="absolute left-1/2 translate-x-[-50%] translate-y-[-50%] w-80 bg-red-900/80 backdrop-blur-sm rounded-2xl p-6 z-30" style={{ top: "calc(50% + 100px)" }}>
+          <h3 className="text-white text-lg font-semibold mb-3">Analysis Failed</h3>
+          <p className="text-white/80 text-sm mb-4">Unable to analyze the image. Please try again.</p>
+          <div className="flex gap-3">
+            <button onClick={performAnalysis} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
+              Retry
+            </button>
+            <button onClick={handleRetake} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors">
+              Retake
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Analysis Button */}
+      <div className="absolute left-[164px] size-[66px] top-[715px] z-20">
+        <div className="absolute inset-[-1.52%_-10.61%_-37.88%_-10.61%]">
+          <img alt="Analysis" className="block max-w-none size-full" src={imgAnalysisButton} />
+        </div>
+      </div>
+
+      {/* Gallery Button */}
+      <button className="absolute left-[290px] top-[727px] z-20 cursor-pointer hover:scale-110 transition-transform duration-200" onClick={handleGallery}>
+        <div className="backdrop-blur-[0.778px] backdrop-filter bg-[rgba(0,0,0,0.3)] rounded-[7.778px] size-[42px]">
+          <div className="absolute contents inset-[20.37%_18.52%]">
+            <div className="absolute inset-[20.37%_18.52%]">
+              <img alt="Gallery" className="block max-w-none size-full" src={imgGallery} />
+            </div>
+          </div>
+        </div>
+      </button>
+
+      {/* Home Indicator */}
+      <div className="absolute box-border content-stretch flex flex-col items-center justify-start left-0 p-0 top-[826px] w-[393px] z-20">
+        <div className="h-[26px] relative shrink-0 w-[375px]">
+          <div className="absolute bottom-2 flex h-[5px] items-center justify-center left-1/2 translate-x-[-50%] w-36">
+            <div className="flex-none rotate-[180deg] scale-y-[-100%]">
+              <div className="bg-[#000000] h-[5px] rounded-[100px] w-36" />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

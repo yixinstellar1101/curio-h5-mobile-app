@@ -111,13 +111,8 @@ const CameraCapturePage = ({ onNavigate }) => {
 
           console.log('Captured photo:', file.name, 'Size:', file.size, 'Type:', file.type);
 
-          // TODO: Interface Call - analyzeImage(file, requestId)
-          // Simulate processing delay
-          setTimeout(() => {
-            setIsCapturing(false);
-            // Navigate to ImageAnalysisPage after successful capture
-            onNavigate && onNavigate(PAGES.IMAGE_ANALYSIS);
-          }, 1000);
+          // Navigate to CameraCapturingPage with captured image
+          onNavigate && onNavigate(PAGES.CAMERA_CAPTURING, { file });
         }
       }, 'image/jpeg', 0.8);
 
@@ -126,6 +121,11 @@ const CameraCapturePage = ({ onNavigate }) => {
       setIsCapturing(false);
       alert('Failed to capture photo. Please try again.');
     }
+  };
+
+  // Handle viewfinder click to capture photo
+  const handleViewfinderClick = () => {
+    handleCapture();
   };
 
   const handleBack = () => {
@@ -228,11 +228,12 @@ const CameraCapturePage = ({ onNavigate }) => {
         <img alt="Back" className="block max-w-none size-full" src={imgBackArrow} />
       </button>
 
-      {/* Camera Frame/Viewfinder - Exact Figma positioning */}
+      {/* Camera Frame/Viewfinder - Exact Figma positioning with click handler */}
       <div
-        className="absolute h-[336px] left-1/2 translate-x-[-50%] translate-y-[-50%] w-[299px] z-10"
+        className="absolute h-[336px] left-1/2 translate-x-[-50%] translate-y-[-50%] w-[299px] z-10 cursor-pointer"
         data-name="kuang"
         style={{ top: "calc(50% - 41px)" }}
+        onClick={handleViewfinderClick}
       >
         <CameraFrame />
       </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import StatusBar from '../components/common/StatusBar';
 import HomeIndicator from '../components/common/HomeIndicator';
 import { PAGES } from '../constants/pages';
@@ -18,6 +18,10 @@ const imgCellular = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
  * Swipe right → Navigate to GalleryPage
  */
 const HomePage = ({ onNavigate }) => {
+  const [startX, setStartX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef(null);
+
   const handleUploadClick = () => {
     if (onNavigate) {
       onNavigate(PAGES.IMAGE_UPLOAD);
@@ -30,33 +34,41 @@ const HomePage = ({ onNavigate }) => {
     }
   };
 
-  const handleSwipeRight = (e) => {
-    // Simple swipe detection
-    const touchStartX = e.touches?.[0]?.clientX || e.clientX;
+  // Handle swipe gestures
+  const handleTouchStart = (e) => {
+    setStartX(e.touches[0].clientX);
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    // Optional: Add visual feedback during drag
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!isDragging) return;
     
-    const handleTouchEnd = (endEvent) => {
-      const touchEndX = endEvent.changedTouches?.[0]?.clientX || endEvent.clientX;
-      const swipeDistance = touchEndX - touchStartX;
-      
-      if (swipeDistance > 100) { // Swipe right threshold
-        onNavigate && onNavigate(PAGES.GALLERY);
-      }
-      
-      // Clean up event listener
-      document.removeEventListener('touchend', handleTouchEnd);
-      document.removeEventListener('mouseup', handleTouchEnd);
-    };
+    const endX = e.changedTouches[0].clientX;
+    const deltaX = endX - startX;
+    const threshold = 100; // Minimum swipe distance
     
-    document.addEventListener('touchend', handleTouchEnd);
-    document.addEventListener('mouseup', handleTouchEnd);
+    // Right swipe (swipe left to right) - go to GalleryPage
+    if (deltaX < -threshold) {
+      onNavigate && onNavigate(PAGES.GALLERY);
+    }
+    
+    setIsDragging(false);
+    setStartX(0);
   };
 
   return (
     <div
-      className="bg-center bg-cover bg-no-repeat relative w-full h-full"
+      ref={containerRef}
+      className="bg-center bg-cover bg-no-repeat relative w-full h-full overflow-hidden"
       style={{ backgroundImage: `url('${imgHomePage}')` }}
-      onTouchStart={handleSwipeRight}
-      onMouseDown={handleSwipeRight}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd} 
     >
       {/* Status Bar */}
       <div className="absolute box-border content-stretch flex flex-col items-start justify-start left-1/2 p-0 top-0 translate-x-[-50%] w-[393px]">

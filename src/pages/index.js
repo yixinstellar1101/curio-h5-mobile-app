@@ -11,6 +11,8 @@ export { default as GalleryPage } from './GalleryPage';
 // Image upload flow
 export { default as ImageUploadPage } from './ImageUploadPage';
 export { default as CameraCapturePage } from './CameraCapturePage';
+export { default as CameraCapturingPage } from './CameraCapturingPage';
+export { default as ImageAnalysisPage } from './ImageAnalysisPage';
 
 // Live room and interaction
 export { default as LiveRoomPage } from './LiveRoomPage';

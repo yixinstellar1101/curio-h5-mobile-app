@@ -3,12 +3,16 @@ import {
   SplashAnimationPage, 
   HomePage,
   ImageUploadPage,
-  CameraCapturePage
+  CameraCapturePage,
+  CameraCapturingPage,
+  ImageAnalysisPage,
+  GalleryPage
 } from './pages';
 import { PAGES } from './constants/pages';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('splash');
+  const [pageData, setPageData] = useState(null);
 
   // Start opening sequence on component mount
   useEffect(() => {
@@ -27,7 +31,11 @@ function App() {
     setCurrentPage('home');
   };
 
-  const handleNavigate = (page) => {
+  const handleNavigate = (page, data = null) => {
+    if (data) {
+      setPageData(data);
+    }
+    
     switch (page) {
       case PAGES.HOME:
         setCurrentPage('home');
@@ -37,6 +45,12 @@ function App() {
         break;
       case PAGES.CAMERA_CAPTURE:
         setCurrentPage('cameraCapture');
+        break;
+      case PAGES.CAMERA_CAPTURING:
+        setCurrentPage('cameraCapturing');
+        break;
+      case PAGES.IMAGE_ANALYSIS:
+        setCurrentPage('imageAnalysis');
         break;
       case PAGES.VOLUME_SETTINGS:
         setCurrentPage('volumeSettings');
@@ -68,7 +82,19 @@ function App() {
         )}
         
         {currentPage === 'cameraCapture' && (
-          <CameraCapturePage onNavigate={handleNavigate} />
+          <CameraCapturePage onNavigate={handleNavigate} data={pageData} />
+        )}
+        
+        {currentPage === 'cameraCapturing' && (
+          <CameraCapturingPage onNavigate={handleNavigate} data={pageData} />
+        )}
+        
+        {currentPage === 'imageAnalysis' && (
+          <ImageAnalysisPage onNavigate={handleNavigate} data={pageData} />
+        )}
+        
+        {currentPage === 'gallery' && (
+          <GalleryPage onNavigate={handleNavigate} data={pageData} />
         )}
       </div>
     </div>
