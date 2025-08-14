@@ -91,3 +91,139 @@ html, body, #root {
   padding: 0;
   overflow-x: hidden;
 }
+
+/* Hide scrollbar utility class */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari, and Opera */
+}
+
+/* Fade in animation for messages */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Float up and fade animation for emojis */
+@keyframes float-up-fade {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-30px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.8);
+  }
+}
+
+.animate-float-up-fade {
+  animation: float-up-fade 4s ease-out forwards;
+}
+
+/* Emoji floating animations - based on Figma Component 26 */
+@keyframes emoji-float-up-fast {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-60vh);
+    opacity: 0;
+  }
+}
+
+.animate-emoji-float-fast {
+  animation: emoji-float-up-fast 4s ease-out forwards;
+}
+
+/* Burst emojis for click interactions - faster and higher */
+@keyframes emoji-burst-fast {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.8) translateY(0);
+  }
+  10% {
+    opacity: 1;
+    transform: scale(1.1) translateY(-10px);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1) translateY(-30vh);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-65vh);
+  }
+}
+
+.animate-emoji-burst-fast {
+  animation: emoji-burst-fast 2.5s ease-out forwards;
+}
+
+/* Continuous upward movement for emojis */
+@keyframes continuous-float-up {
+  0% {
+    opacity: 1;
+    transform: translateY(100px) scale(0.8);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(80px) scale(1);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(-180px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-200px) scale(0.8);
+  }
+}
+
+.animate-continuous-float {
+  animation: continuous-float-up 6s linear forwards;
+}
+
+/* Click burst animation for like emojis */
+@keyframes emoji-burst {
+  0% {
+    opacity: 1;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3) translateY(-20px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) translateY(-40px);
+  }
+}
+
+.animate-emoji-burst {
+  animation: emoji-burst 2s ease-out forwards;
+}
