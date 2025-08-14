@@ -131,19 +131,19 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
       </div>
 
       {/* Text content - following Figma design exactly */}
-      <div className="absolute left-[50%] bottom-[140px] transform -translate-x-1/2 text-center">
+      <div className="absolute left-0 right-0 bottom-[140px] flex flex-col items-center gap-2 px-[24px]">
         {/* Title */}
-        <h1 className="text-white text-[28px] font-bold leading-[34px] font-sf-pro mb-[8px]">
+        <h1 className="text-white text-[28px] font-bold leading-[34px] font-sf-pro text-center">
           {metadata.title}
         </h1>
         
         {/* Timestamp */}
-        <div className="text-white/70 text-[16px] font-normal leading-[21px] font-sf-pro mb-[16px]">
+        <div className="text-white/70 text-[16px] font-normal leading-[21px] font-sf-pro text-center">
           {metadata.timestamp}
         </div>
         
         {/* Description */}
-        <div className="text-white/90 text-[16px] font-normal leading-[24px] font-sf-pro max-w-[345px]">
+        <div className="text-white/90 text-[16px] font-normal leading-[24px] font-sf-pro text-center max-w-[345px]">
           {metadata.description}
         </div>
       </div>
