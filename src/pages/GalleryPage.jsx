@@ -10,6 +10,7 @@ const imgBackground = "/src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png"
 const GalleryPage = ({ data = {}, onNavigate }) => {
   const [startX, setStartX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
   const containerRef = useRef(null);
   
   const { image, analysis } = data || {};
@@ -69,6 +70,21 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
 
   const composedImageSrc = getComposedImage();
 
+  // Handle image click to show popup
+  const handleImageClick = () => {
+    setShowPopup(true);
+  };
+
+  // Handle popup actions
+  const handleEnterLiveRoom = () => {
+    setShowPopup(false);
+    onNavigate && onNavigate(PAGES.LIVE_ROOM, { image, analysis });
+  };
+
+  const handleClosePopup = () => {
+    setShowPopup(false);
+  };
+
   // Handle swipe gestures
   const handleTouchStart = (e) => {
     setStartX(e.touches[0].clientX);
@@ -121,7 +137,7 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
 
       {/* Main image container - no frame */}
       <div className="absolute left-[50%] top-[120px] transform -translate-x-1/2">
-        <div className="relative w-[300px] h-[400px]">
+        <div className="relative w-[300px] h-[400px] cursor-pointer" onClick={handleImageClick}>
           <img 
             className="w-full h-full object-cover rounded-[8px]"
             src={composedImageSrc}
@@ -150,6 +166,39 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
 
       {/* Bottom indicator */}
       <div className="absolute bottom-[8px] left-1/2 transform -translate-x-1/2 w-[134px] h-[5px] bg-white rounded-[2.5px]" />
+
+      {/* Popup Modal */}
+      {showPopup && (
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-[16px] p-[24px] mx-[32px] max-w-[329px] w-full">
+            {/* Modal Header */}
+            <div className="text-center mb-[20px]">
+              <h3 className="text-[20px] font-bold text-gray-900 mb-[8px]">
+                Enter Live Room
+              </h3>
+              <p className="text-[16px] text-gray-600 leading-[24px]">
+                Would you like to enter the live room and start a conversation about this image?
+              </p>
+            </div>
+            
+            {/* Modal Buttons */}
+            <div className="flex gap-[12px]">
+              <button
+                onClick={handleClosePopup}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-[12px] px-[20px] rounded-[12px] font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEnterLiveRoom}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-[12px] px-[20px] rounded-[12px] font-medium transition-colors"
+              >
+                Enter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

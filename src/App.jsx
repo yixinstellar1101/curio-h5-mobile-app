@@ -6,7 +6,8 @@ import {
   CameraCapturePage,
   CameraCapturingPage,
   ImageAnalysisPage,
-  GalleryPage
+  GalleryPage,
+  LiveRoomPage
 } from './pages';
 import { PAGES } from './constants/pages';
 
@@ -95,6 +96,10 @@ function App() {
         
         {currentPage === 'gallery' && (
           <GalleryPage onNavigate={handleNavigate} data={pageData} />
+        )}
+        
+        {currentPage === 'liveRoom' && (
+          <LiveRoomPage onNavigate={handleNavigate} data={pageData} />
         )}
       </div>
     </div>
