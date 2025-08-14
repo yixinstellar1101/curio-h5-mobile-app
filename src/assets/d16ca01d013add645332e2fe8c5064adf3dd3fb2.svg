@@ -1,10 +1,10 @@
 <svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 14 13" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="Hat">
 <path d="M14 0L0 13V10.3065L0.5947 8.75233L0 7.65096V5.30138L0.668124 3.72275L0 2.64586V2C0 0.895431 0.89543 0 2 0H2.66282L3.49497 0.638924L5.29387 0H7.66793L8.68363 0.528788L10.3112 0H14Z" fill="var(--fill-0, #BB1D80)"/>
-<path d="M14 0L0 13V10.3065L0.5947 8.75233L0 7.65096V5.30138L0.668124 3.72275L0 2.64586V2C0 0.895431 0.89543 0 2 0H2.66282L3.49497 0.638924L5.29387 0H7.66793L8.68363 0.528788L10.3112 0H14Z" fill="url(#paint0_linear_32_1385)"/>
+<path d="M14 0L0 13V10.3065L0.5947 8.75233L0 7.65096V5.30138L0.668124 3.72275L0 2.64586V2C0 0.895431 0.89543 0 2 0H2.66282L3.49497 0.638924L5.29387 0H7.66793L8.68363 0.528788L10.3112 0H14Z" fill="url(#paint0_linear_146_1872)"/>
 </g>
 <defs>
-<linearGradient id="paint0_linear_32_1385" x1="-2.98807e-07" y1="15.9453" x2="13" y2="1.13281" gradientUnits="userSpaceOnUse">
+<linearGradient id="paint0_linear_146_1872" x1="-2.98807e-07" y1="15.9453" x2="13" y2="1.13281" gradientUnits="userSpaceOnUse">
 <stop stop-color="#5092FF"/>
 <stop offset="0.859375" stop-color="#5092FF" stop-opacity="0"/>
 </linearGradient>

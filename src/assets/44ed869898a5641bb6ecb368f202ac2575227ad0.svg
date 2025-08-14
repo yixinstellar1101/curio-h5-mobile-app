@@ -1,15 +1,15 @@
 <svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 6 11" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="Middle">
-<path d="M0 2.63281C0 1.17875 1.17875 0 2.63281 0V0C4.08687 0 5.26562 1.17875 5.26562 2.63281V8.29297C5.26562 9.74703 4.08687 10.9258 2.63281 10.9258V10.9258C1.17875 10.9258 0 9.74703 0 8.29297V2.63281Z" fill="url(#paint0_radial_32_1221)"/>
-<path d="M0 2.63281C0 1.17875 1.17875 0 2.63281 0V0C4.08687 0 5.26562 1.17875 5.26562 2.63281V8.29297C5.26562 9.74703 4.08687 10.9258 2.63281 10.9258V10.9258C1.17875 10.9258 0 9.74703 0 8.29297V2.63281Z" fill="url(#paint1_radial_32_1221)"/>
+<path d="M0 2.63281C0 1.17875 1.17875 0 2.63281 0V0C4.08687 0 5.26562 1.17875 5.26562 2.63281V8.29297C5.26562 9.74703 4.08687 10.9258 2.63281 10.9258V10.9258C1.17875 10.9258 0 9.74703 0 8.29297V2.63281Z" fill="url(#paint0_radial_146_1696)"/>
+<path d="M0 2.63281C0 1.17875 1.17875 0 2.63281 0V0C4.08687 0 5.26562 1.17875 5.26562 2.63281V8.29297C5.26562 9.74703 4.08687 10.9258 2.63281 10.9258V10.9258C1.17875 10.9258 0 9.74703 0 8.29297V2.63281Z" fill="url(#paint1_radial_146_1696)"/>
 </g>
 <defs>
-<radialGradient id="paint0_radial_32_1221" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1.99673 2.3738) rotate(90) scale(8.55134 4.12127)">
+<radialGradient id="paint0_radial_146_1696" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1.99673 2.3738) rotate(90) scale(8.55134 4.12127)">
 <stop offset="0.0706402" stop-color="#695352"/>
 <stop offset="0.785872" stop-color="#463231"/>
 <stop offset="1" stop-color="#2D1D1E"/>
 </radialGradient>
-<radialGradient id="paint1_radial_32_1221" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(5.6875 8.59765) rotate(-90) scale(16.625 2.9375)">
+<radialGradient id="paint1_radial_146_1696" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(5.6875 8.59765) rotate(-90) scale(16.625 2.9375)">
 <stop stop-color="#221211"/>
 <stop offset="1" stop-color="#221211" stop-opacity="0"/>
 </radialGradient>

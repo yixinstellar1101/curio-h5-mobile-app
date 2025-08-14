@@ -8,6 +8,8 @@ import {
   CHARACTERS,
   REACTION_EMOJIS 
 } from '../services/mockLiveRoomApi';
+import CharacterDetailCardPage from '../components/CharacterDetailCardPage';
+import CharacterDetailFullPage from '../components/CharacterDetailFullPage';
 
 // Asset imports from Figma
 const imgStatusBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
@@ -37,6 +39,11 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [conversationStream, setConversationStream] = useState(null);
+  
+  // Character detail modal states
+  const [showCharacterCard, setShowCharacterCard] = useState(false);
+  const [showCharacterFull, setShowCharacterFull] = useState(false);
+  const [showIntroPopup, setShowIntroPopup] = useState(false);
   
   // Right channel emoji system
   const [channelEmojis, setChannelEmojis] = useState([]);
@@ -134,9 +141,9 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       // Auto cleanup after animation duration
       setTimeout(() => {
         setChannelEmojis(prev => prev.filter(e => e.id !== newEmoji.id));
-      }, 4000);
+      }, 3500); // Reduced from 4000 for faster cleanup
       
-    }, Math.random() * 1000 + 1000); // 1-2s intervals for faster feel
+    }, Math.random() * 600 + 600); // 0.6-1.2s intervals for more emojis
   };
 
   const handleBack = () => {
@@ -196,6 +203,33 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
     } catch (error) {
       console.error('Failed to send reaction:', error);
     }
+  };
+
+  // Character detail modal handlers
+  const handleVanGoghClick = () => {
+    setShowIntroPopup(true);
+  };
+
+  const handleIntroPopupBack = () => {
+    setShowIntroPopup(false);
+  };
+
+  const handleIntroPopupExpand = () => {
+    setShowIntroPopup(false);
+    setShowCharacterFull(true);
+  };
+
+  const handleCharacterCardBack = () => {
+    setShowCharacterCard(false);
+  };
+
+  const handleCharacterCardExpand = () => {
+    setShowCharacterCard(false);
+    setShowCharacterFull(true);
+  };
+
+  const handleCharacterFullBack = () => {
+    setShowCharacterFull(false);
   };
 
   const scrollToBottom = () => {
@@ -286,7 +320,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
               <img 
                 src={avatar} 
                 alt={name}
-                className="w-16 h-16 rounded-full border-2 border-white shadow-lg"
+                className={`w-16 h-16 rounded-full border-2 border-white shadow-lg ${
+                  name === 'Vincent van Gogh' ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                }`}
+                onClick={name === 'Vincent van Gogh' ? handleVanGoghClick : undefined}
               />
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
             </div>
@@ -298,7 +335,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       </div>
 
       {/* Messages Container - Above control panel */}
-      <div className="absolute bottom-20 left-4 right-4 h-64 pointer-events-none">
+      <div className="absolute bottom-20 left-4 right-16 h-64 pointer-events-none">
         <div className="h-full overflow-y-auto scrollbar-hide">
           {isLoading ? (
             <div className="flex items-center justify-start h-32">
@@ -312,7 +349,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                     <img 
                       src={characterAvatars[message.speaker]}
                       alt={message.speaker}
-                      className="w-8 h-8 rounded-full flex-shrink-0"
+                      className={`w-8 h-8 rounded-full flex-shrink-0 ${
+                        message.speaker === 'Vincent van Gogh' ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                      }`}
+                      onClick={message.speaker === 'Vincent van Gogh' ? handleVanGoghClick : undefined}
                     />
                     <div className="bg-white/10 backdrop-blur-md rounded-2xl px-3 py-2 max-w-xs">
                       <div className="flex items-center gap-2 mb-1">
@@ -347,7 +387,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
             <div className="w-[22px] h-[22px] flex-shrink-0">
               <img src={imgMicrophone} alt="microphone" className="w-full h-full" />
             </div>
-            <span className="text-[#e5e0dc] text-[13px] font-['Avenir_LT_Std:55_Roman',sans-serif] h-4 leading-[0]">
+            <span className="text-[#e5e0dc] text-[13px] font-['Avenir_LT_Std:55_Roman',sans-serif] leading-[22px]">
               Press and hold to speak
             </span>
           </div>
@@ -391,6 +431,149 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
         <div className="w-32 h-1 bg-white/30 rounded-full"></div>
       </div>
+
+      {/* Character Detail Modals */}
+      {showCharacterCard && (
+        <CharacterDetailCardPage 
+          onBack={handleCharacterCardBack}
+          onExpand={handleCharacterCardExpand}
+        />
+      )}
+      
+      {showCharacterFull && (
+        <CharacterDetailFullPage 
+          onBack={handleCharacterFullBack}
+        />
+      )}
+
+      {/* Intro Popup */}
+      {showIntroPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div 
+            className="bg-[#fffaf4] relative rounded-[20px] w-[306px] h-[538px]"
+            data-name="intro"
+            id="node-32_1044"
+          >
+            {/* Van Gogh portrait - 严格按照Figma位置和尺寸 */}
+            <div
+              className="absolute h-[175px] left-[22px] top-11 w-[262px]"
+              id="node-2_2195"
+            >
+              <div
+                className="absolute bg-[0%_33.43%] bg-no-repeat bg-size-[100%_182.05%] h-[175.174px] left-[5px] rounded-[26px] top-0 w-[252.333px]"
+                data-name="Vector"
+                id="node-2_2196"
+                style={{ backgroundImage: `url('/src/assets/d84d1463db2967ad16c63a138581a4d524675326.png')` }}
+              />
+            </div>
+
+            {/* 展开按钮 - 严格按照Figma位置 */}
+            <button
+              onClick={handleIntroPopupExpand}
+              className="absolute box-border content-stretch flex flex-row gap-3.5 items-center justify-start left-[272px] p-0 top-[11px] cursor-pointer"
+              data-name="zoom icon"
+              id="node-2_2197"
+            >
+              <div
+                className="relative shrink-0 size-[23px]"
+                data-name="展开 1"
+                id="node-2_2198"
+              >
+                <img alt="展开" className="block max-w-none size-full" src="/src/assets/9403ffd15bd9a95db6a8488382897cc71b7212f7.svg" />
+              </div>
+            </button>
+
+            {/* 返回按钮 - 严格按照Figma位置 */}
+            <button
+              onClick={handleIntroPopupBack}
+              className="absolute left-1.5 size-9 top-1 cursor-pointer"
+              data-name="返回 1"
+              id="node-2_2200"
+            >
+              <img alt="返回" className="block max-w-none size-full" src="/src/assets/d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" />
+            </button>
+
+            {/* 内容区域 - 严格按照Figma位置和间距 */}
+            <div
+              className="absolute box-border content-stretch flex flex-col gap-3.5 items-center justify-start p-0 top-[236px] translate-x-[-50%] w-[271px]"
+              id="node-2_2202"
+              style={{ left: "calc(50% + 0.5px)" }}
+            >
+              {/* 姓名 - 严格按照Figma字体和样式 */}
+              <div
+                className="font-bold leading-[0] not-italic opacity-90 relative shrink-0 text-[#232323] text-[18px] text-center w-full"
+                id="node-2_2203"
+              >
+                <p className="block leading-[1.4]">Vincent van Gogh</p>
+              </div>
+
+              {/* 引言 - 严格按照Figma字体和样式 */}
+              <div
+                className="font-medium italic leading-[0] not-italic opacity-90 relative shrink-0 text-[#232323] text-[14px] text-left w-full"
+                id="node-2_2204"
+              >
+                <p className="block leading-[1.45]">
+                  "I painted not what I saw, but what I felt in that night of
+                  madness."
+                </p>
+              </div>
+
+              {/* 标签 - 严格按照Figma颜色和字体 */}
+              <div
+                className="font-medium leading-[0] not-italic opacity-90 relative shrink-0 text-[#0051ae] text-[14px] text-left w-full"
+                id="node-2_2205"
+              >
+                <p className="block leading-[1.6]">
+                  #LonelyGenius #PostImpressionist #NightOfTheMind
+                </p>
+              </div>
+
+              {/* Identity 部分 - 严格按照Figma样式 */}
+              <div
+                className="box-border content-stretch flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic p-0 relative shrink-0 text-[#232323] text-left w-full"
+                id="node-2_2206"
+              >
+                <div
+                  className="font-bold opacity-90 relative shrink-0 text-[15px] w-full"
+                  id="node-2_2207"
+                >
+                  <p className="block leading-[1.6]">Identity</p>
+                </div>
+                <div
+                  className="font-medium opacity-90 relative shrink-0 text-[14px] w-full"
+                  id="node-2_2208"
+                >
+                  <p className="block leading-[1.6]">
+                    19th-century Dutch painter, creator of The Starry Night
+                  </p>
+                </div>
+              </div>
+
+              {/* Artistic Traits 部分 - 严格按照Figma样式 */}
+              <div
+                className="box-border content-stretch flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic p-0 relative shrink-0 text-[#232323] text-left w-full"
+                id="node-2_2209"
+              >
+                <div
+                  className="font-bold opacity-90 relative shrink-0 text-[15px] w-full"
+                  id="node-2_2210"
+                >
+                  <p className="block leading-[1.6]">Artistic Traits</p>
+                </div>
+                <div
+                  className="font-medium opacity-90 relative shrink-0 text-[14px] w-full"
+                  id="node-2_2211"
+                >
+                  <p className="block leading-[1.6]">
+                    Frequently quoted from personal letters; deeply sensitive to the
+                    emotional power of color
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

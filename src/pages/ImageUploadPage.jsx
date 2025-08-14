@@ -48,10 +48,19 @@ const ImageUploadPage = ({ onNavigate }) => {
           setIsProcessing(true);
           console.log('Selected file:', file.name, 'Size:', file.size, 'Type:', file.type);
           
+          // Create image URL for preview
+          const imageUrl = URL.createObjectURL(file);
+          
+          // Navigate to ImageAnalysisPage with the selected file data
+          // This will trigger the same analysis flow as camera capture
           setTimeout(() => {
             setIsProcessing(false);
-            onNavigate && onNavigate(PAGES.IMAGE_ANALYSIS);
-          }, 1000);
+            onNavigate && onNavigate(PAGES.IMAGE_ANALYSIS, {
+              file: file,
+              imageUrl: imageUrl,
+              source: 'album' // Track the source for analytics
+            });
+          }, 500);
         }
       };
       

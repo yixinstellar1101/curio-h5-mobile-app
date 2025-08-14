@@ -147,17 +147,17 @@ html, body, #root {
   10% {
     opacity: 1;
   }
-  90% {
+  75% {
     opacity: 1;
   }
   100% {
-    transform: translateY(-60vh);
+    transform: translateY(-50vh);
     opacity: 0;
   }
 }
 
 .animate-emoji-float-fast {
-  animation: emoji-float-up-fast 4s ease-out forwards;
+  animation: emoji-float-up-fast 3.5s ease-out forwards;
 }
 
 /* Burst emojis for click interactions - faster and higher */
@@ -170,18 +170,18 @@ html, body, #root {
     opacity: 1;
     transform: scale(1.1) translateY(-10px);
   }
-  30% {
+  60% {
     opacity: 1;
-    transform: scale(1) translateY(-30vh);
+    transform: scale(1) translateY(-25vh);
   }
   100% {
     opacity: 0;
-    transform: scale(0.9) translateY(-65vh);
+    transform: scale(0.9) translateY(-50vh);
   }
 }
 
 .animate-emoji-burst-fast {
-  animation: emoji-burst-fast 2.5s ease-out forwards;
+  animation: emoji-burst-fast 2.2s ease-out forwards;
 }
 
 /* Continuous upward movement for emojis */

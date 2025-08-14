@@ -10,27 +10,76 @@ const imgAnalysisButton = "/src/assets/2314863aa5b98c3561bbba15a029ce5d6b01faa6.
 const imgViewfinder = "/src/assets/db6877c52f8f212513e0ebd034674ef3aa25f15a.svg";
 const imgGallery = "/src/assets/01e1d6ae9f47430674fe0f46b61392a43f9c8519.svg";
 
-// Mock API service for image analysis
+// Mock API service for image analysis with background classification
 const mockAnalyzeImage = async (file) => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 2000));
   
-  // Mock analysis results
+  // Background images for different categories
+  const backgroundImages = {
+    'living_room': '/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png',
+    'bedroom': '/src/assets/017673e2113e179aebea2a633d379cdd6f0ea88f.png',
+    'kitchen': '/src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png',
+    'office': '/src/assets/233979182e2ffd6ce7b63233b59f599effb21afc.png',
+    'outdoor': '/src/assets/634950df85405a71f0845dd2168d6a8e09cce66a.png',
+    'nature': '/src/assets/5fc9e58748a0fa615330e68c877a6fb860ab55a4.png',
+    'art': '/src/assets/59520d231a783bb20cd3d4f98dfaec2de858b210.png',
+    'default': '/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png'
+  };
+  
+  // Simple object detection simulation based on filename or random selection
+  const objectCategories = [
+    { objects: ['chair', 'table', 'lamp'], category: 'living_room', style: 'Morden', description: "This image shows a modern living room scene with furniture and lighting elements." },
+    { objects: ['bed', 'pillow', 'nightstand'], category: 'bedroom', style: 'Morden', description: "This appears to be a bedroom setting with comfortable sleeping arrangements." },
+    { objects: ['kitchen', 'stove', 'refrigerator'], category: 'kitchen', style: 'Morden', description: "A kitchen scene with cooking appliances and utensils." },
+    { objects: ['desk', 'computer', 'chair'], category: 'office', style: 'Morden', description: "An office workspace with work-related items." },
+    { objects: ['tree', 'flower', 'grass'], category: 'nature', style: 'Chinese', description: "A natural outdoor scene with plants and vegetation." },
+    { objects: ['building', 'car', 'street'], category: 'outdoor', style: 'Morden', description: "An urban outdoor environment with architectural elements." },
+    { objects: ['painting', 'sculpture', 'canvas'], category: 'art', style: 'European', description: "An artistic scene with creative elements." },
+    { objects: ['person', 'portrait', 'face'], category: 'portrait', style: 'European', description: "A portrait featuring human subjects." },
+    { objects: ['animal', 'cat', 'dog'], category: 'animal', style: 'Chinese', description: "A scene featuring animals or pets." },
+  ];
+  
+  // Randomly select a category for mock analysis
+  const selectedCategory = objectCategories[Math.floor(Math.random() * objectCategories.length)];
+  
+  // Function to randomly select background from category
+  const getRandomBackground = (style) => {
+    const backgroundCounts = {
+      'Chinese': 4,    // Chinese_3_4_01.jpg to Chinese_3_4_04.jpg
+      'European': 6,   // European_3_4_01.jpg to European_3_4_06.jpg  
+      'Morden': 6      // Morden_3_4_01.jpg to Morden_3_4_06.jpg
+    };
+    
+    const count = backgroundCounts[style] || 4;
+    const randomNum = Math.floor(Math.random() * count) + 1;
+    const paddedNum = randomNum.toString().padStart(2, '0');
+    
+    return `/src/assets/backgrounds/${style}/${style}_3_4_${paddedNum}.jpg`;
+  };
+  
+  const backgroundUrl = getRandomBackground(selectedCategory.style);
+  
+  // Mock analysis results with background classification
   return {
     success: true,
     analysis: {
-      objects: ['chair', 'table', 'lamp'],
-      description: "This image shows a modern living room with a comfortable chair, wooden table, and elegant floor lamp. The furniture appears to be in good condition with contemporary design elements.",
-      confidence: 0.92,
+      objects: selectedCategory.objects,
+      category: selectedCategory.category,
+      style: selectedCategory.style,
+      description: selectedCategory.description,
+      confidence: 0.85 + Math.random() * 0.14, // Random confidence between 0.85-0.99
+      backgroundImage: backgroundUrl,
       suggestions: [
-        "Consider adding some colorful cushions to enhance the seating area",
-        "A small plant could bring more life to the space",
-        "The lighting creates a warm, welcoming atmosphere"
+        `Great composition! The AI has detected a ${selectedCategory.category} scene.`,
+        `This image has been categorized as ${selectedCategory.style} style.`,
+        "The selected background complements the detected objects beautifully."
       ],
       metadata: {
-        dimensions: "1920x1080",
-        size: "2.4 MB",
-        format: "JPEG"
+        dimensions: file.name ? "Auto-detected" : "1920x1080",
+        size: file.size ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : "2.4 MB",
+        format: file.type ? file.type.split('/')[1].toUpperCase() : "JPEG",
+        source: 'album'
       }
     }
   };
@@ -125,18 +174,48 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
   };
 
   const handleBack = () => {
-    onNavigate && onNavigate(PAGES.CAMERA_CAPTURE);
+    // Clean up created object URL to prevent memory leaks
+    if (data?.imageUrl && data?.source === 'album') {
+      URL.revokeObjectURL(data.imageUrl);
+    }
+    // Go back to image upload page for album selection, camera capture for camera
+    const targetPage = data?.source === 'album' ? PAGES.IMAGE_UPLOAD : PAGES.CAMERA_CAPTURE;
+    onNavigate && onNavigate(targetPage);
   };
 
   const handleRetake = () => {
-    onNavigate && onNavigate(PAGES.CAMERA_CAPTURE);
+    // Clean up created object URL to prevent memory leaks
+    if (data?.imageUrl && data?.source === 'album') {
+      URL.revokeObjectURL(data.imageUrl);
+    }
+    // Go back to appropriate source page
+    const targetPage = data?.source === 'album' ? PAGES.IMAGE_UPLOAD : PAGES.CAMERA_CAPTURE;
+    onNavigate && onNavigate(targetPage);
   };
 
   const handleContinue = () => {
-    onNavigate && onNavigate(PAGES.GALLERY, { 
+    // Create complete data package for Gallery including background composition
+    const galleryData = {
       analysis: analysisResult,
-      image: file 
-    });
+      originalImage: file,
+      imageUrl: data?.imageUrl || URL.createObjectURL(file),
+      backgroundImage: analysisResult?.analysis?.backgroundImage,
+      category: analysisResult?.analysis?.category || 'default',
+      style: analysisResult?.analysis?.style || 'Morden',
+      objects: analysisResult?.analysis?.objects || [],
+      source: data?.source || 'camera', // Track if from album or camera
+      timestamp: new Date().toISOString(),
+      composition: {
+        // Data for background composition/merging
+        shouldCompose: true,
+        backgroundUrl: analysisResult?.analysis?.backgroundImage,
+        category: analysisResult?.analysis?.category,
+        style: analysisResult?.analysis?.style
+      }
+    };
+    
+    console.log('Navigating to Gallery with data:', galleryData);
+    onNavigate && onNavigate(PAGES.GALLERY, galleryData);
   };
 
   const handleGallery = () => {
@@ -177,7 +256,11 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
         </div>
         {file && analysisState !== 'analyzing' && (
           <div className="absolute inset-4 rounded-lg overflow-hidden bg-black/50">
-            <img src={URL.createObjectURL(file)} alt="Captured" className="w-full h-full object-cover opacity-80" />
+            <img 
+              src={data?.imageUrl || URL.createObjectURL(file)} 
+              alt="Selected" 
+              className="w-full h-full object-cover opacity-80" 
+            />
           </div>
         )}
       </div>
@@ -205,15 +288,17 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
           <h3 className="text-white text-lg font-semibold mb-3">Analysis Complete</h3>
           <div className="text-white/80 text-sm space-y-2">
             <p><strong>Objects detected:</strong> {analysisResult.analysis.objects.join(', ')}</p>
+            <p><strong>Category:</strong> {analysisResult.analysis.category?.replace('_', ' ')}</p>
             <p><strong>Description:</strong> {analysisResult.analysis.description}</p>
             <p><strong>Confidence:</strong> {Math.round(analysisResult.analysis.confidence * 100)}%</p>
+            {data?.source === 'album' && <p><strong>Source:</strong> Photo Album</p>}
           </div>
           <div className="flex gap-3 mt-4">
             <button onClick={handleRetake} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors">
-              Retake
+              {data?.source === 'album' ? 'Choose Again' : 'Retake'}
             </button>
             <button onClick={handleContinue} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
-              Continue
+              Continue to Gallery
             </button>
           </div>
         </div>

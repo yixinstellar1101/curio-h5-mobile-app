@@ -1,25 +1,25 @@
 <svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 10 2" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="Party Horn (Stroke)">
 <path fill-rule="evenodd" clip-rule="evenodd" d="M0 0.75C0 0.335786 0.335786 0 0.75 0H8.60426C9.01847 0 9.35426 0.335786 9.35426 0.75C9.35426 1.16421 9.01847 1.5 8.60426 1.5H0.75C0.335786 1.5 0 1.16421 0 0.75Z" fill="var(--fill-0, #00A6ED)"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 0.75C0 0.335786 0.335786 0 0.75 0H8.60426C9.01847 0 9.35426 0.335786 9.35426 0.75C9.35426 1.16421 9.01847 1.5 8.60426 1.5H0.75C0.335786 1.5 0 1.16421 0 0.75Z" fill="url(#paint0_radial_32_1255)"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 0.75C0 0.335786 0.335786 0 0.75 0H8.60426C9.01847 0 9.35426 0.335786 9.35426 0.75C9.35426 1.16421 9.01847 1.5 8.60426 1.5H0.75C0.335786 1.5 0 1.16421 0 0.75Z" fill="url(#paint1_radial_32_1255)"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 0.75C0 0.335786 0.335786 0 0.75 0H8.60426C9.01847 0 9.35426 0.335786 9.35426 0.75C9.35426 1.16421 9.01847 1.5 8.60426 1.5H0.75C0.335786 1.5 0 1.16421 0 0.75Z" fill="url(#paint2_radial_32_1255)"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 0.75C0 0.335786 0.335786 0 0.75 0H8.60426C9.01847 0 9.35426 0.335786 9.35426 0.75C9.35426 1.16421 9.01847 1.5 8.60426 1.5H0.75C0.335786 1.5 0 1.16421 0 0.75Z" fill="url(#paint3_linear_32_1255)"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 0.75C0 0.335786 0.335786 0 0.75 0H8.60426C9.01847 0 9.35426 0.335786 9.35426 0.75C9.35426 1.16421 9.01847 1.5 8.60426 1.5H0.75C0.335786 1.5 0 1.16421 0 0.75Z" fill="url(#paint0_radial_146_1730)"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 0.75C0 0.335786 0.335786 0 0.75 0H8.60426C9.01847 0 9.35426 0.335786 9.35426 0.75C9.35426 1.16421 9.01847 1.5 8.60426 1.5H0.75C0.335786 1.5 0 1.16421 0 0.75Z" fill="url(#paint1_radial_146_1730)"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 0.75C0 0.335786 0.335786 0 0.75 0H8.60426C9.01847 0 9.35426 0.335786 9.35426 0.75C9.35426 1.16421 9.01847 1.5 8.60426 1.5H0.75C0.335786 1.5 0 1.16421 0 0.75Z" fill="url(#paint2_radial_146_1730)"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 0.75C0 0.335786 0.335786 0 0.75 0H8.60426C9.01847 0 9.35426 0.335786 9.35426 0.75C9.35426 1.16421 9.01847 1.5 8.60426 1.5H0.75C0.335786 1.5 0 1.16421 0 0.75Z" fill="url(#paint3_linear_146_1730)"/>
 </g>
 <defs>
-<radialGradient id="paint0_radial_32_1255" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(3.53976 -3.76058) rotate(9.65183) scale(4.65971 7.89053)">
+<radialGradient id="paint0_radial_146_1730" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(3.53976 -3.76058) rotate(9.65183) scale(4.65971 7.89053)">
 <stop offset="0.328125" stop-color="#1B6AD1"/>
 <stop offset="1" stop-color="#2A80F0" stop-opacity="0"/>
 </radialGradient>
-<radialGradient id="paint1_radial_32_1255" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(8.28976 -3.02621) rotate(27.8973) scale(1.20221 1.73102)">
+<radialGradient id="paint1_radial_146_1730" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(8.28976 -3.02621) rotate(27.8973) scale(1.20221 1.73102)">
 <stop stop-color="#1B6AD1"/>
 <stop offset="1" stop-color="#2A80F0" stop-opacity="0"/>
 </radialGradient>
-<radialGradient id="paint2_radial_32_1255" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9.88352 2.92692) rotate(-92.9038) scale(4.31804 17.7684)">
+<radialGradient id="paint2_radial_146_1730" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9.88352 2.92692) rotate(-92.9038) scale(4.31804 17.7684)">
 <stop stop-color="#1B6AD1"/>
 <stop offset="0.601914" stop-color="#2A80F0" stop-opacity="0"/>
 </radialGradient>
-<linearGradient id="paint3_linear_32_1255" x1="4.67713" y1="0.00178266" x2="4.67713" y2="1.5" gradientUnits="userSpaceOnUse">
+<linearGradient id="paint3_linear_146_1730" x1="4.67713" y1="0.00178266" x2="4.67713" y2="1.5" gradientUnits="userSpaceOnUse">
 <stop stop-color="#A0D9FF" stop-opacity="0"/>
 <stop offset="0.238015" stop-color="#A0D9FF" stop-opacity="0.413046"/>
 <stop offset="0.360818" stop-color="#A0D9FF" stop-opacity="0.52"/>

@@ -21,10 +21,10 @@ const SplashAnimationPage = ({ onNavigate }) => {
         if (onNavigate) {
           onNavigate(PAGES.HOME);
         }
-      }, 2000);
+      }, 1000);
       
       return () => clearTimeout(timer2);
-    }, 2000);
+    }, 1000);
     
     return () => clearTimeout(timer1);
   }, [onNavigate]);

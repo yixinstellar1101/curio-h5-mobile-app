@@ -1,7 +1,7 @@
 <svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path id="Vector 30 (Stroke)" fill-rule="evenodd" clip-rule="evenodd" d="M1 0C1.55228 0 2 0.447715 2 1C2 1.50664 2.16022 2.28887 2.61153 2.9157C3.02614 3.49153 3.72592 4 5 4C6.27408 4 6.97386 3.49153 7.38847 2.9157C7.83978 2.28887 8 1.50664 8 1C8 0.447715 8.44772 0 9 0C9.55229 0 10 0.447715 10 1C10 1.82669 9.76022 3.04446 9.01153 4.0843C8.22614 5.17513 6.92592 6 5 6C3.07408 6 1.77386 5.17513 0.988466 4.0843C0.239781 3.04446 0 1.82669 0 1C0 0.447715 0.447715 0 1 0Z" fill="url(#paint0_radial_32_1257)"/>
+<path id="Vector 30 (Stroke)" fill-rule="evenodd" clip-rule="evenodd" d="M1 0C1.55228 0 2 0.447715 2 1C2 1.50664 2.16022 2.28887 2.61153 2.9157C3.02614 3.49153 3.72592 4 5 4C6.27408 4 6.97386 3.49153 7.38847 2.9157C7.83978 2.28887 8 1.50664 8 1C8 0.447715 8.44772 0 9 0C9.55229 0 10 0.447715 10 1C10 1.82669 9.76022 3.04446 9.01153 4.0843C8.22614 5.17513 6.92592 6 5 6C3.07408 6 1.77386 5.17513 0.988466 4.0843C0.239781 3.04446 0 1.82669 0 1C0 0.447715 0.447715 0 1 0Z" fill="url(#paint0_radial_146_1732)"/>
 <defs>
-<radialGradient id="paint0_radial_32_1257" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(5 -3) rotate(90) scale(10.5 6.42871)">
+<radialGradient id="paint0_radial_146_1732" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(5 -3) rotate(90) scale(10.5 6.42871)">
 <stop offset="0.555727" stop-color="#584343"/>
 <stop offset="0.740289" stop-color="#66525E"/>
 <stop offset="1" stop-color="#4E2553"/>

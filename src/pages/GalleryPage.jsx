@@ -13,30 +13,57 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
   const [showPopup, setShowPopup] = useState(false);
   const containerRef = useRef(null);
   
-  const { image, analysis } = data || {};
+  // Extract data from the structure passed by ImageAnalysisPage
+  const { 
+    analysis, 
+    originalImage, 
+    imageUrl, 
+    backgroundImage,
+    category,
+    style,
+    objects = [],
+    source,
+    timestamp,
+    composition
+  } = data || {};
+  
+  console.log('GalleryPage received data:', data); // Debug log
   
   // Get metadata from analysis results or use defaults for demo
   const getMetadata = () => {
     if (analysis?.analysis) {
       // Use actual analysis data if available
+      const analysisData = analysis.analysis;
       return {
-        title: analysis.metadata?.name || "The Enigmatic Aristocat", 
-        timestamp: analysis.metadata?.timestamp || new Date().toLocaleString('en-US', { 
+        title: `The ${category ? category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Enigmatic'} Scene`, 
+        timestamp: timestamp ? new Date(timestamp).toLocaleString('en-US', { 
+          month: 'long', 
+          day: 'numeric', 
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }) : new Date().toLocaleString('en-US', { 
           month: 'long', 
           day: 'numeric', 
           hour: 'numeric',
           minute: '2-digit',
           hour12: true
         }),
-        description: analysis.metadata?.description || analysis.analysis.description || "This Persian might featured in Tissot's 1866 portrait of the Marquise de Miramon epitomizes Victorian aristocratic cats, its gemstone eyes echoing the luxury of Empress Eugénie's court pets...."
+        description: `${analysisData.description} Enhanced with ${style || 'classic'} artistic styling.`
       };
     }
     
     // Default metadata for demo showing the expected structure
     return {
-      title: "The Enigmatic Aristocat",
-      timestamp: "July 8, 3:42PM", 
-      description: "This Persian might featured in Tissot's 1866 portrait of the Marquise de Miramon epitomizes Victorian aristocratic cats, its gemstone eyes echoing the luxury of Empress Eugénie's court pets...."
+      title: "The Enigmatic Scene",
+      timestamp: new Date().toLocaleString('en-US', { 
+        month: 'long', 
+        day: 'numeric', 
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }), 
+      description: `A beautifully captured moment enhanced with AI analysis and ${style || 'classic'} artistic background composition.`
     };
   };
 
@@ -44,27 +71,68 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
   
   // Background image selection based on category or use default
   const getBackgroundImage = () => {
-    if (analysis?.background?.imageUrl) {
-      return analysis.background.imageUrl;
+    // Use the backgroundImage from analysis data (already randomly selected)
+    if (backgroundImage) {
+      console.log('Using backgroundImage from analysis:', backgroundImage);
+      return backgroundImage;
     }
     
-    // Default Victorian/aristocratic background for the demo
+    // Use analysis background if available
+    if (analysis?.analysis?.backgroundImage) {
+      console.log('Using analysis.analysis.backgroundImage:', analysis.analysis.backgroundImage);
+      return analysis.analysis.backgroundImage;
+    }
+    
+    // Fallback: randomly select background based on style and category
+    if (style) {
+      const getRandomBackground = (styleType) => {
+        const backgroundCounts = {
+          'Chinese': 4,    // Chinese_3_4_01.jpg to Chinese_3_4_04.jpg
+          'European': 6,   // European_3_4_01.jpg to European_3_4_06.jpg  
+          'Morden': 6      // Morden_3_4_01.jpg to Morden_3_4_06.jpg
+        };
+        
+        const count = backgroundCounts[styleType] || 4;
+        const randomNum = Math.floor(Math.random() * count) + 1;
+        const paddedNum = randomNum.toString().padStart(2, '0');
+        
+        return `/src/assets/backgrounds/${styleType}/${styleType}_3_4_${paddedNum}.jpg`;
+      };
+      
+      const selectedBackground = getRandomBackground(style);
+      console.log('Generated random background for style', style, ':', selectedBackground);
+      return selectedBackground;
+    }
+    
+    // Final fallback to default
+    console.log('Using default background fallback');
     return imgBackground;
   };
 
   const backgroundImageSrc = getBackgroundImage();
   
-  // Create composed image URL - use composite if available, otherwise captured image
+  // Create composed image URL - use the uploaded/captured image
   const getComposedImage = () => {
-    if (analysis?.compositeImageUrl) {
-      return analysis.compositeImageUrl;
+    // First priority: use the imageUrl passed from ImageAnalysisPage
+    if (imageUrl) {
+      console.log('Using imageUrl from data:', imageUrl);
+      return imageUrl;
     }
     
-    if (image) {
-      return URL.createObjectURL(image);
+    // Second priority: create URL from originalImage file
+    if (originalImage) {
+      console.log('Creating URL from originalImage file');
+      return URL.createObjectURL(originalImage);
     }
     
-    // Fallback to a placeholder image
+    // Legacy support: check if there's an 'image' property
+    if (data.image) {
+      console.log('Using legacy image property');
+      return URL.createObjectURL(data.image);
+    }
+    
+    // Fallback: use a placeholder
+    console.log('Using fallback placeholder image');
     return "/src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png";
   };
 
@@ -78,7 +146,15 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
   // Handle popup actions
   const handleEnterLiveRoom = () => {
     setShowPopup(false);
-    onNavigate && onNavigate(PAGES.LIVE_ROOM, { image, analysis });
+    onNavigate && onNavigate(PAGES.LIVE_ROOM, { 
+      originalImage, 
+      imageUrl, 
+      analysis,
+      backgroundImage,
+      category,
+      style,
+      objects 
+    });
   };
 
   const handleClosePopup = () => {
