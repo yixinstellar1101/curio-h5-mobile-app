@@ -19,6 +19,7 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
     originalImage, 
     imageUrl, 
     backgroundImage,
+    compositeImage, // Add composite image from analysis
     category,
     style,
     objects = [],
@@ -49,7 +50,7 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
           minute: '2-digit',
           hour12: true
         }),
-        description: `${analysisData.description} Enhanced with ${style || 'classic'} artistic styling.`
+        description: `${analysisData.description} Enhanced with ${style || 'European'} artistic styling and composite background.`
       };
     }
     
@@ -69,9 +70,21 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
 
   const metadata = getMetadata();
   
-  // Background image selection based on category or use default
+  // Background image selection - use composite image as background
   const getBackgroundImage = () => {
-    // Use the backgroundImage from analysis data (already randomly selected)
+    // First priority: use the composite image as background
+    if (compositeImage) {
+      console.log('Using compositeImage as background:', compositeImage);
+      return compositeImage;
+    }
+    
+    // Second priority: use composite from analysis data
+    if (analysis?.analysis?.compositeImage) {
+      console.log('Using analysis.analysis.compositeImage as background:', analysis.analysis.compositeImage);
+      return analysis.analysis.compositeImage;
+    }
+    
+    // Third priority: use the backgroundImage from analysis data (non-composite)
     if (backgroundImage) {
       console.log('Using backgroundImage from analysis:', backgroundImage);
       return backgroundImage;
@@ -111,34 +124,7 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
 
   const backgroundImageSrc = getBackgroundImage();
   
-  // Create composed image URL - use the uploaded/captured image
-  const getComposedImage = () => {
-    // First priority: use the imageUrl passed from ImageAnalysisPage
-    if (imageUrl) {
-      console.log('Using imageUrl from data:', imageUrl);
-      return imageUrl;
-    }
-    
-    // Second priority: create URL from originalImage file
-    if (originalImage) {
-      console.log('Creating URL from originalImage file');
-      return URL.createObjectURL(originalImage);
-    }
-    
-    // Legacy support: check if there's an 'image' property
-    if (data.image) {
-      console.log('Using legacy image property');
-      return URL.createObjectURL(data.image);
-    }
-    
-    // Fallback: use a placeholder
-    console.log('Using fallback placeholder image');
-    return "/src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png";
-  };
-
-  const composedImageSrc = getComposedImage();
-
-  // Handle image click to show popup
+  // Handle image click to show popup (now for background click)
   const handleImageClick = () => {
     setShowPopup(true);
   };
@@ -211,15 +197,18 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
         </div>
       </div>
 
-      {/* Main image container - no frame */}
-      <div className="absolute left-[50%] top-[120px] transform -translate-x-1/2">
-        <div className="relative w-[300px] h-[400px] cursor-pointer" onClick={handleImageClick}>
-          <img 
-            className="w-full h-full object-cover rounded-[8px]"
-            src={composedImageSrc}
-            alt="Captured scene"
-          />
-        </div>
+      {/* Interactive area in the center for popup trigger */}
+      <div 
+        className="absolute left-[50%] top-[200px] transform -translate-x-1/2 w-[200px] h-[250px] cursor-pointer z-10"
+        onClick={handleImageClick}
+        style={{
+          // Optional: Add a subtle visual hint (can be removed if not desired)
+          // backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          // border: '1px solid rgba(255, 255, 255, 0.2)',
+          // borderRadius: '8px'
+        }}
+      >
+        {/* This is an invisible clickable area */}
       </div>
 
       {/* Text content - following Figma design exactly */}

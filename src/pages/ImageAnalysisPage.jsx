@@ -15,7 +15,21 @@ const mockAnalyzeImage = async (file) => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 2000));
   
-  // Background images for different categories
+  // Fixed green screen area for European_3_4_02.jpg
+  const greenScreenArea = {
+    x: 131,
+    y: 284,
+    width: 124,
+    height: 173
+  };
+  
+  // Fixed background for testing
+  const backgroundImagePath = '/src/assets/backgrounds/European/European_3_4_02.jpg';
+  
+  // Create composite image by combining user image with background
+  const compositeImageUrl = await createCompositeImage(file, backgroundImagePath, greenScreenArea);
+  
+  // Background images for different categories (keeping for future use)
   const backgroundImages = {
     'living_room': '/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png',
     'bedroom': '/src/assets/017673e2113e179aebea2a633d379cdd6f0ea88f.png',
@@ -26,7 +40,7 @@ const mockAnalyzeImage = async (file) => {
     'art': '/src/assets/59520d231a783bb20cd3d4f98dfaec2de858b210.png',
     'default': '/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png'
   };
-  
+
   // Simple object detection simulation based on filename or random selection
   const objectCategories = [
     { objects: ['chair', 'table', 'lamp'], category: 'living_room', style: 'Morden', description: "This image shows a modern living room scene with furniture and lighting elements." },
@@ -39,7 +53,7 @@ const mockAnalyzeImage = async (file) => {
     { objects: ['person', 'portrait', 'face'], category: 'portrait', style: 'European', description: "A portrait featuring human subjects." },
     { objects: ['animal', 'cat', 'dog'], category: 'animal', style: 'Chinese', description: "A scene featuring animals or pets." },
   ];
-  
+
   // Randomly select a category for mock analysis
   const selectedCategory = objectCategories[Math.floor(Math.random() * objectCategories.length)];
   
@@ -57,9 +71,9 @@ const mockAnalyzeImage = async (file) => {
     
     return `/src/assets/backgrounds/${style}/${style}_3_4_${paddedNum}.jpg`;
   };
-  
+
   const backgroundUrl = getRandomBackground(selectedCategory.style);
-  
+
   // Mock analysis results with background classification
   return {
     success: true,
@@ -70,10 +84,12 @@ const mockAnalyzeImage = async (file) => {
       description: selectedCategory.description,
       confidence: 0.85 + Math.random() * 0.14, // Random confidence between 0.85-0.99
       backgroundImage: backgroundUrl,
+      compositeImage: compositeImageUrl, // Add composite image URL
+      greenScreenArea: greenScreenArea, // Add green screen area info
       suggestions: [
         `Great composition! The AI has detected a ${selectedCategory.category} scene.`,
         `This image has been categorized as ${selectedCategory.style} style.`,
-        "The selected background complements the detected objects beautifully."
+        "The image has been composited with an artistic background."
       ],
       metadata: {
         dimensions: file.name ? "Auto-detected" : "1920x1080",
@@ -85,7 +101,84 @@ const mockAnalyzeImage = async (file) => {
   };
 };
 
-// Loading Spinner Component - exact Figma design
+// Function to create composite image by inserting user image into green screen area
+const createCompositeImage = async (userImageFile, backgroundImagePath, greenArea) => {
+  try {
+    // Create a canvas for image composition
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Load background image
+    const backgroundImg = new Image();
+    backgroundImg.crossOrigin = 'anonymous';
+    
+    // Load user image
+    const userImg = new Image();
+    const userImageUrl = URL.createObjectURL(userImageFile);
+    
+    return new Promise((resolve, reject) => {
+      let imagesLoaded = 0;
+      
+      const checkIfBothLoaded = () => {
+        imagesLoaded++;
+        if (imagesLoaded === 2) {
+          try {
+            // Set canvas size to background image size
+            canvas.width = backgroundImg.width;
+            canvas.height = backgroundImg.height;
+            
+            // Draw background image
+            ctx.drawImage(backgroundImg, 0, 0);
+            
+            // Draw user image stretched to fill green area exactly (may distort aspect ratio)
+            // This ensures complete coverage of green area without any green showing through
+            ctx.drawImage(
+              userImg, 
+              greenArea.x, 
+              greenArea.y, 
+              greenArea.width, 
+              greenArea.height
+            );
+            
+            // Convert canvas to blob and create URL
+            canvas.toBlob((blob) => {
+              const compositeUrl = URL.createObjectURL(blob);
+              console.log('Created composite image:', compositeUrl);
+              resolve(compositeUrl);
+            }, 'image/jpeg', 0.9);
+            
+            // Clean up user image URL
+            URL.revokeObjectURL(userImageUrl);
+            
+          } catch (error) {
+            console.error('Error creating composite image:', error);
+            reject(error);
+          }
+        }
+      };
+      
+      backgroundImg.onload = checkIfBothLoaded;
+      backgroundImg.onerror = (error) => {
+        console.error('Error loading background image:', error);
+        reject(error);
+      };
+      
+      userImg.onload = checkIfBothLoaded;
+      userImg.onerror = (error) => {
+        console.error('Error loading user image:', error);
+        reject(error);
+      };
+      
+      // Start loading images
+      backgroundImg.src = backgroundImagePath;
+      userImg.src = userImageUrl;
+    });
+    
+  } catch (error) {
+    console.error('Error in createCompositeImage:', error);
+    return null;
+  }
+};// Loading Spinner Component - exact Figma design
 const AnalysisSpinner = () => {
   return (
     <div
@@ -200,8 +293,9 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
       originalImage: file,
       imageUrl: data?.imageUrl || URL.createObjectURL(file),
       backgroundImage: analysisResult?.analysis?.backgroundImage,
+      compositeImage: analysisResult?.analysis?.compositeImage, // Add composite image
       category: analysisResult?.analysis?.category || 'default',
-      style: analysisResult?.analysis?.style || 'Morden',
+      style: analysisResult?.analysis?.style || 'European',
       objects: analysisResult?.analysis?.objects || [],
       source: data?.source || 'camera', // Track if from album or camera
       timestamp: new Date().toISOString(),
@@ -209,12 +303,14 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
         // Data for background composition/merging
         shouldCompose: true,
         backgroundUrl: analysisResult?.analysis?.backgroundImage,
+        compositeUrl: analysisResult?.analysis?.compositeImage,
+        greenScreenArea: analysisResult?.analysis?.greenScreenArea,
         category: analysisResult?.analysis?.category,
         style: analysisResult?.analysis?.style
       }
     };
     
-    console.log('Navigating to Gallery with data:', galleryData);
+    console.log('Navigating to Gallery with composite data:', galleryData);
     onNavigate && onNavigate(PAGES.GALLERY, galleryData);
   };
 
