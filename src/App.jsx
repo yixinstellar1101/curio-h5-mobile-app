@@ -14,6 +14,8 @@ import { PAGES } from './constants/pages';
 function App() {
   const [currentPage, setCurrentPage] = useState('splash');
   const [pageData, setPageData] = useState(null);
+  const [galleryItems, setGalleryItems] = useState([]); // Store multiple gallery items
+  const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0); // Current viewing index
 
   // Start opening sequence on component mount
   useEffect(() => {
@@ -35,6 +37,15 @@ function App() {
   const handleNavigate = (page, data = null) => {
     if (data) {
       setPageData(data);
+      
+      // If navigating to gallery, add the item to gallery list
+      if (page === PAGES.GALLERY) {
+        setGalleryItems(prevItems => {
+          const newItems = [...prevItems, data];
+          setCurrentGalleryIndex(newItems.length - 1); // Set to show latest item
+          return newItems;
+        });
+      }
     }
     
     switch (page) {
@@ -95,7 +106,12 @@ function App() {
         )}
         
         {currentPage === 'gallery' && (
-          <GalleryPage onNavigate={handleNavigate} data={pageData} />
+          <GalleryPage 
+            onNavigate={handleNavigate} 
+            galleryItems={galleryItems}
+            currentIndex={currentGalleryIndex}
+            onIndexChange={setCurrentGalleryIndex}
+          />
         )}
         
         {currentPage === 'liveRoom' && (

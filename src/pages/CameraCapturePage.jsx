@@ -8,6 +8,9 @@ const imgWifi = "/src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg";
 const imgCellular = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
 const imgBackArrow = "/src/assets/40807933db102c5ddfe145202e96cb747d9662c5.svg";
 const imgWhiteDot = "/src/assets/3a56d57eec3f941a5df78a985a87aa7235c2181a.svg";
+// Background assets - 使用与ImageUploadPage一致的背景
+const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png"; // 与ImageUploadPage一致的背景
+const imgRectangle346603543 = "/src/assets/9b6dc444b0feeb650edd472c766d9b00af5ddbb8.svg"; // 重要的背景覆盖层
 const imgGallery = "/src/assets/01e1d6ae9f47430674fe0f46b61392a43f9c8519.svg";
 
 // Camera Frame Component - exact Figma design
@@ -57,11 +60,12 @@ const CameraCapturePage = ({ onNavigate }) => {
 
   const initializeCamera = async () => {
     try {
-      // Request camera access
+      // Request camera access with 3:4 aspect ratio
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
+          width: { ideal: 1080 },  // 3:4 ratio - width
+          height: { ideal: 1440 }, // 3:4 ratio - height
+          aspectRatio: { ideal: 0.75 }, // 3:4 = 0.75
           facingMode: 'environment' // Use back camera if available
         },
         audio: false
@@ -89,12 +93,39 @@ const CameraCapturePage = ({ onNavigate }) => {
       const video = videoRef.current;
       const context = canvas.getContext('2d');
 
-      // Set canvas dimensions to match video
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      // Calculate 3:4 aspect ratio dimensions
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+      
+      // Determine the output size maintaining 3:4 ratio
+      let outputWidth, outputHeight;
+      const targetAspectRatio = 3 / 4; // 0.75
+      const videoAspectRatio = videoWidth / videoHeight;
+      
+      if (videoAspectRatio > targetAspectRatio) {
+        // Video is wider than 3:4, crop width
+        outputHeight = videoHeight;
+        outputWidth = videoHeight * targetAspectRatio;
+      } else {
+        // Video is taller than 3:4, crop height  
+        outputWidth = videoWidth;
+        outputHeight = videoWidth / targetAspectRatio;
+      }
+      
+      // Set canvas dimensions to 3:4 ratio
+      canvas.width = outputWidth;
+      canvas.height = outputHeight;
+      
+      // Calculate crop offsets to center the crop
+      const cropX = (videoWidth - outputWidth) / 2;
+      const cropY = (videoHeight - outputHeight) / 2;
 
-      // Draw current video frame to canvas
-      context.drawImage(video, 0, 0);
+      // Draw cropped video frame to canvas with 3:4 ratio
+      context.drawImage(
+        video,
+        cropX, cropY, outputWidth, outputHeight, // Source rectangle (cropped from video)
+        0, 0, outputWidth, outputHeight          // Destination rectangle (full canvas)
+      );
 
       // Convert to blob
       canvas.toBlob(async (blob) => {
@@ -144,17 +175,25 @@ const CameraCapturePage = ({ onNavigate }) => {
 
   return (
     <div
-      className="bg-[#221400] relative size-full"
+      className="bg-center bg-cover bg-no-repeat relative w-full h-full"
       data-name="CameraCapturePage"
+      style={{ backgroundImage: `url('${imgHomePage}')` }}
     >
-      {/* Camera Preview Video */}
+      {/* Camera Preview Video - 3:4 aspect ratio */}
       <video
         ref={videoRef}
         autoPlay
         playsInline
         muted
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{ zIndex: 0 }}
+        className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
+        style={{ 
+          zIndex: 0,
+          width: 'auto',
+          height: '100%',
+          aspectRatio: '3/4', // Force 3:4 aspect ratio
+          objectFit: 'cover',
+          maxWidth: '100%'
+        }}
       />
 
       {/* Hidden canvas for capture */}
@@ -228,11 +267,16 @@ const CameraCapturePage = ({ onNavigate }) => {
         <img alt="Back" className="block max-w-none size-full" src={imgBackArrow} />
       </button>
 
-      {/* Camera Frame/Viewfinder - Exact Figma positioning with click handler */}
+      {/* Camera Frame/Viewfinder - Adjusted for 3:4 aspect ratio with click handler */}
       <div
-        className="absolute h-[336px] left-1/2 translate-x-[-50%] translate-y-[-50%] w-[299px] z-10 cursor-pointer"
+        className="absolute left-1/2 translate-x-[-50%] translate-y-[-50%] z-10 cursor-pointer"
         data-name="kuang"
-        style={{ top: "calc(50% - 41px)" }}
+        style={{ 
+          top: "calc(50% - 41px)",
+          width: '280px',  // Adjusted for better 3:4 fit
+          height: '373px', // 280 * 4/3 = 373.33, maintaining 3:4 ratio
+          aspectRatio: '3/4'
+        }}
         onClick={handleViewfinderClick}
       >
         <CameraFrame />

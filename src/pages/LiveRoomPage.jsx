@@ -35,7 +35,17 @@ const imgAvatarQianlong = "/src/assets/6b326c99ea19859605dd14cb228f024ce6a52c08.
  * Based on exact Figma design with mock API integration
  */
 const LiveRoomPage = ({ data = {}, onNavigate }) => {
-  const { image, analysis } = data || {};
+  const { 
+    image, 
+    analysis, 
+    backgroundImage, 
+    originalImage, 
+    imageUrl, 
+    category, 
+    style, 
+    objects 
+  } = data || {};
+  
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [conversationStream, setConversationStream] = useState(null);
@@ -64,6 +74,21 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
     'Su Shi': imgAvatarVanGogh,
     'Vincent van Gogh': imgAvatarSuShi
   };
+
+  // Get background image - use the same background as GalleryPage
+  const getBackgroundImage = () => {
+    // Use the background image passed from GalleryPage
+    if (backgroundImage) {
+      console.log('Using background image from GalleryPage:', backgroundImage);
+      return backgroundImage;
+    }
+    
+    // Fallback to default background
+    console.log('Using default background fallback');
+    return imgBackground;
+  };
+
+  const backgroundImageSrc = getBackgroundImage();
 
   useEffect(() => {
     initializeConversation();
@@ -277,7 +302,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   return (
     <div 
       className="h-full w-full bg-cover bg-center relative overflow-hidden"
-      style={{ backgroundImage: `url(${imgBackground})` }}
+      style={{ backgroundImage: `url(${backgroundImageSrc})` }}
     >
       {/* Status Bar */}
       <div className="absolute top-0 left-0 right-0 flex justify-between items-center pt-3 pb-2 px-4 bg-transparent z-10">

@@ -9,6 +9,8 @@ const imgBackArrow = "/src/assets/40807933db102c5ddfe145202e96cb747d9662c5.svg";
 const imgAnalysisButton = "/src/assets/2314863aa5b98c3561bbba15a029ce5d6b01faa6.svg";
 const imgViewfinder = "/src/assets/db6877c52f8f212513e0ebd034674ef3aa25f15a.svg";
 const imgGallery = "/src/assets/01e1d6ae9f47430674fe0f46b61392a43f9c8519.svg";
+// Background assets - 使用与ImageUploadPage一致的背景
+const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png";
 
 // Mock API service for image analysis with background classification
 const mockAnalyzeImage = async (file) => {
@@ -319,7 +321,11 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
   };
 
   return (
-    <div className="bg-[#221400] relative size-full" data-name="ImageAnalysisPage">
+    <div
+      className="bg-center bg-cover bg-no-repeat relative w-full h-full"
+      data-name="ImageAnalysisPage"
+      style={{ backgroundImage: `url('${imgHomePage}')` }}
+    >
       {/* Status Bar */}
       <div className="absolute box-border content-stretch flex flex-col items-start justify-start left-1/2 p-0 top-0 translate-x-[-50%] w-[393px] z-20">
         <div className="h-11 relative shrink-0 w-full">
@@ -378,22 +384,14 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
         </>
       )}
 
-      {/* Analysis Complete State */}
+      {/* Analysis Complete State - Simplified with buttons only */}
       {analysisState === 'complete' && analysisResult && (
-        <div className="absolute left-1/2 translate-x-[-50%] translate-y-[-50%] w-80 bg-black/80 backdrop-blur-sm rounded-2xl p-6 z-30" style={{ top: "calc(50% + 100px)" }}>
-          <h3 className="text-white text-lg font-semibold mb-3">Analysis Complete</h3>
-          <div className="text-white/80 text-sm space-y-2">
-            <p><strong>Objects detected:</strong> {analysisResult.analysis.objects.join(', ')}</p>
-            <p><strong>Category:</strong> {analysisResult.analysis.category?.replace('_', ' ')}</p>
-            <p><strong>Description:</strong> {analysisResult.analysis.description}</p>
-            <p><strong>Confidence:</strong> {Math.round(analysisResult.analysis.confidence * 100)}%</p>
-            {data?.source === 'album' && <p><strong>Source:</strong> Photo Album</p>}
-          </div>
-          <div className="flex gap-3 mt-4">
-            <button onClick={handleRetake} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors">
+        <div className="absolute left-1/2 translate-x-[-50%] top-[600px] w-80 z-30">
+          <div className="flex gap-3">
+            <button onClick={handleRetake} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 px-6 rounded-lg transition-colors font-medium">
               {data?.source === 'album' ? 'Choose Again' : 'Retake'}
             </button>
-            <button onClick={handleContinue} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
+            <button onClick={handleContinue} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg transition-colors font-medium">
               Continue to Gallery
             </button>
           </div>

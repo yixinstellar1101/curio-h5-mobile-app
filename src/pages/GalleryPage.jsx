@@ -7,13 +7,16 @@ const imgStatusWifi = "/src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg"
 const imgStatusCellular = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
 const imgBackground = "/src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png";
 
-const GalleryPage = ({ data = {}, onNavigate }) => {
+const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNavigate }) => {
   const [startX, setStartX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const containerRef = useRef(null);
   
-  // Extract data from the structure passed by ImageAnalysisPage
+  // Get current gallery item or default
+  const currentItem = galleryItems[currentIndex] || {};
+  
+  // Extract data from the current gallery item
   const { 
     analysis, 
     originalImage, 
@@ -26,12 +29,28 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
     source,
     timestamp,
     composition
-  } = data || {};
+  } = currentItem;
   
-  console.log('GalleryPage received data:', data); // Debug log
+  console.log('GalleryPage received items:', galleryItems); // Debug log
+  console.log('Current index:', currentIndex); // Debug log
   
   // Get metadata from analysis results or use defaults for demo
   const getMetadata = () => {
+    // If no current item, return default
+    if (!currentItem || Object.keys(currentItem).length === 0) {
+      return {
+        title: "Gallery Item",
+        timestamp: new Date().toLocaleString('en-US', { 
+          month: 'long', 
+          day: 'numeric', 
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }),
+        description: "No description available."
+      };
+    }
+
     if (analysis?.analysis) {
       // Use actual analysis data if available
       const analysisData = analysis.analysis;
@@ -136,7 +155,7 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
       originalImage, 
       imageUrl, 
       analysis,
-      backgroundImage,
+      backgroundImage: backgroundImageSrc, // Use the same background as current GalleryPage
       category,
       style,
       objects 
@@ -147,7 +166,29 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
     setShowPopup(false);
   };
 
-  // Handle swipe gestures
+  // If no gallery items, show empty state
+  if (galleryItems.length === 0) {
+    return (
+      <div className="relative w-[393px] h-[852px] bg-black flex items-center justify-center">
+        <div className="text-center px-[40px]">
+          <div className="text-white text-[24px] font-bold mb-[16px]">
+            No Gallery Items
+          </div>
+          <div className="text-white/70 text-[16px] mb-[24px]">
+            Take a photo or upload an image to start building your gallery.
+          </div>
+          <button
+            onClick={() => onNavigate && onNavigate(PAGES.HOME)}
+            className="bg-white text-black px-[24px] py-[12px] rounded-[12px] font-medium"
+          >
+            Go Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle swipe gestures for gallery navigation
   const handleTouchStart = (e) => {
     setStartX(e.touches[0].clientX);
     setIsDragging(true);
@@ -165,9 +206,23 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
     const deltaX = endX - startX;
     const threshold = 100; // Minimum swipe distance
     
-    // Left swipe (swipe right to left) - go back to HomePage
+    // Right swipe (swipe left to right) - go to previous item or back to Home
     if (deltaX > threshold) {
-      onNavigate && onNavigate(PAGES.HOME);
+      if (currentIndex > 0) {
+        // Navigate to previous gallery item
+        onIndexChange && onIndexChange(currentIndex - 1);
+      } else {
+        // At first item, go back to HomePage
+        onNavigate && onNavigate(PAGES.HOME);
+      }
+    }
+    // Left swipe (swipe right to left) - go to next item
+    else if (deltaX < -threshold) {
+      if (currentIndex < galleryItems.length - 1) {
+        // Navigate to next gallery item
+        onIndexChange && onIndexChange(currentIndex + 1);
+      }
+      // At last item, no action (or could go back to analysis/capture)
     }
     
     setIsDragging(false);
@@ -196,6 +251,17 @@ const GalleryPage = ({ data = {}, onNavigate }) => {
           <img className="w-[24px] h-[11px]" src={imgStatusBattery} alt="Battery" />
         </div>
       </div>
+
+      {/* Gallery navigation indicator */}
+      {galleryItems.length > 1 && (
+        <div className="absolute top-[50px] left-1/2 transform -translate-x-1/2 z-20">
+          <div className="flex items-center gap-[8px] bg-black/30 px-[12px] py-[6px] rounded-[20px] backdrop-blur-sm">
+            <span className="text-white text-[14px] font-medium">
+              {currentIndex + 1} / {galleryItems.length}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Interactive area in the center for popup trigger */}
       <div 

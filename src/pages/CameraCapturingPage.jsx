@@ -9,6 +9,8 @@ const imgBackArrow = "/src/assets/40807933db102c5ddfe145202e96cb747d9662c5.svg";
 const imgWhiteDot = "/src/assets/5b05d68c3eb2bca3a02f5a3824a8ff08166d4c40.svg";
 const imgViewfinder = "/src/assets/7f7f4e9c0ff1336f239a058ecfbcb93598e33f94.svg";
 const imgGallery = "/src/assets/01e1d6ae9f47430674fe0f46b61392a43f9c8519.svg";
+// Background assets - 使用与ImageUploadPage一致的背景
+const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png";
 
 // Loading Spinner Component - exact Figma design
 const LoadingSpinner = () => {
@@ -92,8 +94,9 @@ const CameraCapturingPage = ({ onNavigate, data }) => {
 
   return (
     <div
-      className="bg-[#221400] relative size-full"
+      className="bg-center bg-cover bg-no-repeat relative w-full h-full"
       data-name="CameraCapturingPage"
+      style={{ backgroundImage: `url('${imgHomePage}')` }}
     >
       {/* Status Bar */}
       <div
