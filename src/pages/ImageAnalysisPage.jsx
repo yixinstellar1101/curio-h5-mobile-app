@@ -10,7 +10,6 @@ const imgCellular = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
 const imgBackArrow = "/src/assets/40807933db102c5ddfe145202e96cb747d9662c5.svg";
 const imgAnalysisButton = "/src/assets/2314863aa5b98c3561bbba15a029ce5d6b01faa6.svg";
 const imgViewfinder = "/src/assets/db6877c52f8f212513e0ebd034674ef3aa25f15a.svg";
-const imgGallery = "/src/assets/01e1d6ae9f47430674fe0f46b61392a43f9c8519.svg";
 // Background assets - 使用与ImageUploadPage一致的背景
 const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png";
 
@@ -203,10 +202,6 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
     onNavigate && onNavigate(PAGES.GALLERY, galleryData);
   };
 
-  const handleGallery = () => {
-    onNavigate && onNavigate(PAGES.GALLERY);
-  };
-
   return (
     <div
       className="bg-center bg-cover bg-no-repeat relative w-full h-full"
@@ -307,17 +302,6 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
           <img alt="Analysis" className="block max-w-none size-full" src={imgAnalysisButton} />
         </div>
       </div>
-
-      {/* Gallery Button */}
-      <button className="absolute left-[290px] top-[727px] z-20 cursor-pointer hover:scale-110 transition-transform duration-200" onClick={handleGallery}>
-        <div className="backdrop-blur-[0.778px] backdrop-filter bg-[rgba(0,0,0,0.3)] rounded-[7.778px] size-[42px]">
-          <div className="absolute contents inset-[20.37%_18.52%]">
-            <div className="absolute inset-[20.37%_18.52%]">
-              <img alt="Gallery" className="block max-w-none size-full" src={imgGallery} />
-            </div>
-          </div>
-        </div>
-      </button>
 
       {/* Home Indicator */}
       <div className="absolute box-border content-stretch flex flex-col items-center justify-start left-0 p-0 top-[826px] w-[393px] z-20">

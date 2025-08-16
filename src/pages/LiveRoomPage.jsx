@@ -11,6 +11,7 @@ import {
 } from '../services/mockLiveRoomApi';
 import CharacterDetailCardPage from '../components/CharacterDetailCardPage';
 import CharacterDetailFullPage from '../components/CharacterDetailFullPage';
+import TextInputBar from '../components/TextInputBar';
 
 // Asset imports from Figma
 const imgStatusBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
@@ -91,6 +92,9 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [conversationStream, setConversationStream] = useState(null);
+  
+  // Text input state
+  const [showTextInput, setShowTextInput] = useState(false);
   
   // Character detail modal states
   const [showCharacterCard, setShowCharacterCard] = useState(false);
@@ -224,23 +228,93 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   };
 
   const handleTextInput = () => {
-    onNavigate && onNavigate(PAGES.TEXT_INPUT, { returnTo: PAGES.LIVE_ROOM });
+    setShowTextInput(true);
+  };
+
+  const handleSendMessage = async (messageText) => {
+    if (!conversationStream || !messageText.trim()) return;
+
+    console.log('=== USER MESSAGE SENT ===');
+    console.log('Message:', messageText);
+
+    try {
+      // 提交用户消息到mock API
+      const result = await mockSubmitUserMessage(conversationStream.streamId, messageText, 'text');
+      
+      if (result.success) {
+        // 添加用户消息到对话中
+        const userMessage = {
+          ...result.userMessage,
+          speaker: 'You', // 显示为用户
+          avatar: null // 用户没有头像
+        };
+        
+        setMessages(prev => [...prev, userMessage]);
+        
+        // 添加AI角色的回复
+        if (result.aiResponses && result.aiResponses.length > 0) {
+          // 延迟添加AI回复，模拟思考时间
+          setTimeout(() => {
+            setMessages(prev => [...prev, ...result.aiResponses]);
+            // 滚动到最新消息
+            setTimeout(() => {
+              scrollToBottom();
+            }, 100);
+          }, 1000); // 1秒延迟
+        }
+        
+        // 滚动到用户消息
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Failed to send user message:', error);
+    }
+  };
+
+  const handleCloseTextInput = () => {
+    setShowTextInput(false);
   };
 
   const handleReroll = async () => {
-    if (!conversationStream) return;
+    if (!conversationStream) {
+      console.warn('No conversation stream available for reroll');
+      return;
+    }
+    
+    console.log('=== REROLL BUTTON CLICKED ===');
+    console.log('Generating new conversation messages...');
     
     try {
+      // 添加视觉反馈：显示加载状态
+      setIsLoading(true);
+      
       const result = await mockGenerateConversation(conversationStream.streamId, {
         generateNewLoop: true,
         category: conversationStream.category
       });
       
-      if (result.messages) {
+      if (result.messages && result.messages.length > 0) {
+        console.log(`Generated ${result.messages.length} new messages`);
+        // 添加新的消息到现有对话中
         setMessages(prev => [...prev, ...result.messages]);
+        
+        // 滚动到最新消息
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
+      } else {
+        console.warn('No new messages generated');
       }
+      
+      setIsLoading(false);
     } catch (error) {
       console.error('Reroll failed:', error);
+      setIsLoading(false);
+      
+      // 可以添加错误提示给用户
+      // 这里可以显示一个toast或其他提示
     }
   };
 
@@ -414,16 +488,29 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
             <>
               {messages.map((message, index) => (
                 <div key={message.id} className="mb-3 animate-fade-in">
-                  <div className="inline-flex items-center gap-3">
-                    <img 
-                      src={characterAvatars[message.speaker]}
-                      alt={message.speaker}
-                      className={`w-8 h-8 rounded-full flex-shrink-0 ${
-                        message.speaker === 'Vincent van Gogh' ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
-                      }`}
-                      onClick={message.speaker === 'Vincent van Gogh' ? handleVanGoghClick : undefined}
-                    />
-                    <div className="bg-white/10 backdrop-blur-md rounded-2xl px-3 py-2 max-w-xs">
+                  <div className={`inline-flex items-center gap-3 ${
+                    message.speaker === 'You' ? 'flex-row-reverse' : ''
+                  }`}>
+                    {message.speaker === 'You' ? (
+                      // 用户消息：没有头像，使用不同的样式
+                      <div className="w-8 h-8 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">You</span>
+                      </div>
+                    ) : (
+                      <img 
+                        src={characterAvatars[message.speaker]}
+                        alt={message.speaker}
+                        className={`w-8 h-8 rounded-full flex-shrink-0 ${
+                          message.speaker === 'Vincent van Gogh' ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                        }`}
+                        onClick={message.speaker === 'Vincent van Gogh' ? handleVanGoghClick : undefined}
+                      />
+                    )}
+                    <div className={`rounded-2xl px-3 py-2 max-w-xs ${
+                      message.speaker === 'You' 
+                        ? 'bg-blue-600/80 backdrop-blur-md' 
+                        : 'bg-white/10 backdrop-blur-md'
+                    }`}>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-white font-medium text-xs">
                           {message.speaker}
@@ -449,57 +536,78 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       </div>
 
       {/* Control Panel - Match exact Figma design */}
-      <div className="absolute bottom-8 left-5 right-5">
-        <div className="flex items-center gap-3">
-          {/* Voice input with text */}
-          <div className="backdrop-blur-[1px] bg-black/30 flex items-center gap-4 px-3 py-2 rounded-full flex-1">
-            <div className="w-[22px] h-[22px] flex-shrink-0">
-              <img src={imgMicrophone} alt="microphone" className="w-full h-full" />
+      {!showTextInput && (
+        <div className="absolute bottom-8 left-5 right-5">
+          <div className="flex items-center gap-3">
+            {/* Voice input with text */}
+            <div className="backdrop-blur-[1px] bg-black/30 flex items-center gap-4 px-3 py-2 rounded-full flex-1">
+              <div className="w-[22px] h-[22px] flex-shrink-0">
+                <img src={imgMicrophone} alt="microphone" className="w-full h-full" />
+              </div>
+              <span className="text-[#e5e0dc] text-[13px] font-['Avenir_LT_Std:55_Roman',sans-serif] leading-[22px]">
+                Press and hold to speak
+              </span>
             </div>
-            <span className="text-[#e5e0dc] text-[13px] font-['Avenir_LT_Std:55_Roman',sans-serif] leading-[22px]">
-              Press and hold to speak
-            </span>
+            
+            {/* Keyboard button */}
+            <button 
+              onClick={handleTextInput}
+              className="backdrop-blur-[1px] bg-black/30 flex items-center justify-center p-2 rounded-full w-[38px] h-[38px] flex-shrink-0"
+            >
+              <div className="w-[22px] h-[22px]">
+                <img src={imgKeyboard} alt="keyboard" className="w-full h-full" />
+              </div>
+            </button>
+            
+            {/* Reroll button */}
+            <button 
+              onClick={handleReroll}
+              disabled={isLoading}
+              className={`backdrop-blur-[1px] bg-black/30 flex items-center justify-center p-2 rounded-full w-[38px] h-[38px] flex-shrink-0 transition-opacity ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-black/40 active:scale-95'
+              }`}
+              title="重新生成对话"
+            >
+              <div className="w-[22px] h-[22px]">
+                {isLoading ? (
+                  <div className="animate-spin rounded-full h-full w-full border-2 border-white border-t-transparent"></div>
+                ) : (
+                  <img src={imgRecheck} alt="reroll" className="w-full h-full" />
+                )}
+              </div>
+            </button>
+            
+            {/* Like button */}
+            <button 
+              onClick={handleLike}
+              className="backdrop-blur-[1px] bg-black/30 flex items-center justify-center p-2 rounded-full w-[38px] h-[38px] flex-shrink-0"
+            >
+              <div className="w-[22px] h-[22px]">
+                <img src={imgLike} alt="like" className="w-full h-full" />
+              </div>
+            </button>
           </div>
-          
-          {/* Keyboard button */}
-          <button 
-            onClick={handleTextInput}
-            className="backdrop-blur-[1px] bg-black/30 flex items-center justify-center p-2 rounded-full w-[38px] h-[38px] flex-shrink-0"
-          >
-            <div className="w-[22px] h-[22px]">
-              <img src={imgKeyboard} alt="keyboard" className="w-full h-full" />
-            </div>
-          </button>
-          
-          {/* Reroll button */}
-          <button 
-            onClick={handleReroll}
-            className="backdrop-blur-[1px] bg-black/30 flex items-center justify-center p-2 rounded-full w-[38px] h-[38px] flex-shrink-0"
-          >
-            <div className="w-[22px] h-[22px]">
-              <img src={imgRecheck} alt="reroll" className="w-full h-full" />
-            </div>
-          </button>
-          
-          {/* Like button */}
-          <button 
-            onClick={handleLike}
-            className="backdrop-blur-[1px] bg-black/30 flex items-center justify-center p-2 rounded-full w-[38px] h-[38px] flex-shrink-0"
-          >
-            <div className="w-[22px] h-[22px]">
-              <img src={imgLike} alt="like" className="w-full h-full" />
-            </div>
-          </button>
         </div>
-      </div>
+      )}
+
+      {/* Text Input Bar */}
+      {showTextInput && (
+        <TextInputBar
+          onSendMessage={handleSendMessage}
+          onClose={handleCloseTextInput}
+          placeholder="Type here"
+        />
+      )}
 
       {/* Floating Emojis */}
       {renderFloatingEmojis()}
 
-      {/* Home Indicator */}
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-        <div className="w-32 h-1 bg-white/30 rounded-full"></div>
-      </div>
+      {/* Home Indicator - only show when text input is not visible */}
+      {!showTextInput && (
+        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+          <div className="w-32 h-1 bg-white/30 rounded-full"></div>
+        </div>
+      )}
 
       {/* Character Detail Modals */}
       {showCharacterCard && (

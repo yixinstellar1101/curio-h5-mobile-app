@@ -48,8 +48,9 @@ class MusicManager {
    */
   selectMusicByCategory(category, backgroundId) {
     console.log('=== MUSIC SELECTION START ===');
-    console.log('Category:', category);
-    console.log('Background ID:', backgroundId);
+    console.log('Input parameters:', { category, backgroundId });
+    console.log('Available categories:', Object.keys(MUSIC_MAPPING));
+    console.log('Category music tracks:', MUSIC_MAPPING[category] ? MUSIC_MAPPING[category].length : 0);
 
     const categoryMusic = MUSIC_MAPPING[category];
     if (!categoryMusic || categoryMusic.length === 0) {
@@ -70,6 +71,13 @@ class MusicManager {
 
     const selectedTrack = categoryMusic[trackIndex];
     console.log(`Selected track ${trackIndex + 1}/${categoryMusic.length}:`, selectedTrack);
+    console.log('Track details:', {
+      category,
+      backgroundId,
+      hash: backgroundId ? this.simpleHash(backgroundId) : 'no-id',
+      trackIndex,
+      filename: selectedTrack.split('/').pop()
+    });
     console.log('=== MUSIC SELECTION COMPLETE ===');
     return selectedTrack;
   }

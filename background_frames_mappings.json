@@ -135,7 +135,7 @@
         "height": 370
       }
     },
-    "Morden_3_4_01": {
+    "Modern_3_4_01": {
       "category": "Modern",
       "filename": "Morden_3_4_01.jpg",
       "boundingBox": {
@@ -145,9 +145,9 @@
         "height": 354
       }
     },
-    "Morden_3_4_02": {
+    "Modern_3_4_02": {
       "category": "Modern",
-      "filename": "Morden_3_4_02.jpg",
+      "filename": "Modern_3_4_02.jpg",
       "boundingBox": {
         "x": 216,
         "y": 612,
@@ -155,9 +155,9 @@
         "height": 456
       }
     },
-    "Morden_3_4_03": {
+    "Modern_3_4_03": {
       "category": "Modern",
-      "filename": "Morden_3_4_03.jpg",
+      "filename": "Modern_3_4_03.jpg",
       "boundingBox": {
         "x": 246,
         "y": 656,
@@ -165,9 +165,9 @@
         "height": 378
       }
     },
-    "Morden_3_4_04": {
+    "Modern_3_4_04": {
       "category": "Modern",
-      "filename": "Morden_3_4_04.jpg",
+      "filename": "Modern_3_4_04.jpg",
       "boundingBox": {
         "x": 252,
         "y": 650,
@@ -175,9 +175,9 @@
         "height": 356
       }
     },
-    "Morden_3_4_05": {
+    "Modern_3_4_05": {
       "category": "Modern",
-      "filename": "Morden_3_4_05.jpg",
+      "filename": "Modern_3_4_05.jpg",
       "boundingBox": {
         "x": 240,
         "y": 638,
@@ -185,9 +185,9 @@
         "height": 360
       }
     },
-    "Morden_3_4_06": {
+    "Modern_3_4_06": {
       "category": "Modern",
-      "filename": "Morden_3_4_06.jpg",
+      "filename": "Modern_3_4_06.jpg",
       "boundingBox": {
         "x": 268,
         "y": 644,

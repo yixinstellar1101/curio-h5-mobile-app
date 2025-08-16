@@ -105,7 +105,7 @@ const HomePage = ({ onNavigate }) => {
         <div
           className="bg-center bg-cover bg-no-repeat h-[421px] shadow-[82px_201px_61px_0px_rgba(0,0,0,0.01),53px_128px_56px_0px_rgba(0,0,0,0.06),30px_72px_47px_0px_rgba(0,0,0,0.2),13px_32px_35px_0px_rgba(0,0,0,0.34),3px_8px_19px_0px_rgba(0,0,0,0.39)] shrink-0 w-[281px] hover:scale-105 transition-transform duration-300 cursor-pointer"
           style={{ backgroundImage: `url('${imgImage176}')` }}
-          onClick={() => onNavigate && onNavigate(PAGES.LIVE_ROOM)}
+          onClick={() => onNavigate && onNavigate(PAGES.IMAGE_UPLOAD)}
         />
         <div
           className="bg-[12.08%_51.25%] bg-no-repeat h-[339px] opacity-70 shadow-[82px_201px_61px_0px_rgba(0,0,0,0.01),53px_128px_56px_0px_rgba(0,0,0,0.06),30px_72px_47px_0px_rgba(0,0,0,0.2),13px_32px_35px_0px_rgba(0,0,0,0.34),3px_8px_19px_0px_rgba(0,0,0,0.39)] shrink-0 w-[33px] hover:opacity-100 transition-opacity duration-300 cursor-pointer"

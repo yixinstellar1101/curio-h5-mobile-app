@@ -8,6 +8,7 @@ const imgStatusBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.s
 const imgStatusWifi = "/src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg";
 const imgStatusCellular = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
 const imgBackground = "/src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png";
+const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png"; // HomePage背景图片
 
 const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNavigate }) => {
   const [startX, setStartX] = useState(0);
@@ -62,7 +63,18 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
       const backgroundId = currentItem.backgroundId || `${musicCategory}_${currentIndex}`;
       
       console.log('=== GALLERY MUSIC CONTROL ===');
+      console.log('Current item full data:', currentItem);
+      console.log('Music category determination:', {
+        style: currentItem.style,
+        category: currentItem.category,
+        fallback: 'European',
+        selected: musicCategory
+      });
       console.log('Playing music for:', { musicCategory, backgroundId, currentIndex });
+      console.log('Background info:', {
+        backgroundImage: currentItem.backgroundImage,
+        backgroundId: currentItem.backgroundId
+      });
       
       try {
         // 先停止当前播放的音乐，然后播放新的音乐
@@ -258,7 +270,10 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
   // If no gallery items, show empty state
   if (processedItems.length === 0) {
     return (
-      <div className="relative w-[393px] h-[852px] bg-black flex items-center justify-center">
+      <div 
+        className="relative w-[393px] h-[852px] bg-cover bg-center flex items-center justify-center"
+        style={{ backgroundImage: `url('${imgHomePage}')` }}
+      >
         <div className="text-center px-[40px]">
           <div className="text-white text-[24px] font-bold mb-[16px]">
             No Gallery Items
@@ -379,7 +394,7 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
       </div>
 
       {/* Text content - following Figma design exactly */}
-      <div className="absolute left-0 right-0 bottom-[140px] flex flex-col items-center gap-2 px-[24px]">
+      <div className="absolute left-0 right-0 bottom-[90px] flex flex-col items-center gap-2 px-[24px]">
         {/* Title */}
         <h1 className="text-white text-[28px] font-bold leading-[34px] font-sf-pro text-center">
           {metadata.title}

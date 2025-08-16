@@ -132,15 +132,66 @@ export const analyzeImage = async (imageInput, requestId = null) => {
   
   const imageId = generateId();
   
-  // Simulate random classification (in real implementation, this would be AI-driven)
-  const randomCategory = CLASSIFICATION_CATEGORIES[Math.floor(Math.random() * CLASSIFICATION_CATEGORIES.length)];
-  const confidence = 0.85 + Math.random() * 0.14; // 0.85-0.99
+  // Simulate smarter classification based on image content characteristics
+  // Use image file properties to create deterministic but pseudo-random classification
+  let classificationSeed = 0;
   
-  console.log('Selected random category:', randomCategory);
+  if (imageInput instanceof File) {
+    // Use file name, size, and lastModified to create a deterministic seed
+    const fileName = imageInput.name.toLowerCase();
+    const fileSize = imageInput.size;
+    const lastModified = imageInput.lastModified || Date.now();
+    
+    // Simple hash function for deterministic classification
+    classificationSeed = (fileName.length * 31 + fileSize + lastModified) % 1000;
+    
+    console.log('Classification seed based on file:', {
+      name: fileName,
+      size: fileSize,
+      lastModified,
+      seed: classificationSeed
+    });
+  } else {
+    // Fallback for other input types
+    classificationSeed = Math.floor(Math.random() * 1000);
+  }
+  
+  // Use seed to select category more intelligently
+  // Distribute categories with realistic proportions:
+  // Chinese (1,6): 30% chance
+  // European (2,4,5,7): 50% chance  
+  // Modern (3): 20% chance
+  let selectedCategory;
+  if (classificationSeed < 150) {
+    // 15% - Chinese Historical Artifact
+    selectedCategory = CLASSIFICATION_CATEGORIES[0]; // Category 1
+  } else if (classificationSeed < 300) {
+    // 15% - Chinese Painting / Calligraphy  
+    selectedCategory = CLASSIFICATION_CATEGORIES[5]; // Category 6
+  } else if (classificationSeed < 500) {
+    // 20% - Modern Product
+    selectedCategory = CLASSIFICATION_CATEGORIES[2]; // Category 3
+  } else if (classificationSeed < 625) {
+    // 12.5% - European Historical Artifact
+    selectedCategory = CLASSIFICATION_CATEGORIES[1]; // Category 2
+  } else if (classificationSeed < 750) {
+    // 12.5% - Pet
+    selectedCategory = CLASSIFICATION_CATEGORIES[3]; // Category 4
+  } else if (classificationSeed < 875) {
+    // 12.5% - Portrait / People
+    selectedCategory = CLASSIFICATION_CATEGORIES[4]; // Category 5
+  } else {
+    // 12.5% - European Painting / Calligraphy
+    selectedCategory = CLASSIFICATION_CATEGORIES[6]; // Category 7
+  }
+  
+  const confidence = 0.85 + (classificationSeed % 100) * 0.0014; // 0.85-0.99, deterministic
+  
+  console.log('Selected category based on seed:', selectedCategory);
   
   // Get background style from category mapping
-  const backgroundStyle = CATEGORY_MAPPING[randomCategory.number] || "European";
-  console.log('Background style for category', randomCategory.number + ':', backgroundStyle);
+  const backgroundStyle = CATEGORY_MAPPING[selectedCategory.number] || "European";
+  console.log('Background style for category', selectedCategory.number + ':', backgroundStyle);
   
   // Select random background from the category
   const categoryBackgrounds = Object.entries(backgroundFrameMappings.backgroundFrames)
@@ -161,9 +212,9 @@ export const analyzeImage = async (imageInput, requestId = null) => {
   console.log('Selected background:', backgroundId, backgroundInfo);
   
   // Generate metadata
-  const metadataName = generateMetadataName(randomCategory.number);
+  const metadataName = generateMetadataName(selectedCategory.number);
   const timestamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
-  const description = generateDescription(randomCategory.number, metadataName);
+  const description = generateDescription(selectedCategory.number, metadataName);
   
   // Generate URLs (in real implementation, these would be actual Azure Blob Storage URLs)
   const baseUrl = "https://storage.blob.core.windows.net";
@@ -177,8 +228,8 @@ export const analyzeImage = async (imageInput, requestId = null) => {
     imageId,
     imageUrl,
     classification: {
-      categoryNumber: randomCategory.number,
-      categoryLabel: randomCategory.label,
+      categoryNumber: selectedCategory.number,
+      categoryLabel: selectedCategory.label,
       confidence: parseFloat(confidence.toFixed(3))
     },
     metadata: {
@@ -198,7 +249,9 @@ export const analyzeImage = async (imageInput, requestId = null) => {
   };
   
   console.log('=== MOCK ANALYZE IMAGE RESULT ===');
-  console.log('Final result:', result);
+  console.log('Final result classification:', result.classification);
+  console.log('Final result background:', result.background);
+  console.log('Background style should match music category:', backgroundStyle);
   console.log('=== MOCK ANALYZE IMAGE END ===');
   
   return result;
