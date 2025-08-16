@@ -11,9 +11,8 @@ export const getRandomBackgroundByCategory = (category) => {
   
   // 规范化分类名称 
   let normalizedCategory = category;
-  // 注意：文件夹名仍然是Morden，但我们的分类统一使用Modern
+  // 统一使用Modern分类，文件夹名称也是Modern
   if (category === 'Modern') {
-    // 文件夹路径使用Morden，但内部处理使用Modern
     normalizedCategory = 'Modern';
   }
   
@@ -69,12 +68,10 @@ export const getRandomBackgroundByCategory = (category) => {
 };
 
 /**
- * 获取实际的文件夹名称（处理Modern->Morden的映射）
+ * 获取实际的文件夹名称
  */
 const getActualFolderName = (category) => {
-  if (category === 'Modern') {
-    return 'Morden'; // 文件夹名仍然是Morden
-  }
+  // 所有文件夹名称都与分类名称一致
   return category;
 };
 

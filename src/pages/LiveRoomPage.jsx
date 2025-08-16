@@ -28,8 +28,8 @@ const imgLike = "/src/assets/a996fbaf85b7c9f17c8f104ff2ba4feb228e993b.svg";
 
 // Character avatars from Figma
 const imgAvatarLuXun = "/src/assets/0a0aca255a6a424fd8f131455677b58d6309fa99.png";
-const imgAvatarSuShi = "/src/assets/bb22518de19c944000484ee66f86147664b959a6.png"; 
-const imgAvatarVanGogh = "/src/assets/855a8fe22b8b7ac5f293f93e60065e26a3efd17d.png";
+const imgAvatarSuShi = "/src/assets/855a8fe22b8b7ac5f293f93e60065e26a3efd17d.png"; 
+const imgAvatarVanGogh = "/src/assets/bb22518de19c944000484ee66f86147664b959a6.png";
 const imgAvatarQianlong = "/src/assets/6b326c99ea19859605dd14cb228f024ce6a52c08.png";
 
 /**
@@ -96,10 +96,18 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   // Text input state
   const [showTextInput, setShowTextInput] = useState(false);
   
+  // Message display queue for sequential appearance
+  const [messageQueue, setMessageQueue] = useState([]);
+  const [isDisplayingMessages, setIsDisplayingMessages] = useState(false);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [userScrolledUp, setUserScrolledUp] = useState(false);
+  
   // Character detail modal states
   const [showCharacterCard, setShowCharacterCard] = useState(false);
   const [showCharacterFull, setShowCharacterFull] = useState(false);
   const [showIntroPopup, setShowIntroPopup] = useState(false);
+  const [showSuShiPopup, setShowSuShiPopup] = useState(false);
+  const [showLuXunPopup, setShowLuXunPopup] = useState(false);
   
   // Right channel emoji system
   const [channelEmojis, setChannelEmojis] = useState([]);
@@ -117,8 +125,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   // Character avatar mapping
   const characterAvatars = {
     'Lu Xun': imgAvatarLuXun,
-    'Su Shi': imgAvatarVanGogh,
-    'Vincent van Gogh': imgAvatarSuShi
+    'Su Shi': imgAvatarSuShi,
+    'Vincent van Gogh': imgAvatarVanGogh
   };
 
   // Get background image - use the same background as GalleryPage
@@ -155,6 +163,36 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
     scrollToBottom();
   }, [messages]);
 
+  // Process message queue for sequential display
+  useEffect(() => {
+    if (messageQueue.length === 0 || isDisplayingMessages) return;
+
+    const displayNextMessage = async () => {
+      setIsDisplayingMessages(true);
+      
+      const nextMessage = messageQueue[0];
+      setMessages(prev => [...prev, nextMessage]);
+      setMessageQueue(prev => prev.slice(1));
+      
+      // Wait random 1-3 seconds before showing next message
+      const randomDelay = Math.random() * 2000 + 1000; // 1000ms-3000ms 随机间隔
+      await new Promise(resolve => setTimeout(resolve, randomDelay));
+      
+      setIsDisplayingMessages(false);
+    };
+
+    displayNextMessage();
+  }, [messageQueue, isDisplayingMessages]);
+
+  // Helper function to add messages to queue for sequential display
+  const addMessagesToQueue = (newMessages) => {
+    if (Array.isArray(newMessages)) {
+      setMessageQueue(prev => [...prev, ...newMessages]);
+    } else {
+      setMessageQueue(prev => [...prev, newMessages]);
+    }
+  };
+
   const initializeConversation = async () => {
     try {
       setIsLoading(true);
@@ -167,7 +205,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       
       if (streamResult.success) {
         setConversationStream(streamResult);
-        setMessages(streamResult.initialMessages);
+        // 使用队列逐条显示初始消息
+        if (streamResult.initialMessages && streamResult.initialMessages.length > 0) {
+          addMessagesToQueue(streamResult.initialMessages);
+        }
         startAutoLoop(streamResult.streamId, streamResult.category);
       }
       
@@ -188,7 +229,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         });
         
         if (result.messages) {
-          setMessages(prev => [...prev, ...result.messages]);
+          // 使用队列逐条显示新消息
+          addMessagesToQueue(result.messages);
         }
       } catch (error) {
         console.error('Auto-loop generation failed:', error);
@@ -242,7 +284,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       const result = await mockSubmitUserMessage(conversationStream.streamId, messageText, 'text');
       
       if (result.success) {
-        // 添加用户消息到对话中
+        // 立即添加用户消息到对话中（不使用队列，因为用户消息需要立即显示）
         const userMessage = {
           ...result.userMessage,
           speaker: 'You', // 显示为用户
@@ -251,21 +293,17 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         
         setMessages(prev => [...prev, userMessage]);
         
-        // 添加AI角色的回复
+        // 添加AI角色的回复到队列中逐条显示
         if (result.aiResponses && result.aiResponses.length > 0) {
-          // 延迟添加AI回复，模拟思考时间
+          // 延迟添加到队列，让用户消息先显示
           setTimeout(() => {
-            setMessages(prev => [...prev, ...result.aiResponses]);
-            // 滚动到最新消息
-            setTimeout(() => {
-              scrollToBottom();
-            }, 100);
-          }, 1000); // 1秒延迟
+            addMessagesToQueue(result.aiResponses);
+          }, 500); // 500ms延迟后开始显示AI回复
         }
         
         // 滚动到用户消息
         setTimeout(() => {
-          scrollToBottom();
+          forceScrollToBottom();
         }, 100);
       }
     } catch (error) {
@@ -297,13 +335,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       
       if (result.messages && result.messages.length > 0) {
         console.log(`Generated ${result.messages.length} new messages`);
-        // 添加新的消息到现有对话中
-        setMessages(prev => [...prev, ...result.messages]);
-        
-        // 滚动到最新消息
-        setTimeout(() => {
-          scrollToBottom();
-        }, 100);
+        // 使用队列逐条显示新的消息
+        addMessagesToQueue(result.messages);
       } else {
         console.warn('No new messages generated');
       }
@@ -353,12 +386,33 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
     setShowIntroPopup(true);
   };
 
+  const handleSuShiClick = () => {
+    setShowSuShiPopup(true);
+  };
+
+  const handleLuXunClick = () => {
+    setShowLuXunPopup(true);
+  };
+
   const handleIntroPopupBack = () => {
     setShowIntroPopup(false);
   };
 
+  const handleSuShiPopupBack = () => {
+    setShowSuShiPopup(false);
+  };
+
+  const handleLuXunPopupBack = () => {
+    setShowLuXunPopup(false);
+  };
+
   const handleIntroPopupExpand = () => {
     setShowIntroPopup(false);
+    setShowCharacterFull(true);
+  };
+
+  const handleSuShiPopupExpand = () => {
+    setShowSuShiPopup(false);
     setShowCharacterFull(true);
   };
 
@@ -376,7 +430,38 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   };
 
   const scrollToBottom = () => {
+    const messagesContainer = messagesEndRef.current?.parentElement;
+    if (messagesContainer) {
+      // If user hasn't scrolled up to view history, always force scroll to bottom
+      if (!userScrolledUp) {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        // If user has scrolled up, only auto-scroll if they're near the bottom
+        const isNearBottom = messagesContainer.scrollTop + messagesContainer.clientHeight >= messagesContainer.scrollHeight - 50;
+        if (isNearBottom) {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }
+  };
+
+  const forceScrollToBottom = () => {
+    setUserScrolledUp(false); // Reset scroll state when user manually goes to bottom
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleScroll = (e) => {
+    const container = e.target;
+    const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 50;
+    
+    // Track if user has scrolled up to view history
+    if (!isNearBottom && !userScrolledUp) {
+      setUserScrolledUp(true);
+    } else if (isNearBottom && userScrolledUp) {
+      setUserScrolledUp(false);
+    }
+    
+    setShowScrollToBottom(!isNearBottom && messages.length > 0);
   };
 
   const renderFloatingEmojis = () => {
@@ -458,15 +543,15 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       {/* Character Avatars */}
       <div className="flex justify-center space-x-12 px-4 mb-6">
         {Object.entries(characterAvatars).map(([name, avatar]) => (
-          <div key={name} className="flex flex-col items-center space-y-2">
+          <div key={name} className={`flex flex-col items-center space-y-2 ${name === 'Su Shi' ? 'ml-6' : ''}`}>
             <div className="relative">
               <img 
                 src={avatar} 
                 alt={name}
                 className={`w-16 h-16 rounded-full border-2 border-white shadow-lg ${
-                  name === 'Vincent van Gogh' ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                  name === 'Vincent van Gogh' || name === 'Su Shi' || name === 'Lu Xun' ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
                 }`}
-                onClick={name === 'Vincent van Gogh' ? handleVanGoghClick : undefined}
+                onClick={name === 'Vincent van Gogh' ? handleVanGoghClick : name === 'Su Shi' ? handleSuShiClick : name === 'Lu Xun' ? handleLuXunClick : undefined}
               />
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
             </div>
@@ -478,8 +563,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       </div>
 
       {/* Messages Container - Above control panel */}
-      <div className="absolute bottom-20 left-4 right-16 h-64 pointer-events-none">
-        <div className="h-full overflow-y-auto scrollbar-hide">
+      <div className="absolute bottom-20 left-4 right-16 h-64 pointer-events-auto">
+        <div className="h-full overflow-y-auto scrollbar-hide relative" style={{ scrollBehavior: 'smooth' }} onScroll={handleScroll}>
           {isLoading ? (
             <div className="flex items-center justify-start h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
@@ -500,10 +585,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                       <img 
                         src={characterAvatars[message.speaker]}
                         alt={message.speaker}
-                        className={`w-8 h-8 rounded-full flex-shrink-0 ${
-                          message.speaker === 'Vincent van Gogh' ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
-                        }`}
-                        onClick={message.speaker === 'Vincent van Gogh' ? handleVanGoghClick : undefined}
+                        className="w-8 h-8 rounded-full flex-shrink-0"
                       />
                     )}
                     <div className={`rounded-2xl px-3 py-2 max-w-xs ${
@@ -530,6 +612,26 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                 </div>
               ))}
               <div ref={messagesEndRef} />
+              
+              {/* Scroll to bottom button */}
+              {showScrollToBottom && (
+                <div className="absolute bottom-2 right-2 z-10">
+                  <button
+                    onClick={forceScrollToBottom}
+                    className="bg-black/50 backdrop-blur-md text-white p-2 rounded-full shadow-lg hover:bg-black/70 transition-all duration-200"
+                    title="回到底部"
+                  >
+                    <svg 
+                      className="w-4 h-4" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -623,131 +725,482 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         />
       )}
 
-      {/* Intro Popup */}
-      {showIntroPopup && (
+      {/* Lu Xun Popup - 按照Figma设计 */}
+      {showLuXunPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div 
-            className="bg-[#fffaf4] relative rounded-[20px] w-[306px] h-[538px]"
-            data-name="intro"
-            id="node-32_1044"
+            className="bg-[#fffaf4] relative rounded-[20px] w-[306px] h-[538px] overflow-hidden"
+            data-name="Lu Xun"
+            data-node-id="165:990"
           >
-            {/* Van Gogh portrait - 严格按照Figma位置和尺寸 */}
-            <div
-              className="absolute h-[175px] left-[22px] top-11 w-[262px]"
-              id="node-2_2195"
-            >
+            {/* 滚动内容容器 */}
+            <div className="h-full overflow-y-auto scrollbar-hide">
+              {/* Lu Xun portrait - 严格按照Figma位置和尺寸 */}
               <div
-                className="absolute bg-[0%_33.43%] bg-no-repeat bg-size-[100%_182.05%] h-[175.174px] left-[5px] rounded-[26px] top-0 w-[252.333px]"
-                data-name="Vector"
-                id="node-2_2196"
-                style={{ backgroundImage: `url('/src/assets/d84d1463db2967ad16c63a138581a4d524675326.png')` }}
-              />
+                className="h-[175px] mt-11 mx-[22px] w-[262px]"
+                data-node-id="165:991"
+              >
+                <div
+                  className="bg-no-repeat bg-cover bg-center h-[175.174px] ml-[5px] rounded-[26px] w-[252.333px]"
+                  data-name="Vector"
+                  data-node-id="165:992"
+                  style={{ backgroundImage: `url('/src/assets/1185dfe3ed5446ee8a00fd39bef04880678bfc5a.png')` }}
+                />
+              </div>
+
+              {/* 内容区域 - 严格按照Figma位置和间距 */}
+              <div
+                className="flex flex-col gap-3.5 items-center justify-start px-[17.5px] mt-[25px] w-full"
+                data-node-id="165:998"
+              >
+                {/* 姓名 - 严格按照Figma字体和样式 */}
+                <div
+                  className="font-bold leading-[0] not-italic opacity-90 text-[#232323] text-[18px] text-center w-full"
+                  data-node-id="165:999"
+                >
+                  <p className="block leading-[1.4]">Lu Xun</p>
+                </div>
+
+                {/* 引言 - 严格按照Figma字体和样式 */}
+                <div
+                  className="font-medium italic leading-[0] not-italic opacity-90 text-[#232323] text-[14px] text-left w-full"
+                  data-node-id="165:1000"
+                >
+                  <p className="block leading-[1.45]">
+                    "The pen is but a scalpel; it cuts through the illness beneath the skin of society."
+                  </p>
+                </div>
+
+                {/* 标签 - 严格按照Figma颜色和字体 */}
+                <div
+                  className="font-medium leading-[0] not-italic opacity-90 text-[#0051ae] text-[14px] text-left w-full"
+                  data-node-id="165:1001"
+                >
+                  <p className="block leading-[1.6]">
+                    #SharpSatirist #ModernChineseLiterature #SocialCritic
+                  </p>
+                </div>
+
+                {/* Identity 部分 - 严格按照Figma样式 */}
+                <div
+                  className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full"
+                  data-node-id="165:1002"
+                >
+                  <div
+                    className="font-bold opacity-90 text-[15px] w-full"
+                    data-node-id="165:1003"
+                  >
+                    <p className="block leading-[1.6]">Identity</p>
+                  </div>
+                  <div
+                    className="font-medium opacity-90 text-[14px] w-full"
+                    data-node-id="165:1004"
+                  >
+                    <p className="block leading-[1.6]">
+                      Pioneer of modern Chinese literature, known for sharp social commentary and reformist spirit.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Artistic Traits 部分 - 严格按照Figma样式 */}
+                <div
+                  className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full"
+                  data-node-id="165:1005"
+                >
+                  <div
+                    className="font-bold opacity-90 text-[15px] w-full"
+                    data-node-id="165:1006"
+                  >
+                    <p className="block leading-[1.6]">Artistic Traits</p>
+                  </div>
+                  <div
+                    className="font-medium opacity-90 text-[14px] w-full"
+                    data-node-id="165:1007"
+                  >
+                    <p className="block leading-[1.6]">
+                      Concise, metaphor-rich prose with a tone of irony and compassion.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Perspective 部分 - 严格按照Figma样式 */}
+                <div
+                  className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full"
+                  data-node-id="165:1008"
+                >
+                  <div
+                    className="font-bold opacity-90 text-[15px] w-full"
+                    data-node-id="165:1009"
+                  >
+                    <p className="block leading-[1.6]">Perspective</p>
+                  </div>
+                  <div
+                    className="font-medium opacity-90 text-[14px] w-full"
+                    data-node-id="165:1010"
+                  >
+                    <p className="block leading-[1.6]">
+                      Critical and progressive; seeks to awaken society through literature, believing in the power of culture to transform minds.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 添加更多内容以展示滚动功能 */}
+                <div className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full">
+                  <div className="font-bold opacity-90 text-[15px] w-full">
+                    <p className="block leading-[1.6]">Famous Works</p>
+                  </div>
+                  <div className="font-medium opacity-90 text-[14px] w-full">
+                    <p className="block leading-[1.6]">
+                      "The True Story of Ah Q", "Diary of a Madman", "Kong Yiji", "Medicine", and numerous essays on social reform.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full">
+                  <div className="font-bold opacity-90 text-[15px] w-full">
+                    <p className="block leading-[1.6]">Historical Context</p>
+                  </div>
+                  <div className="font-medium opacity-90 text-[14px] w-full">
+                    <p className="block leading-[1.6]">
+                      Lived during China's transition from imperial to republican era (1881-1936), and advocated for modernization and enlightenment.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 底部间距，确保内容不被截断 */}
+                <div className="h-8 w-full"></div>
+              </div>
             </div>
 
-            {/* 展开按钮 - 严格按照Figma位置 */}
+            {/* 返回按钮 - 固定在顶部 */}
             <button
-              onClick={handleIntroPopupExpand}
-              className="absolute box-border content-stretch flex flex-row gap-3.5 items-center justify-start left-[272px] p-0 top-[11px] cursor-pointer"
-              data-name="zoom icon"
-              id="node-2_2197"
-            >
-              <div
-                className="relative shrink-0 size-[23px]"
-                data-name="展开 1"
-                id="node-2_2198"
-              >
-                <img alt="展开" className="block max-w-none size-full" src="/src/assets/9403ffd15bd9a95db6a8488382897cc71b7212f7.svg" />
-              </div>
-            </button>
-
-            {/* 返回按钮 - 严格按照Figma位置 */}
-            <button
-              onClick={handleIntroPopupBack}
-              className="absolute left-1.5 size-9 top-1 cursor-pointer"
+              onClick={handleLuXunPopupBack}
+              className="absolute left-1.5 size-9 top-1 cursor-pointer z-10"
               data-name="返回 1"
-              id="node-2_2200"
+              data-node-id="165:996"
             >
               <img alt="返回" className="block max-w-none size-full" src="/src/assets/d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" />
             </button>
+          </div>
+        </div>
+      )}
 
-            {/* 内容区域 - 严格按照Figma位置和间距 */}
-            <div
-              className="absolute box-border content-stretch flex flex-col gap-3.5 items-center justify-start p-0 top-[236px] translate-x-[-50%] w-[271px]"
-              id="node-2_2202"
-              style={{ left: "calc(50% + 0.5px)" }}
-            >
-              {/* 姓名 - 严格按照Figma字体和样式 */}
+      {/* Su Shi Popup - 按照Figma设计 */}
+      {showSuShiPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div 
+            className="bg-[#fffaf4] relative rounded-[20px] w-[306px] h-[538px] overflow-hidden"
+            data-name="Su Shi"
+            data-node-id="165:962"
+          >
+            {/* 滚动内容容器 */}
+            <div className="h-full overflow-y-auto scrollbar-hide">
+              {/* Su Shi portrait - 严格按照Figma位置和尺寸 */}
               <div
-                className="font-bold leading-[0] not-italic opacity-90 relative shrink-0 text-[#232323] text-[18px] text-center w-full"
-                id="node-2_2203"
-              >
-                <p className="block leading-[1.4]">Vincent van Gogh</p>
-              </div>
-
-              {/* 引言 - 严格按照Figma字体和样式 */}
-              <div
-                className="font-medium italic leading-[0] not-italic opacity-90 relative shrink-0 text-[#232323] text-[14px] text-left w-full"
-                id="node-2_2204"
-              >
-                <p className="block leading-[1.45]">
-                  "I painted not what I saw, but what I felt in that night of
-                  madness."
-                </p>
-              </div>
-
-              {/* 标签 - 严格按照Figma颜色和字体 */}
-              <div
-                className="font-medium leading-[0] not-italic opacity-90 relative shrink-0 text-[#0051ae] text-[14px] text-left w-full"
-                id="node-2_2205"
-              >
-                <p className="block leading-[1.6]">
-                  #LonelyGenius #PostImpressionist #NightOfTheMind
-                </p>
-              </div>
-
-              {/* Identity 部分 - 严格按照Figma样式 */}
-              <div
-                className="box-border content-stretch flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic p-0 relative shrink-0 text-[#232323] text-left w-full"
-                id="node-2_2206"
+                className="h-[175px] mt-11 mx-[22px] w-[262px]"
+                data-node-id="165:963"
               >
                 <div
-                  className="font-bold opacity-90 relative shrink-0 text-[15px] w-full"
-                  id="node-2_2207"
+                  className="bg-no-repeat bg-cover bg-[center_10%] h-[175.174px] ml-[5px] rounded-[26px] w-[252.333px]"
+                  data-name="Vector"
+                  data-node-id="165:964"
+                  style={{ backgroundImage: `url('/src/assets/506fd9bda269153d8d02ca5992650f763a3d1255.png')` }}
+                />
+              </div>
+
+              {/* 内容区域 - 严格按照Figma位置和间距 */}
+              <div
+                className="flex flex-col gap-3.5 items-center justify-start px-[17.5px] mt-[25px] w-full"
+                data-node-id="165:970"
+              >
+                {/* 姓名 - 严格按照Figma字体和样式 */}
+                <div
+                  className="font-bold leading-[0] not-italic opacity-90 text-[#232323] text-[18px] text-center w-full"
+                  data-node-id="165:971"
                 >
-                  <p className="block leading-[1.6]">Identity</p>
+                  <p className="block leading-[1.4]">Su Shi</p>
                 </div>
+
+                {/* 引言 - 严格按照Figma字体和样式 */}
                 <div
-                  className="font-medium opacity-90 relative shrink-0 text-[14px] w-full"
-                  id="node-2_2208"
+                  className="font-medium italic leading-[0] not-italic opacity-90 text-[#232323] text-[14px] text-left w-full"
+                  data-node-id="165:972"
                 >
-                  <p className="block leading-[1.6]">
-                    19th-century Dutch painter, creator of The Starry Night
+                  <p className="block leading-[1.45]">
+                    "The moonlight upon this artifact would inspire verses flowing like the river beyond my window."
                   </p>
                 </div>
-              </div>
 
-              {/* Artistic Traits 部分 - 严格按照Figma样式 */}
-              <div
-                className="box-border content-stretch flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic p-0 relative shrink-0 text-[#232323] text-left w-full"
-                id="node-2_2209"
-              >
+                {/* 标签 - 严格按照Figma颜色和字体 */}
                 <div
-                  className="font-bold opacity-90 relative shrink-0 text-[15px] w-full"
-                  id="node-2_2210"
-                >
-                  <p className="block leading-[1.6]">Artistic Traits</p>
-                </div>
-                <div
-                  className="font-medium opacity-90 relative shrink-0 text-[14px] w-full"
-                  id="node-2_2211"
+                  className="font-medium leading-[0] not-italic opacity-90 text-[#0051ae] text-[14px] text-left w-full"
+                  data-node-id="165:973"
                 >
                   <p className="block leading-[1.6]">
-                    Frequently quoted from personal letters; deeply sensitive to the
-                    emotional power of color
+                    #SongDynastyPoet #Calligrapher #FreeSpirit
                   </p>
                 </div>
+
+                {/* Identity 部分 - 严格按照Figma样式 */}
+                <div
+                  className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full"
+                  data-node-id="165:974"
+                >
+                  <div
+                    className="font-bold opacity-90 text-[15px] w-full"
+                    data-node-id="165:975"
+                  >
+                    <p className="block leading-[1.6]">Identity</p>
+                  </div>
+                  <div
+                    className="font-medium opacity-90 text-[14px] w-full"
+                    data-node-id="165:976"
+                  >
+                    <p className="block leading-[1.6]">
+                      Master poet and calligrapher of the Northern Song dynasty, famed for his versatility and free-spirited style.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Artistic Traits 部分 - 严格按照Figma样式 */}
+                <div
+                  className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full"
+                  data-node-id="165:977"
+                >
+                  <div
+                    className="font-bold opacity-90 text-[15px] w-full"
+                    data-node-id="165:978"
+                  >
+                    <p className="block leading-[1.6]">Artistic Traits</p>
+                  </div>
+                  <div
+                    className="font-medium opacity-90 text-[14px] w-full"
+                    data-node-id="165:979"
+                  >
+                    <p className="block leading-[1.6]">
+                      Lyrical, philosophical, blending personal sentiment with natural imagery.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Perspective 部分 - 严格按照Figma样式 */}
+                <div
+                  className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full"
+                  data-node-id="165:980"
+                >
+                  <div
+                    className="font-bold opacity-90 text-[15px] w-full"
+                    data-node-id="165:981"
+                  >
+                    <p className="block leading-[1.6]">Perspective</p>
+                  </div>
+                  <div
+                    className="font-medium opacity-90 text-[14px] w-full"
+                    data-node-id="165:982"
+                  >
+                    <p className="block leading-[1.6]">
+                      Romantic and reflective; appreciates artistry, craftsmanship, and the continuity of culture.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 添加更多内容以展示滚动功能 */}
+                <div className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full">
+                  <div className="font-bold opacity-90 text-[15px] w-full">
+                    <p className="block leading-[1.6]">Famous Works</p>
+                  </div>
+                  <div className="font-medium opacity-90 text-[14px] w-full">
+                    <p className="block leading-[1.6]">
+                      "Remembering Red Cliff", "Water Melody Prelude", "Song of Divination", countless poems about nature and human emotion.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full">
+                  <div className="font-bold opacity-90 text-[15px] w-full">
+                    <p className="block leading-[1.6]">Historical Context</p>
+                  </div>
+                  <div className="font-medium opacity-90 text-[14px] w-full">
+                    <p className="block leading-[1.6]">
+                      Lived during the Northern Song dynasty (1037-1101), served in various government positions, and is considered one of the greatest poets in Chinese literature.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 底部间距，确保内容不被截断 */}
+                <div className="h-8 w-full"></div>
               </div>
             </div>
+
+            {/* 返回按钮 - 固定在顶部 */}
+            <button
+              onClick={handleSuShiPopupBack}
+              className="absolute left-1.5 size-9 top-1 cursor-pointer z-10"
+              data-name="返回 1"
+              data-node-id="165:968"
+            >
+              <img alt="返回" className="block max-w-none size-full" src="/src/assets/d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Intro Popup - 严格按照Figma设计 */}
+      {showIntroPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div 
+            className="bg-[#fffaf4] relative rounded-[20px] w-[306px] h-[538px] overflow-hidden"
+            data-name="intro"
+            data-node-id="164:934"
+          >
+            {/* 滚动内容容器 */}
+            <div className="h-full overflow-y-auto scrollbar-hide">
+              {/* Van Gogh portrait - 严格按照Figma位置和尺寸 */}
+              <div
+                className="h-[175px] mt-11 mx-[22px] w-[262px]"
+                data-node-id="164:935"
+              >
+                <div
+                  className="bg-no-repeat bg-cover bg-[center_30%] h-[175.174px] ml-[5px] rounded-[26px] w-[252.333px]"
+                  data-name="Vector"
+                  data-node-id="164:936"
+                  style={{ backgroundImage: `url('/src/assets/d84d1463db2967ad16c63a138581a4d524675326.png')` }}
+                />
+              </div>
+
+              {/* 内容区域 - 严格按照Figma位置和间距 */}
+              <div
+                className="flex flex-col gap-3.5 items-center justify-start px-[17.5px] mt-[25px] w-full"
+                data-node-id="164:942"
+              >
+                {/* 姓名 - 严格按照Figma字体和样式 */}
+                <div
+                  className="font-bold leading-[0] not-italic opacity-90 text-[#232323] text-[18px] text-center w-full"
+                  data-node-id="164:943"
+                >
+                  <p className="block leading-[1.4]">Vincent van Gogh</p>
+                </div>
+
+                {/* 引言 - 严格按照Figma字体和样式 */}
+                <div
+                  className="font-medium italic leading-[0] not-italic opacity-90 text-[#232323] text-[14px] text-left w-full"
+                  data-node-id="164:944"
+                >
+                  <p className="block leading-[1.45]">
+                    "I painted not what I saw, but what I felt in that night of madness."
+                  </p>
+                </div>
+
+                {/* 标签 - 严格按照Figma颜色和字体 */}
+                <div
+                  className="font-medium leading-[0] not-italic opacity-90 text-[#0051ae] text-[14px] text-left w-full"
+                  data-node-id="164:945"
+                >
+                  <p className="block leading-[1.6]">
+                    #LonelyGenius #PostImpressionist #NightOfTheMind
+                  </p>
+                </div>
+
+                {/* Identity 部分 - 严格按照Figma样式 */}
+                <div
+                  className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full"
+                  data-node-id="164:946"
+                >
+                  <div
+                    className="font-bold opacity-90 text-[15px] w-full"
+                    data-node-id="164:947"
+                  >
+                    <p className="block leading-[1.6]">Identity</p>
+                  </div>
+                  <div
+                    className="font-medium opacity-90 text-[14px] w-full"
+                    data-node-id="164:948"
+                  >
+                    <p className="block leading-[1.6]">
+                      19th-century Dutch painter, creator of The Starry Night.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Artistic Traits 部分 - 严格按照Figma样式 */}
+                <div
+                  className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full"
+                  data-node-id="164:949"
+                >
+                  <div
+                    className="font-bold opacity-90 text-[15px] w-full"
+                    data-node-id="164:950"
+                  >
+                    <p className="block leading-[1.6]">Artistic Traits</p>
+                  </div>
+                  <div
+                    className="font-medium opacity-90 text-[14px] w-full"
+                    data-node-id="164:951"
+                  >
+                    <p className="block leading-[1.6]">
+                      Frequently quoted from personal letters; deeply sensitive to the emotional power of color.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Perspective 部分 - 新增内容，按照Figma样式 */}
+                <div
+                  className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full"
+                  data-node-id="164:952"
+                >
+                  <div
+                    className="font-bold opacity-90 text-[15px] w-full"
+                    data-node-id="164:953"
+                  >
+                    <p className="block leading-[1.6]">Perspective</p>
+                  </div>
+                  <div
+                    className="font-medium opacity-90 text-[14px] w-full"
+                    data-node-id="164:954"
+                  >
+                    <p className="block leading-[1.6]">
+                      Interprets the swirling sky, cypress trees, and dreamlike village through a lens of self-healing.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 添加更多内容以展示滚动功能 */}
+                <div className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full">
+                  <div className="font-bold opacity-90 text-[15px] w-full">
+                    <p className="block leading-[1.6]">Famous Works</p>
+                  </div>
+                  <div className="font-medium opacity-90 text-[14px] w-full">
+                    <p className="block leading-[1.6]">
+                      The Starry Night, Sunflowers, The Potato Eaters, Café Terrace at Night, Self-Portrait with Bandaged Ear.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full">
+                  <div className="font-bold opacity-90 text-[15px] w-full">
+                    <p className="block leading-[1.6]">Historical Context</p>
+                  </div>
+                  <div className="font-medium opacity-90 text-[14px] w-full">
+                    <p className="block leading-[1.6]">
+                      Lived during the Post-Impressionist period (1853-1890), struggled with mental health, and created most of his masterpieces in the final years of his life.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 底部间距，确保内容不被截断 */}
+                <div className="h-8 w-full"></div>
+              </div>
+            </div>
+
+            {/* 返回按钮 - 固定在顶部 */}
+            <button
+              onClick={handleIntroPopupBack}
+              className="absolute left-1.5 size-9 top-1 cursor-pointer z-10"
+              data-name="返回 1"
+              data-node-id="164:940"
+            >
+              <img alt="返回" className="block max-w-none size-full" src="/src/assets/d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" />
+            </button>
           </div>
         </div>
       )}
