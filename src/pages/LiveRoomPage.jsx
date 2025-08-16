@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PAGES } from '../constants/pages';
+import { musicManager } from '../utils/musicManager';
 import { 
   mockCreateConversationStream, 
   mockGenerateConversation, 
@@ -43,8 +44,49 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
     imageUrl, 
     category, 
     style, 
-    objects 
+    objects,
+    backgroundId // 添加backgroundId以保持音乐一致性
   } = data || {};
+  
+  // 音乐控制 - 从GalleryPage继续播放相同音乐
+  useEffect(() => {
+    const handleLiveRoomMusic = async () => {
+      console.log('=== LIVE ROOM MUSIC CONTROL ===');
+      console.log('LiveRoom data:', { category, style, backgroundId });
+      
+      const musicCategory = style || category || 'European';
+      const musicBackgroundId = backgroundId || `${musicCategory}_live`;
+      
+      // 等待足够长的时间确保GalleryPage完全卸载和音乐清理
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // 继续播放音乐（不重新开始）
+      // 如果音乐管理器已经在播放相同分类的音乐，则继续
+      const currentStatus = musicManager.getStatus();
+      console.log('Current music status after delay:', currentStatus);
+      
+      // 由于GalleryPage已经停止音乐，这里总是需要重新开始
+      console.log('Starting music for live room after GalleryPage cleanup');
+      try {
+        await musicManager.playMusic(musicCategory, musicBackgroundId, true); // 强制重新开始
+      } catch (error) {
+        console.error('Error starting LiveRoom music:', error);
+      }
+    };
+
+    handleLiveRoomMusic();
+  }, [category, style, backgroundId]);
+  
+  // 组件卸载时清理音乐
+  useEffect(() => {
+    return () => {
+      console.log('LiveRoomPage unmounting, stopping music completely');
+      // 使用stop()来完全清理音乐
+      musicManager.stop().catch(error => {
+        console.error('Error stopping music on LiveRoom unmount:', error);
+      });
+    };
+  }, []);
   
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,6 +142,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       if (continuousEmojiIntervalRef.current) {
         clearInterval(continuousEmojiIntervalRef.current);
       }
+      // 注意：不停止音乐，因为返回GalleryPage时需要继续播放
+      console.log('LiveRoomPage unmounting, music continues playing');
     };
   }, []);
 

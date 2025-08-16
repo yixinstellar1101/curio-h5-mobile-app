@@ -1,5 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PAGES } from '../constants/pages';
+import { getRandomBackgroundByCategory, createCompositeImage, ensureCompositeImage } from '../utils/imageComposition';
+import { musicManager } from '../utils/musicManager';
 
 // Asset imports from Figma
 const imgStatusBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
@@ -11,10 +13,92 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
   const [startX, setStartX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [processedItems, setProcessedItems] = useState(galleryItems);
+  const [isProcessingComposite, setIsProcessingComposite] = useState(false);
   const containerRef = useRef(null);
   
-  // Get current gallery item or default
-  const currentItem = galleryItems[currentIndex] || {};
+  // 处理合成图片生成
+  useEffect(() => {
+    const processGalleryItems = async () => {
+      if (galleryItems.length === 0) return;
+      
+      setIsProcessingComposite(true);
+      try {
+        const processedItemsArray = await Promise.all(
+          galleryItems.map(async (item) => {
+            // 如果已经有合成图片，跳过处理
+            if (item.compositeImage || (item.analysis && item.analysis.compositeImage)) {
+              return item;
+            }
+            
+            try {
+              return await ensureCompositeImage(item);
+            } catch (error) {
+              console.error('Error processing gallery item:', error);
+              return item; // 保留原始项目
+            }
+          })
+        );
+        
+        setProcessedItems(processedItemsArray);
+      } catch (error) {
+        console.error('Error processing gallery items:', error);
+        setProcessedItems(galleryItems); // 使用原始数据
+      } finally {
+        setIsProcessingComposite(false);
+      }
+    };
+    
+    processGalleryItems();
+  }, [galleryItems]);
+  
+  // 音乐播放控制 - 当前项目或索引改变时重新播放音乐
+  useEffect(() => {
+    const playBackgroundMusic = async () => {
+      if (processedItems.length === 0) return;
+      
+      const currentItem = processedItems[currentIndex] || {};
+      const musicCategory = currentItem.style || currentItem.category || 'European';
+      const backgroundId = currentItem.backgroundId || `${musicCategory}_${currentIndex}`;
+      
+      console.log('=== GALLERY MUSIC CONTROL ===');
+      console.log('Playing music for:', { musicCategory, backgroundId, currentIndex });
+      
+      try {
+        // 先停止当前播放的音乐，然后播放新的音乐
+        console.log('Stopping previous music before starting new one');
+        await musicManager.stop();
+        
+        // 增加延迟确保停止完成并避免多音乐播放
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // 播放新的背景音乐
+        console.log('Starting new music');
+        await musicManager.playMusic(musicCategory, backgroundId, true);
+      } catch (error) {
+        console.error('Failed to play background music:', error);
+      }
+    };
+    
+    // 只有当有处理过的项目时才播放音乐
+    if (processedItems.length > 0) {
+      playBackgroundMusic();
+    }
+  }, [processedItems, currentIndex]);
+  
+  // 组件卸载时清理音乐
+  useEffect(() => {
+    return () => {
+      console.log('GalleryPage unmounting, stopping music completely');
+      // 使用stop()而不是pause()来完全清理音乐
+      musicManager.stop().catch(error => {
+        console.error('Error stopping music on unmount:', error);
+      });
+    };
+  }, []);
+  
+  // Get current gallery item or default (使用处理后的items)
+  const currentItem = processedItems[currentIndex] || {};
   
   // Extract data from the current gallery item
   const { 
@@ -33,6 +117,8 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
   
   console.log('GalleryPage received items:', galleryItems); // Debug log
   console.log('Current index:', currentIndex); // Debug log
+  console.log('Processed items:', processedItems); // Debug log
+  console.log('Current processed item:', currentItem); // Debug log
   
   // Get metadata from analysis results or use defaults for demo
   const getMetadata = () => {
@@ -89,54 +175,47 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
 
   const metadata = getMetadata();
   
-  // Background image selection - use composite image as background
+  // Background image selection - 优先使用合成图片作为背景
   const getBackgroundImage = () => {
-    // First priority: use the composite image as background
-    if (compositeImage) {
-      console.log('Using compositeImage as background:', compositeImage);
-      return compositeImage;
+    // 第一优先级：使用合成图片作为背景
+    if (currentItem.compositeImage) {
+      console.log('Using compositeImage as background:', currentItem.compositeImage);
+      return currentItem.compositeImage;
     }
     
-    // Second priority: use composite from analysis data
+    // 第二优先级：使用分析结果中的合成图片
     if (analysis?.analysis?.compositeImage) {
       console.log('Using analysis.analysis.compositeImage as background:', analysis.analysis.compositeImage);
       return analysis.analysis.compositeImage;
     }
     
-    // Third priority: use the backgroundImage from analysis data (non-composite)
-    if (backgroundImage) {
-      console.log('Using backgroundImage from analysis:', backgroundImage);
-      return backgroundImage;
+    // 第三优先级：使用背景图片路径（非合成）
+    if (currentItem.backgroundImage) {
+      console.log('Using backgroundImage from item:', currentItem.backgroundImage);
+      return currentItem.backgroundImage;
     }
     
-    // Use analysis background if available
+    // 第四优先级：使用分析数据中的背景图片
     if (analysis?.analysis?.backgroundImage) {
       console.log('Using analysis.analysis.backgroundImage:', analysis.analysis.backgroundImage);
       return analysis.analysis.backgroundImage;
     }
     
-    // Fallback: randomly select background based on style and category
-    if (style) {
-      const getRandomBackground = (styleType) => {
-        const backgroundCounts = {
-          'Chinese': 4,    // Chinese_3_4_01.jpg to Chinese_3_4_04.jpg
-          'European': 6,   // European_3_4_01.jpg to European_3_4_06.jpg  
-          'Morden': 6      // Morden_3_4_01.jpg to Morden_3_4_06.jpg
-        };
-        
-        const count = backgroundCounts[styleType] || 4;
-        const randomNum = Math.floor(Math.random() * count) + 1;
-        const paddedNum = randomNum.toString().padStart(2, '0');
-        
-        return `/src/assets/backgrounds/${styleType}/${styleType}_3_4_${paddedNum}.jpg`;
-      };
+    // 第五优先级：根据分类动态生成背景（实时生成，不推荐但保留作为后备）
+    if (category || style) {
+      const targetCategory = category || style;
+      console.log('Generating background for category:', targetCategory);
       
-      const selectedBackground = getRandomBackground(style);
-      console.log('Generated random background for style', style, ':', selectedBackground);
-      return selectedBackground;
+      try {
+        const backgroundInfo = getRandomBackgroundByCategory(targetCategory);
+        console.log('Generated background info:', backgroundInfo);
+        return backgroundInfo.backgroundPath;
+      } catch (error) {
+        console.error('Error generating background:', error);
+      }
     }
     
-    // Final fallback to default
+    // 最终回退到默认背景
     console.log('Using default background fallback');
     return imgBackground;
   };
@@ -149,7 +228,16 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
   };
 
   // Handle popup actions
-  const handleEnterLiveRoom = () => {
+  const handleEnterLiveRoom = async () => {
+    console.log('Entering LiveRoom, stopping GalleryPage music');
+    
+    // 在导航前停止音乐，避免与LiveRoom音乐冲突
+    try {
+      await musicManager.stop();
+    } catch (error) {
+      console.error('Error stopping music before entering LiveRoom:', error);
+    }
+    
     setShowPopup(false);
     onNavigate && onNavigate(PAGES.LIVE_ROOM, { 
       originalImage, 
@@ -158,7 +246,8 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
       backgroundImage: backgroundImageSrc, // Use the same background as current GalleryPage
       category,
       style,
-      objects 
+      objects,
+      backgroundId: currentItem.backgroundId // 传递backgroundId以保持音乐一致性
     });
   };
 
@@ -167,7 +256,7 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
   };
 
   // If no gallery items, show empty state
-  if (galleryItems.length === 0) {
+  if (processedItems.length === 0) {
     return (
       <div className="relative w-[393px] h-[852px] bg-black flex items-center justify-center">
         <div className="text-center px-[40px]">
@@ -218,7 +307,7 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
     }
     // Left swipe (swipe right to left) - go to next item
     else if (deltaX < -threshold) {
-      if (currentIndex < galleryItems.length - 1) {
+      if (currentIndex < processedItems.length - 1) {
         // Navigate to next gallery item
         onIndexChange && onIndexChange(currentIndex + 1);
       }
@@ -253,11 +342,23 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
       </div>
 
       {/* Gallery navigation indicator */}
-      {galleryItems.length > 1 && (
+      {processedItems.length > 1 && (
         <div className="absolute top-[50px] left-1/2 transform -translate-x-1/2 z-20">
           <div className="flex items-center gap-[8px] bg-black/30 px-[12px] py-[6px] rounded-[20px] backdrop-blur-sm">
             <span className="text-white text-[14px] font-medium">
-              {currentIndex + 1} / {galleryItems.length}
+              {currentIndex + 1} / {processedItems.length}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Processing indicator */}
+      {isProcessingComposite && (
+        <div className="absolute top-[90px] left-1/2 transform -translate-x-1/2 z-20">
+          <div className="flex items-center gap-[8px] bg-blue-600/80 px-[12px] py-[6px] rounded-[20px] backdrop-blur-sm">
+            <div className="w-[16px] h-[16px] border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-white text-[14px] font-medium">
+              Processing...
             </span>
           </div>
         </div>

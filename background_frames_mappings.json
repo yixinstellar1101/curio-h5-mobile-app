@@ -1,0 +1,199 @@
+{
+  "metadata": {
+    "generatedAt": {
+      "input_folder": "C:\\Users\\t-yixinxia\\curio-h5-mobile-app\\src\\assets\\backgrounds",
+      "total_images": 18,
+      "processed_images": 18,
+      "successful_detections": 18,
+      "failed_detections": 0
+    },
+    "totalBackgrounds": 18,
+    "categories": {
+      "Chinese": 4,
+      "European": 8,
+      "Modern": 6
+    }
+  },
+  "backgroundFrames": {
+    "Chinese_3_4_01": {
+      "category": "Chinese",
+      "filename": "Chinese_3_4_01.jpg",
+      "boundingBox": {
+        "x": 280,
+        "y": 722,
+        "width": 224,
+        "height": 298
+      }
+    },
+    "Chinese_3_4_02": {
+      "category": "Chinese",
+      "filename": "Chinese_3_4_02.jpg",
+      "boundingBox": {
+        "x": 222,
+        "y": 584,
+        "width": 334,
+        "height": 450
+      }
+    },
+    "Chinese_3_4_03": {
+      "category": "Chinese",
+      "filename": "Chinese_3_4_03.jpg",
+      "boundingBox": {
+        "x": 280,
+        "y": 736,
+        "width": 238,
+        "height": 318
+      }
+    },
+    "Chinese_3_4_04": {
+      "category": "Chinese",
+      "filename": "Chinese_3_4_04.jpg",
+      "boundingBox": {
+        "x": 274,
+        "y": 738,
+        "width": 240,
+        "height": 320
+      }
+    },
+    "European_3_4_01": {
+      "category": "European",
+      "filename": "European_3_4_01.jpg",
+      "boundingBox": {
+        "x": 280,
+        "y": 646,
+        "width": 228,
+        "height": 304
+      }
+    },
+    "European_3_4_02": {
+      "category": "European",
+      "filename": "European_3_4_02.jpg",
+      "boundingBox": {
+        "x": 262,
+        "y": 568,
+        "width": 248,
+        "height": 346
+      }
+    },
+    "European_3_4_03": {
+      "category": "European",
+      "filename": "European_3_4_03.jpg",
+      "boundingBox": {
+        "x": 262,
+        "y": 548,
+        "width": 262,
+        "height": 338
+      }
+    },
+    "European_3_4_04": {
+      "category": "European",
+      "filename": "European_3_4_04.jpg",
+      "boundingBox": {
+        "x": 274,
+        "y": 650,
+        "width": 238,
+        "height": 304
+      }
+    },
+    "European_3_4_05": {
+      "category": "European",
+      "filename": "European_3_4_05.jpg",
+      "boundingBox": {
+        "x": 288,
+        "y": 632,
+        "width": 224,
+        "height": 304
+      }
+    },
+    "European_3_4_06": {
+      "category": "European",
+      "filename": "European_3_4_06.jpg",
+      "boundingBox": {
+        "x": 278,
+        "y": 590,
+        "width": 242,
+        "height": 310
+      }
+    },
+    "European_3_4_07": {
+      "category": "European",
+      "filename": "European_3_4_07.jpg",
+      "boundingBox": {
+        "x": 266,
+        "y": 578,
+        "width": 238,
+        "height": 296
+      }
+    },
+    "European_3_4_08": {
+      "category": "European",
+      "filename": "European_3_4_08.jpg",
+      "boundingBox": {
+        "x": 254,
+        "y": 590,
+        "width": 278,
+        "height": 370
+      }
+    },
+    "Morden_3_4_01": {
+      "category": "Modern",
+      "filename": "Morden_3_4_01.jpg",
+      "boundingBox": {
+        "x": 250,
+        "y": 662,
+        "width": 280,
+        "height": 354
+      }
+    },
+    "Morden_3_4_02": {
+      "category": "Modern",
+      "filename": "Morden_3_4_02.jpg",
+      "boundingBox": {
+        "x": 216,
+        "y": 612,
+        "width": 342,
+        "height": 456
+      }
+    },
+    "Morden_3_4_03": {
+      "category": "Modern",
+      "filename": "Morden_3_4_03.jpg",
+      "boundingBox": {
+        "x": 246,
+        "y": 656,
+        "width": 284,
+        "height": 378
+      }
+    },
+    "Morden_3_4_04": {
+      "category": "Modern",
+      "filename": "Morden_3_4_04.jpg",
+      "boundingBox": {
+        "x": 252,
+        "y": 650,
+        "width": 264,
+        "height": 356
+      }
+    },
+    "Morden_3_4_05": {
+      "category": "Modern",
+      "filename": "Morden_3_4_05.jpg",
+      "boundingBox": {
+        "x": 240,
+        "y": 638,
+        "width": 274,
+        "height": 360
+      }
+    },
+    "Morden_3_4_06": {
+      "category": "Modern",
+      "filename": "Morden_3_4_06.jpg",
+      "boundingBox": {
+        "x": 268,
+        "y": 644,
+        "width": 226,
+        "height": 302
+      }
+    }
+  }
+}
