@@ -149,39 +149,47 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
       };
     }
 
-    if (analysis?.analysis) {
-      // Use actual analysis data if available
-      const analysisData = analysis.analysis;
+    // New primary structure (analysis object from interface.js)
+    if (analysis) {
+      console.log('=== GALLERY METADATA DEBUG ===');
+      console.log('Current analysis object:', analysis);
+      
+      // Handle wrapped analysis structure: {success: true, analysis: {...}}
+      const actualAnalysis = analysis.analysis || analysis;
+      const meta = actualAnalysis.metadata || {};
+      const cls = actualAnalysis.classification || actualAnalysis;
+      
+      console.log('Actual analysis object:', actualAnalysis);
+      console.log('Metadata object:', meta);
+      console.log('Classification object:', cls);
+      console.log('Meta name:', meta.name);
+      console.log('Meta description:', meta.description);
+      console.log('Meta timestamp:', meta.timestamp);
+      
       return {
-        title: `The ${category ? category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Enigmatic'} Scene`, 
-        timestamp: timestamp ? new Date(timestamp).toLocaleString('en-US', { 
-          month: 'long', 
-          day: 'numeric', 
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        }) : new Date().toLocaleString('en-US', { 
+        title: meta.name || cls.categoryLabel || 'Untitled Artifact',
+        timestamp: meta.timestamp || new Date().toLocaleString('en-US', { 
           month: 'long', 
           day: 'numeric', 
           hour: 'numeric',
           minute: '2-digit',
           hour12: true
         }),
-        description: `${analysisData.description} Enhanced with ${style || 'European'} artistic styling and composite background.`
+        description: meta.description || 'No description available.'
       };
     }
-    
-    // Default metadata for demo showing the expected structure
+
+    // Legacy fallback removed: always prefer real metadata; show minimal fallback if absent
     return {
-      title: "The Enigmatic Scene",
+      title: 'Untitled Artifact',
       timestamp: new Date().toLocaleString('en-US', { 
         month: 'long', 
         day: 'numeric', 
         hour: 'numeric',
         minute: '2-digit',
         hour12: true
-      }), 
-      description: `A beautifully captured moment enhanced with AI analysis and ${style || 'classic'} artistic background composition.`
+      }),
+      description: 'No description available.'
     };
   };
 
@@ -242,6 +250,7 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
   // Handle popup actions
   const handleEnterLiveRoom = async () => {
     console.log('Entering LiveRoom, stopping GalleryPage music');
+    console.log('Current processed item:', currentItem);
     
     // 在导航前停止音乐，避免与LiveRoom音乐冲突
     try {
@@ -250,12 +259,16 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
       console.error('Error stopping music before entering LiveRoom:', error);
     }
     
+    // Use compositeImage if available, otherwise fall back to backgroundImageSrc
+    const liveRoomBackgroundImage = currentItem?.compositeImage || backgroundImageSrc;
+    console.log('Passing background image to LiveRoom:', liveRoomBackgroundImage?.substring(0, 100) + '...');
+    
     setShowPopup(false);
     onNavigate && onNavigate(PAGES.LIVE_ROOM, { 
       originalImage, 
       imageUrl, 
       analysis,
-      backgroundImage: backgroundImageSrc, // Use the same background as current GalleryPage
+      backgroundImage: liveRoomBackgroundImage, // Use the composite image from analysis
       category,
       style,
       objects,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PAGES } from '../constants/pages';
 import { generateCompositeFromAnalysis } from '../utils/imageComposition';
-import { analyzeImage } from '../services/mockInterface';
+import { analyzeImage } from '../services/interface'; // Use real interface instead of mock
 
 // Asset imports from Figma
 const imgBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
@@ -13,10 +13,12 @@ const imgViewfinder = "/src/assets/db6877c52f8f212513e0ebd034674ef3aa25f15a.svg"
 // Background assets - 使用与ImageUploadPage一致的背景
 const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png";
 
-// Mock API service for image analysis using the new interface
-const mockAnalyzeImage = async (file) => {
+// Real API service for image analysis using Azure services
+const analyzeImageWithAzure = async (file) => {
   try {
-    // Use the new mock interface
+    console.log('Analyzing image with Azure services...');
+    
+    // Use the real interface implementation
     const result = await analyzeImage(file, `req-${Date.now()}`);
     
     // Transform the result to match the expected format
@@ -24,26 +26,35 @@ const mockAnalyzeImage = async (file) => {
       success: true,
       analysis: {
         objects: [], // Will be filled based on category
-        category: result.background.category,
-        style: result.background.category, // Use same as category for compatibility
+        category: result.background?.category || 'Modern',
+        style: result.background?.category || 'Modern', // Use same as category for compatibility
         description: result.metadata.description,
         confidence: result.classification.confidence,
-        backgroundImage: result.background.imageUrl,
+        backgroundImage: result.background?.imageUrl,
         compositeImage: result.compositeImageUrl,
-        greenScreenArea: result.background.boundingBox,
+        greenScreenArea: result.background?.boundingBox,
         categoryNumber: result.classification.categoryNumber,
         categoryLabel: result.classification.categoryLabel,
         metadata: result.metadata,
         suggestions: [
-          `Great composition! The AI has detected a ${result.classification.categoryLabel.toLowerCase()} scene.`,
-          `This image has been categorized as ${result.background.category} style.`,
-          "The image has been enhanced with an artistic background composition."
+          `AI Analysis Complete! Classified as ${result.classification.categoryLabel}.`,
+          `Confidence level: ${(result.classification.confidence * 100).toFixed(1)}%`,
+          `Background style: ${result.background?.category || 'Modern'}`
         ]
       }
     };
   } catch (error) {
-    console.error('Mock analysis failed:', error);
-    throw error;
+    console.error('Azure image analysis failed:', error);
+    
+    // Provide user-friendly error messages
+    let errorMessage = 'Image analysis failed. Please try again.';
+    if (error.code === 'UPLOAD_FAILED') {
+      errorMessage = 'Failed to upload image. Please check your connection.';
+    } else if (error.code === 'CLASSIFICATION_FAILED') {
+      errorMessage = 'Unable to classify image. Please try a different image.';
+    }
+    
+    throw new Error(errorMessage);
   }
 };
 
@@ -120,7 +131,7 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
         });
       }, 200);
 
-      const result = await mockAnalyzeImage(file);
+      const result = await analyzeImageWithAzure(file);
       
       clearInterval(progressTimer);
       setProgress(100);
