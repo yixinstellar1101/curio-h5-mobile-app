@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Conversation API</title>
+</head>
+<body>
+    <h1>Test Conversation API</h1>
+    <button id="testBtn">Test generateConversation</button>
+    <div id="output"></div>
+
+    <script type="module">
+        import { generateConversation } from './src/services/interface.js';
+
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const output = document.getElementById('output');
+            output.innerHTML = 'Testing...';
+
+            try {
+                console.log('=== TESTING GENERATE CONVERSATION ===');
+                
+                // Use a simple test image URL
+                const testImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+                
+                const result = await generateConversation({
+                    imageId: 'test-123',
+                    imageUrl: testImageUrl,
+                    description: 'A beautiful ceramic vase with intricate patterns',
+                    characters: ['lu-xun', 'su-shi', 'vincent-van-gogh']
+                });
+                
+                console.log('Test result:', result);
+                
+                if (result && result.messages) {
+                    output.innerHTML = '<h3>Success! Generated messages:</h3>' + 
+                        result.messages.map(msg => 
+                            `<p><strong>${msg.character}:</strong> ${msg.content}</p>`
+                        ).join('');
+                } else {
+                    output.innerHTML = '<h3>Error: No messages generated</h3>';
+                }
+                
+            } catch (error) {
+                console.error('Test failed:', error);
+                output.innerHTML = '<h3>Test Failed</h3><pre>' + error.message + '</pre>';
+            }
+        });
+    </script>
+</body>
+</html>

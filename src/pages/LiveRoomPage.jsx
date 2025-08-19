@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { PAGES } from '../constants/pages';
 import { musicManager } from '../utils/musicManager';
 import { 
-  mockCreateConversationStream, 
-  mockGenerateConversation, 
-  mockSubmitUserMessage,
-  mockSendReaction,
+  createConversationStream, 
+  generateConversation
+} from '../services/interface';
+import { 
   CHARACTERS,
   REACTION_EMOJIS 
 } from '../services/mockLiveRoomApi';
@@ -38,16 +38,28 @@ const imgAvatarQianlong = "/src/assets/6b326c99ea19859605dd14cb228f024ce6a52c08.
  */
 const LiveRoomPage = ({ data = {}, onNavigate }) => {
   const { 
-    image, 
+    originalImage, // Changed from image to originalImage to match GalleryPage data
     analysis, 
     backgroundImage, 
-    originalImage, 
     imageUrl, 
     category, 
     style, 
     objects,
     backgroundId // 添加backgroundId以保持音乐一致性
   } = data || {};
+  
+  // Create image object for compatibility with existing code
+  const image = useMemo(() => ({
+    imageId: `live-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Generate a unique imageId
+    imageUrl: imageUrl,
+    compositeImageUrl: imageUrl,
+    originalImage,
+    metadata: analysis ? {
+      name: analysis.name,
+      description: analysis.description,
+      timestamp: analysis.timestamp
+    } : {}
+  }), [imageUrl, originalImage, analysis]);
   
   // 音乐控制 - 从GalleryPage继续播放相同音乐
   useEffect(() => {
@@ -129,27 +141,52 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
     'Vincent van Gogh': imgAvatarVanGogh
   };
 
+  // Character ID to display name mapping
+  const characterIdToName = {
+    'lu-xun': 'Lu Xun',
+    'su-shi': 'Su Shi', 
+    'vincent-van-gogh': 'Vincent van Gogh',
+    'You': 'You'
+  };
+
+  // Helper function to get character display name
+  const getCharacterName = (message) => {
+    if (message.speaker) return message.speaker;
+    if (message.character) return characterIdToName[message.character] || message.character;
+    return 'Unknown';
+  };
+
+  // Helper function to get character avatar
+  const getCharacterAvatar = (message) => {
+    const displayName = getCharacterName(message);
+    return characterAvatars[displayName];
+  };
+
   // Get background image - use the same background as GalleryPage
-  const getBackgroundImage = () => {
+  const backgroundImageSrc = useMemo(() => {
+    console.log('=== BACKGROUND IMAGE PROCESSING ===');
+    console.log('Received backgroundImage prop:', backgroundImage ? 'Present' : 'Missing');
+    console.log('BackgroundImage type:', typeof backgroundImage);
+    console.log('BackgroundImage starts with data:', backgroundImage?.startsWith('data:'));
+    console.log('BackgroundImage preview:', backgroundImage?.substring(0, 100) + '...');
+    
     // Use the background image passed from GalleryPage
     if (backgroundImage) {
-      console.log('Using background image from GalleryPage:', backgroundImage);
+      console.log('Using background image from GalleryPage (composite)');
       return backgroundImage;
     }
     
     // Fallback to default background
     console.log('Using default background fallback');
     return imgBackground;
-  };
-
-  const backgroundImageSrc = getBackgroundImage();
+  }, [backgroundImage]);
 
   useEffect(() => {
     initializeConversation();
     startContinuousEmojis();
     return () => {
       if (autoLoopIntervalRef.current) {
-        clearInterval(autoLoopIntervalRef.current);
+        clearTimeout(autoLoopIntervalRef.current);
       }
       if (continuousEmojiIntervalRef.current) {
         clearInterval(continuousEmojiIntervalRef.current);
@@ -174,8 +211,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       setMessages(prev => [...prev, nextMessage]);
       setMessageQueue(prev => prev.slice(1));
       
-      // Wait random 1-3 seconds before showing next message
-      const randomDelay = Math.random() * 2000 + 1000; // 1000ms-3000ms 随机间隔
+      // Wait random 3-5 seconds before showing next message
+      const randomDelay = Math.random() * 2000 + 3000; // 3000ms-5000ms 随机间隔
       await new Promise(resolve => setTimeout(resolve, randomDelay));
       
       setIsDisplayingMessages(false);
@@ -195,47 +232,246 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
 
   const initializeConversation = async () => {
     try {
+      console.log('=== INITIALIZING CONVERSATION ===');
+      console.log('Data passed to LiveRoomPage:', {
+        image,
+        analysis,
+        imageUrl,
+        category,
+        style
+      });
+      
+      if (!image || !image.imageId) {
+        console.error('Missing required image data:', image);
+        throw new Error('Missing required image data');
+      }
+      
       setIsLoading(true);
       
-      // Create conversation stream with mock API
-      const streamResult = await mockCreateConversationStream(image, {
+      // Create conversation stream with real interface
+      const stream = createConversationStream(image.imageId, {
         autoLoop: true,
         loopInterval: 8000
       });
       
-      if (streamResult.success) {
-        setConversationStream(streamResult);
-        // 使用队列逐条显示初始消息
-        if (streamResult.initialMessages && streamResult.initialMessages.length > 0) {
-          addMessagesToQueue(streamResult.initialMessages);
+      setConversationStream(stream);
+      
+      // Generate initial conversation using the real interface
+      console.log('=== STARTING INITIAL CONVERSATION GENERATION ===');
+      
+      // 确保AI只看到原始文物，不是合成的背景图
+      let apiImageUrl = imageUrl || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+      
+      console.log('🖼️  Initial Image Processing:');
+      console.log('  - imageUrl type:', typeof imageUrl, imageUrl);
+      console.log('  - image.originalImage type:', typeof image?.originalImage, image?.originalImage);
+      
+      // 如果有原始图像数据，需要转换为可用的URL
+      if (image.originalImage && image.originalImage instanceof File) {
+        console.log('Converting original image File to base64 for AI analysis');
+        try {
+          const reader = new FileReader();
+          apiImageUrl = await new Promise((resolve, reject) => {
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(image.originalImage);
+          });
+        } catch (error) {
+          console.error('Failed to convert original image File:', error);
+          apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
         }
-        startAutoLoop(streamResult.streamId, streamResult.category);
+      } else if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('blob:')) {
+        console.log('Using provided imageUrl for AI analysis');
+        apiImageUrl = imageUrl;
+      } else if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('blob:')) {
+        console.log('Converting blob URL to base64 for AI analysis of original artifact only');
+        // 这里应该转换原始blob URL，而不是使用合成的背景图
+        try {
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          const reader = new FileReader();
+          apiImageUrl = await new Promise((resolve, reject) => {
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        } catch (error) {
+          console.error('Failed to convert blob to base64:', error);
+          // 使用样本图片作为最后的fallback
+          apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+        }
       }
+      
+      // 确保 apiImageUrl 是有效字符串
+      if (!apiImageUrl || typeof apiImageUrl !== 'string' || 
+          (!apiImageUrl.startsWith('http') && !apiImageUrl.startsWith('data:'))) {
+        console.log('⚠️ apiImageUrl validation failed in initializeConversation, using fallback');
+        apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+      }
+      
+      console.log('🔍 Final apiImageUrl for initializeConversation:', typeof apiImageUrl, apiImageUrl?.substring(0, 50) + '...');
+      
+      console.log('Image data:', {
+        imageId: image.imageId,
+        originalImageUrl: imageUrl,
+        apiImageUrl: apiImageUrl?.substring(0, 100) + '...',
+        description: image.metadata?.description || 'An interesting artifact for discussion'
+      });
+      
+      const initialConversation = await generateConversation({
+        imageId: image.imageId,
+        imageUrl: apiImageUrl, // Use the processed API-compatible URL
+        description: image.metadata?.description || 'An interesting artifact for discussion',
+        characters: ['lu-xun', 'su-shi', 'vincent-van-gogh']
+      });
+      
+      console.log('Initial conversation result:', initialConversation);
+      
+      if (initialConversation.messages && initialConversation.messages.length > 0) {
+        console.log('Generated initial conversation:', initialConversation.messages);
+        addMessagesToQueue(initialConversation.messages);
+      } else {
+        console.warn('No messages received from generateConversation, using fallback');
+      }
+      
+      // Start the auto-loop for continuous conversation
+      startAutoLoop();
       
       setIsLoading(false);
     } catch (error) {
-      console.error('Failed to initialize conversation:', error);
+      console.error('=== FAILED TO INITIALIZE CONVERSATION ===');
+      console.error('Error details:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
       setIsLoading(false);
+      
+      // Fallback: add some default messages
+      const baseTimestamp = Date.now();
+      const fallbackMessages = [
+        {
+          id: `msg-${baseTimestamp}-1-${Math.random().toString(36).substr(2, 9)}`,
+          character: 'lu-xun',
+          content: 'This artifact speaks to the depths of human creativity and cultural expression.',
+          timestamp: new Date().toISOString(),
+          isAI: true
+        },
+        {
+          id: `msg-${baseTimestamp}-2-${Math.random().toString(36).substr(2, 9)}`,
+          character: 'su-shi',
+          content: 'Indeed, like moonlight on water, it reflects the beauty of its time.',
+          timestamp: new Date().toISOString(),
+          isAI: true
+        },
+        {
+          id: `msg-${baseTimestamp}-3-${Math.random().toString(36).substr(2, 9)}`,
+          character: 'vincent-van-gogh',
+          content: 'The colors and forms here stir something profound in my artistic soul.',
+          timestamp: new Date().toISOString(),
+          isAI: true
+        }
+      ];
+      
+      addMessagesToQueue(fallbackMessages);
     }
   };
 
-  const startAutoLoop = (streamId, category) => {
-    // Auto-generate new conversation loops
-    autoLoopIntervalRef.current = setInterval(async () => {
-      try {
-        const result = await mockGenerateConversation(streamId, {
-          generateNewLoop: true,
-          category
-        });
-        
-        if (result.messages) {
-          // 使用队列逐条显示新消息
-          addMessagesToQueue(result.messages);
+  const startAutoLoop = () => {
+    const scheduleNextLoop = () => {
+      // Random interval between 3-5 seconds (3000-5000ms)
+      const randomInterval = Math.random() * 2000 + 3000;
+      
+      autoLoopIntervalRef.current = setTimeout(async () => {
+        try {
+          console.log('Generating new conversation loop...');
+          
+          // 确保AI只分析原始文物，不是合成背景
+          let apiImageUrl = imageUrl || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+          
+          console.log('🔄 Auto-loop Image Processing:');
+          console.log('  - imageUrl type:', typeof imageUrl);
+          console.log('  - image.originalImage type:', typeof image?.originalImage);
+          
+          if (image.originalImage && image.originalImage instanceof File) {
+            console.log('Converting original image File to base64 for auto-loop');
+            try {
+              const reader = new FileReader();
+              apiImageUrl = await new Promise((resolve, reject) => {
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(image.originalImage);
+              });
+            } catch (error) {
+              console.error('Failed to convert original image File in auto-loop:', error);
+              apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+            }
+          } else if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('blob:')) {
+            // 转换原始blob URL而不是使用合成背景
+            try {
+              const response = await fetch(imageUrl);
+              const blob = await response.blob();
+              const reader = new FileReader();
+              apiImageUrl = await new Promise((resolve, reject) => {
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+              });
+            } catch (error) {
+              console.error('Failed to convert blob:', error);
+              apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+            }
+          }
+          
+          // 确保 apiImageUrl 是有效字符串
+          if (!apiImageUrl || typeof apiImageUrl !== 'string' || 
+              (!apiImageUrl.startsWith('http') && !apiImageUrl.startsWith('data:'))) {
+            console.log('⚠️ apiImageUrl validation failed in auto-loop, using fallback');
+            apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+          }
+          
+          console.log('🔍 Final apiImageUrl for auto-loop:', typeof apiImageUrl);
+          
+          const result = await generateConversation({
+            imageId: image.imageId,
+            imageUrl: apiImageUrl,
+            description: image.metadata?.description || 'An interesting artifact for discussion',
+            characters: ['lu-xun', 'su-shi', 'vincent-van-gogh'],
+            previousMessages: messages.slice(-5) // 传递最近5条消息作为上下文，包含用户消息
+          });
+          
+          if (result.messages && result.messages.length > 0) {
+            console.log('Generated new messages:', result.messages);
+            // 使用队列逐条显示新消息
+            addMessagesToQueue(result.messages);
+          }
+        } catch (error) {
+          console.error('Auto-loop generation failed:', error);
+          
+          // Fallback: generate some variety messages
+          const baseTimestamp = Date.now();
+          const fallbackMessages = [
+            {
+              id: `msg-${baseTimestamp}-fallback-${Math.random().toString(36).substr(2, 9)}`,
+              character: ['lu-xun', 'su-shi', 'vincent-van-gogh'][Math.floor(Math.random() * 3)],
+              content: [
+                'The artistry here continues to fascinate me with each viewing.',
+                'Such craftsmanship deserves our continued admiration.',
+                'Every detail reveals new layers of meaning and beauty.'
+              ][Math.floor(Math.random() * 3)],
+              timestamp: new Date().toISOString(),
+              isAI: true
+            }
+          ];
+          
+          addMessagesToQueue(fallbackMessages);
         }
-      } catch (error) {
-        console.error('Auto-loop generation failed:', error);
-      }
-    }, 8000);
+        
+        // Schedule next loop with random interval
+        scheduleNextLoop();
+      }, randomInterval);
+    };
+    
+    // Start the first loop
+    scheduleNextLoop();
   };
 
   const startContinuousEmojis = () => {
@@ -274,40 +510,201 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   };
 
   const handleSendMessage = async (messageText) => {
-    if (!conversationStream || !messageText.trim()) return;
+    if (!messageText.trim()) return;
 
     console.log('=== USER MESSAGE SENT ===');
     console.log('Message:', messageText);
 
     try {
-      // 提交用户消息到mock API
-      const result = await mockSubmitUserMessage(conversationStream.streamId, messageText, 'text');
+      // 立即添加用户消息到对话中
+      const userMessage = {
+        id: `user-msg-${Date.now()}`,
+        character: 'You',
+        content: messageText,
+        timestamp: new Date().toISOString(),
+        isAI: false,
+        isUser: true
+      };
       
-      if (result.success) {
-        // 立即添加用户消息到对话中（不使用队列，因为用户消息需要立即显示）
-        const userMessage = {
-          ...result.userMessage,
-          speaker: 'You', // 显示为用户
-          avatar: null // 用户没有头像
-        };
-        
-        setMessages(prev => [...prev, userMessage]);
-        
-        // 添加AI角色的回复到队列中逐条显示
-        if (result.aiResponses && result.aiResponses.length > 0) {
-          // 延迟添加到队列，让用户消息先显示
-          setTimeout(() => {
-            addMessagesToQueue(result.aiResponses);
-          }, 500); // 500ms延迟后开始显示AI回复
-        }
-        
-        // 滚动到用户消息
-        setTimeout(() => {
-          forceScrollToBottom();
-        }, 100);
+      setMessages(prev => [...prev, userMessage]);
+      
+      // 滚动到用户消息
+      setTimeout(() => {
+        forceScrollToBottom();
+      }, 100);
+
+      // 暂时停止自动对话循环，让AI专注回应用户
+      if (autoLoopIntervalRef.current) {
+        clearTimeout(autoLoopIntervalRef.current);
       }
+      
+      // 确保AI分析原始文物，不是合成背景
+      let apiImageUrl = imageUrl || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+      
+      console.log('🖼️  Image URL Processing:');
+      console.log('  - Initial imageUrl:', typeof imageUrl, imageUrl);
+      console.log('  - Initial apiImageUrl:', typeof apiImageUrl, apiImageUrl);
+      console.log('  - image.originalImage:', typeof image?.originalImage, image?.originalImage);
+      
+      if (image.originalImage && image.originalImage instanceof File) {
+        console.log('Converting original image File to base64 for handleSendMessage');
+        try {
+          const reader = new FileReader();
+          apiImageUrl = await new Promise((resolve, reject) => {
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(image.originalImage);
+          });
+        } catch (error) {
+          console.error('Failed to convert original image File in handleSendMessage:', error);
+          apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+        }
+      } else if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('blob:')) {
+        try {
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          const reader = new FileReader();
+          apiImageUrl = await new Promise((resolve, reject) => {
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        } catch (error) {
+          console.error('Failed to convert blob:', error);
+          apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+        }
+      }
+      
+      // 确保 apiImageUrl 是字符串
+      console.log('🔍 Final URL Validation:');
+      console.log('  - apiImageUrl type:', typeof apiImageUrl);
+      console.log('  - apiImageUrl value:', apiImageUrl);
+      
+      if (!apiImageUrl || typeof apiImageUrl !== 'string' || 
+          (!apiImageUrl.startsWith('http') && !apiImageUrl.startsWith('data:'))) {
+        console.log('⚠️  apiImageUrl failed validation, using fallback');
+        apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+      } else {
+        console.log('✅ apiImageUrl passed validation');
+      }
+      
+      // 生成AI角色的回复（包含用户消息的上下文）
+      console.log('=== CALLING GENERATE CONVERSATION ===');
+      console.log('Parameters being sent to AI:', {
+        imageId: image.imageId,
+        imageUrl: apiImageUrl?.substring(0, 50) + '...',
+        description: image.metadata?.description,
+        characters: ['lu-xun', 'su-shi', 'vincent-van-gogh'],
+        userMessage: messageText,
+        previousMessagesCount: messages.slice(-8).length
+      });
+      
+      const result = await generateConversation({
+        imageId: image.imageId,
+        imageUrl: apiImageUrl,
+        description: image.metadata?.description || 'An interesting artifact for discussion',
+        characters: ['lu-xun', 'su-shi', 'vincent-van-gogh'],
+        userMessage: messageText, // 传递用户消息
+        previousMessages: messages.slice(-8) // 传递最近8条消息作为上下文
+      });
+      
+      console.log('=== AI GENERATION RESULT ===');
+      console.log('Full result object:', result);
+      console.log('Result has messages:', !!result?.messages);
+      console.log('Messages count:', result?.messages?.length);
+      console.log('First message:', result?.messages?.[0]);
+      
+      if (result && result.messages && result.messages.length > 0) {
+        console.log('✅ SUCCESS: Generated AI responses to user message:', result.messages);
+        
+        // 快速响应用户消息，特别是中文消息
+        const isChineseMessage = /[\u4e00-\u9fff]/.test(messageText);
+        const responseDelay = isChineseMessage ? 200 : 800;
+        
+        setTimeout(() => {
+          addMessagesToQueue(result.messages);
+        }, responseDelay);
+        
+        // 在AI回应后重启自动对话循环
+        setTimeout(() => {
+          startAutoLoop();
+        }, 5000);
+        
+      } else {
+        console.log('❌ FAILED: No AI response generated, using fallback messages');
+        console.log('Result was:', result);
+        // 只有在AI完全失败时才使用fallback
+        throw new Error('AI generation failed, using fallback');
+      }
+      
     } catch (error) {
       console.error('Failed to send user message:', error);
+      
+      // Fallback: add more engaging acknowledgment messages that match user's language and ANSWER their question
+      const baseTimestamp = Date.now();
+      const isChineseMessage = /[\u4e00-\u9fff]/.test(messageText);
+      
+      // Try to extract and respond to the user's question/comment
+      const userQuestion = messageText.toLowerCase();
+      let fallbackContent;
+      
+      if (isChineseMessage) {
+        if (messageText.includes('什么人') || messageText.includes('背后') || messageText.includes('是什么')) {
+          fallbackContent = {
+            luXun: '你问的问题很有深度，这件文物背后承载着深厚的历史文化。',
+            suShi: '如你所询，此物工艺精湛，必出自名门巧匠之手。',
+            vanGogh: '你的提问让我思考，每件艺术品背后都有故事。'
+          };
+        } else {
+          fallbackContent = {
+            luXun: '从你的话中感受到对文物的深切关注，这正是我们需要的文化自觉。',
+            suShi: '观君之言，知音难得，此物之美需有心人方能领略。',
+            vanGogh: '我虽不懂中文深意，但从你的语调感受到了对美的真诚。'
+          };
+        }
+      } else {
+        if (userQuestion.includes('what') || userQuestion.includes('who') || userQuestion.includes('how')) {
+          fallbackContent = {
+            luXun: `Your question about "${messageText.substring(0, 15)}..." touches on deep cultural significance.`,
+            suShi: 'Your inquiry reveals the thoughtful observer - this piece has layers of meaning.',
+            vanGogh: 'You ask the right questions! Art speaks when we truly listen.'
+          };
+        } else {
+          fallbackContent = {
+            luXun: `Your perspective on "${messageText.substring(0, 15)}..." reveals deep cultural insight.`,
+            suShi: 'Your observation opens new pathways of understanding this ancient craft.',
+            vanGogh: 'You see what I see—the soul speaking through form and color!'
+          };
+        }
+      }
+      
+      const fallbackResponses = [
+        {
+          id: `response-${baseTimestamp}-1`,
+          character: 'lu-xun',
+          content: fallbackContent.luXun,
+          timestamp: new Date().toISOString(),
+          isAI: true
+        },
+        {
+          id: `response-${baseTimestamp}-2`, 
+          character: 'su-shi',
+          content: fallbackContent.suShi,
+          timestamp: new Date().toISOString(),
+          isAI: true
+        },
+        {
+          id: `response-${baseTimestamp}-3`,
+          character: 'vincent-van-gogh',
+          content: fallbackContent.vanGogh,
+          timestamp: new Date().toISOString(),
+          isAI: true
+        }
+      ];
+      
+      setTimeout(() => {
+        addMessagesToQueue(fallbackResponses);
+      }, 1000);
     }
   };
 
@@ -328,9 +725,22 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       // 添加视觉反馈：显示加载状态
       setIsLoading(true);
       
-      const result = await mockGenerateConversation(conversationStream.streamId, {
-        generateNewLoop: true,
-        category: conversationStream.category
+      // Use the same image URL logic as other functions
+      let apiImageUrl = imageUrl;
+      
+      if (imageUrl && imageUrl.startsWith('blob:')) {
+        apiImageUrl = backgroundImage;
+      }
+      
+      if (!apiImageUrl || (!apiImageUrl.startsWith('http') && !apiImageUrl.startsWith('data:'))) {
+        apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+      }
+      
+      const result = await generateConversation({
+        streamId: conversationStream.streamId,
+        imageUrl: apiImageUrl,
+        category: conversationStream.category,
+        generateNewLoop: true
       });
       
       if (result.messages && result.messages.length > 0) {
@@ -373,12 +783,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       setBurstEmojis(prev => prev.filter(e => !newBurstEmojis.some(be => be.id === e.id)));
     }, 3000);
     
-    // Send reaction to API
-    try {
-      await mockSendReaction(messages[messages.length - 1]?.id, '❤️');
-    } catch (error) {
-      console.error('Failed to send reaction:', error);
-    }
+    // Reaction sent successfully (UI only for now)
+    console.log('Reaction sent:', '❤️');
   };
 
   // Character detail modal handlers
@@ -571,31 +977,35 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
             </div>
           ) : (
             <>
-              {messages.map((message, index) => (
+              {messages.map((message, index) => {
+                const characterName = getCharacterName(message);
+                const isUserMessage = characterName === 'You';
+                
+                return (
                 <div key={message.id} className="mb-3 animate-fade-in">
                   <div className={`inline-flex items-center gap-3 ${
-                    message.speaker === 'You' ? 'flex-row-reverse' : ''
+                    isUserMessage ? 'flex-row-reverse' : ''
                   }`}>
-                    {message.speaker === 'You' ? (
+                    {isUserMessage ? (
                       // 用户消息：没有头像，使用不同的样式
                       <div className="w-8 h-8 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center">
                         <span className="text-white text-xs font-bold">You</span>
                       </div>
                     ) : (
                       <img 
-                        src={characterAvatars[message.speaker]}
-                        alt={message.speaker}
+                        src={getCharacterAvatar(message)}
+                        alt={characterName}
                         className="w-8 h-8 rounded-full flex-shrink-0"
                       />
                     )}
                     <div className={`rounded-2xl px-3 py-2 max-w-xs ${
-                      message.speaker === 'You' 
+                      isUserMessage
                         ? 'bg-blue-600/80 backdrop-blur-md' 
                         : 'bg-white/10 backdrop-blur-md'
                     }`}>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-white font-medium text-xs">
-                          {message.speaker}
+                          {characterName}
                         </span>
                         <span className="text-white/60 text-xs">
                           {new Date(message.timestamp).toLocaleTimeString([], { 
@@ -605,12 +1015,13 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                         </span>
                       </div>
                       <p className="text-white text-sm leading-5">
-                        {message.text}
+                        {message.content || message.text}
                       </p>
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
               <div ref={messagesEndRef} />
               
               {/* Scroll to bottom button */}
