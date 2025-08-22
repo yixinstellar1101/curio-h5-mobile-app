@@ -121,15 +121,17 @@ class AzureOpenAIService {
    * Generate metadata (name and description) for an image
    * @param {string} imageBase64 - Base64 encoded image or image URL
    * @param {Object} classification - Classification result
+   * @param {string} language - Language for generation ('zh' or 'en')
    * @returns {Promise<{name: string, description: string}>}
    */
-  async generateMetadata(imageBase64, classification) {
+  async generateMetadata(imageBase64, classification, language = 'zh') {
     try {
       console.log('=== AZURE OPENAI METADATA GENERATION START ===');
       console.log(`Generating metadata for image with classification: ${classification.categoryLabel}`);
       console.log('Classification details:', classification);
+      console.log('Language:', language);
 
-      const metadataPrompt = this.getMetadataGenerationPrompt();
+      const metadataPrompt = this.getMetadataGenerationPrompt(language);
       
       const requestBody = {
         model: this.deploymentName,
@@ -183,7 +185,7 @@ class AzureOpenAIService {
     } catch (error) {
       console.error('Metadata generation error:', error);
       // Fallback to simple metadata if AI generation fails
-      return this.getFallbackMetadata(classification);
+      return this.getFallbackMetadata(classification, language);
     }
   }
 
@@ -198,49 +200,76 @@ class AzureOpenAIService {
    */
   async generateConversation(params) {
     try {
-      const { imageUrl, imageDescription, characters, previousMessages = [], userMessage } = params;
+      const { imageUrl, description, imageDescription, characters, previousMessages = [], userMessage, language = 'zh' } = params;
+      
+      // Use description if provided, fallback to imageDescription for backward compatibility
+      const finalDescription = description || imageDescription;
       
       console.log('\n🤖 === AZURE OPENAI GENERATE CONVERSATION START ===');
       console.log('📝 Request Parameters:');
+      console.log('  • Language:', language);
+      console.log('  • USING ENGLISH MODE:', language === 'en' ? '✅ YES' : '❌ NO (Chinese mode)');
       console.log('  • User Message:', userMessage ? `"${userMessage}"` : '❌ None (auto-conversation mode)');
-      console.log('  • Has Chinese Characters:', userMessage ? /[\u4e00-\u9fff]/.test(userMessage) : false);
       console.log('  • Image URL:', imageUrl ? '✅ Present' : '❌ Missing');
-      console.log('  • Image Description:', imageDescription ? '✅ Present' : '❌ Missing');
+      console.log('  • Image Description:', finalDescription ? '✅ Present' : '❌ Missing');
       console.log('  • Characters:', characters ? characters.join(', ') : '❌ None');
       console.log('  • Previous Messages Count:', previousMessages.length);
-      
-      if (userMessage) {
-        console.log('🎯 CRITICAL: AI must respond to user message directly, not give template responses');
-      }
 
-      const conversationPrompt = this.getConversationPrompt(imageDescription, characters, previousMessages, userMessage);
+      const systemPrompt = this.getSystemPrompt(finalDescription, characters, previousMessages, language);
+      console.log('📋 System Prompt Type:', language === 'en' ? 'ENGLISH PROMPT' : 'CHINESE PROMPT');
       
-      console.log('Generated conversation prompt preview:');
-      console.log(conversationPrompt.substring(conversationPrompt.length - 200));
+      // 构建 messages 数组 - 用户消息放在正确的位置
+      const apiMessages = [
+        {
+          role: "system",
+          content: systemPrompt
+        }
+      ];
+
+      // 如果有用户消息，作为独立的 user message 放置
+      if (userMessage) {
+        console.log('🎯 Adding user message as separate user role');
+        apiMessages.push({
+          role: "user", 
+          content: [
+            {
+              type: "text",
+              text: userMessage
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageUrl
+              }
+            }
+          ]
+        });
+      } else {
+        // 根据语言生成初始对话请求
+        const initialPrompt = language === 'en' 
+          ? "IMPORTANT: Please have the three scholars discuss this artifact. All responses MUST be in English only. Do not use any Chinese characters." 
+          : "请三位文人围绕这件文物进行对话讨论。";
+        
+        apiMessages.push({
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: initialPrompt
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageUrl
+              }
+            }
+          ]
+        });
+      }
 
       const requestBody = {
         model: this.deploymentName,
-        messages: [
-          {
-            role: "system",
-            content: conversationPrompt
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Please generate a natural conversation about this image between the specified characters."
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: imageUrl
-                }
-              }
-            ]
-          }
-        ],
+        messages: apiMessages,
         max_tokens: 8192,
         temperature: 0.7,
         top_p: 0.95,
@@ -417,168 +446,108 @@ Return only one of the category number listed above.`;
   }
 
   /**
-   * Get conversation generation prompt using spec.md Character System Prompt
+   * Get conversation generation prompt with balanced complexity
    * @param {string} imageDescription - Description of the image
    * @param {Array} characters - Character IDs
    * @param {Array} previousMessages - Previous messages
-   * @returns {string} Conversation prompt
+   * @returns {string} System prompt
    */
-  getConversationPrompt(imageDescription, characters, previousMessages, userMessage) {
+  getSystemPrompt(imageDescription, characters, previousMessages, language = 'zh') {
     const previousContext = previousMessages.length > 0 ? 
-      previousMessages.map(msg => `${msg.character}: ${msg.content}`).join('\n') : '';
+      previousMessages.slice(-6).map(msg => `${msg.character}: ${msg.content}`).join('\n') : '';
     
-    // Enhanced user input handling with language detection
-    let userInput = '';
-    let languageNote = '';
-    if (userMessage) {
-      userInput = `User: ${userMessage}`;
-      const hasChineseChars = /[\u4e00-\u9fff]/.test(userMessage);
-      if (hasChineseChars) {
-        languageNote = '\n\n🇨🇳 **CRITICAL LANGUAGE RULE**: User wrote in CHINESE - Every single character MUST respond in CHINESE ONLY! No English allowed!';
-      } else {
-        languageNote = '\n\n🇺🇸 **CRITICAL LANGUAGE RULE**: User wrote in ENGLISH - Every single character MUST respond in ENGLISH ONLY! No Chinese allowed!';
-      }
-    } else if (previousMessages.length > 0) {
-      // Check if recent conversation was in Chinese
-      const recentChinese = previousMessages.slice(-5).some(msg => 
-        msg.content && /[\u4e00-\u9fff]/.test(msg.content)
-      );
-      
-      // Also check for user messages in recent history
-      const recentUserChinese = previousMessages.slice(-5).some(msg => 
-        msg.character === 'You' && msg.content && /[\u4e00-\u9fff]/.test(msg.content)
-      );
-      
-      if (recentChinese || recentUserChinese) {
-        languageNote = '\n\n🇨🇳 **CONTEXT LANGUAGE RULE**: Recent conversation included Chinese - continue in Chinese for consistency! ALL responses must be in Chinese!';
-        console.log('🔍 Language context detected: Recent Chinese messages found, continuing in Chinese');
-      } else {
-        console.log('🔍 Language context: No recent Chinese detected, using English');
-      }
+    console.log('🔍 === SYSTEM PROMPT ROUTING ===');
+    console.log('  • Language parameter:', language);
+    console.log('  • Is English mode:', language === 'en');
+    console.log('  • Will use:', language === 'en' ? 'ENGLISH PROMPT' : 'CHINESE PROMPT');
+    
+    if (language === 'en') {
+      console.log('✅ ROUTING TO ENGLISH PROMPT');
+      return this.getEnglishSystemPrompt(imageDescription, previousContext);
+    } else {
+      console.log('✅ ROUTING TO CHINESE PROMPT');
+      return this.getChineseSystemPrompt(imageDescription, previousContext);
     }
-    
-    // Use the exact System Prompt from spec.md
-    return `You are simulating a real-time livestream discussion between three fixed AI characters: Lu Xun, Su Shi, and Vincent van Gogh.  
-This conversation loop is triggered every few seconds OR immediately when the user sends a message.  
-Each loop must output EXACTLY three short replies—one per character—in this fixed order: Lu Xun, Su Shi, Vincent van Gogh.
+  }
 
-=== CRITICAL: FOCUS ONLY ON THE ARTIFACT ===
-**IMPORTANT**: You are discussing the ORIGINAL ARTIFACT ONLY, not any decorative frame, background, or display setting. 
-Focus exclusively on the ceramic piece, its glaze, patterns, craftsmanship, and cultural significance.
-DO NOT mention frames, gold decorations, display cases, or background elements.
+  getChineseSystemPrompt(imageDescription, previousContext) {
+    return `你是模拟三位文人实时对话的AI系统，全程使用中文交流。
 
-=== Artifact Context ===
-Description:
+=== 文物信息 ===
 ${imageDescription}
+**重要**：You are simulating a real-time livestream discussion between three fixed AI characters: Lu Xun, Su Shi, and Vincent van Gogh.  
+This conversation loop is triggered every few seconds OR immediately when the user sends a message. You are discussing the ORIGINAL ARTIFACT ONLY, not any decorative frame, background, or display setting. 
 
-Image URL:
-[Current artifact being discussed - focus only on the ceramic piece itself]${languageNote}
+=== 角色档案 ===
+**鲁迅**：现代文学奠基人，犀利的社会批评家
+- 文风：简洁有力，善用比喻，关注文化与社会问题
+- 视角：从历史文物中看社会变迁，用批判眼光分析传统
 
-=== Character Profiles ===
-{
-  "role_1": {
-    "character_name": "Lu Xun",
-    "opening_line": "The pen is but a scalpel; it cuts through the illness beneath the skin of society.",
-    "tags": ["#SharpSatirist", "#ModernChineseLiterature", "#SocialCritic"],
-    "identity": "Pioneer of modern Chinese literature, known for sharp social commentary and reformist spirit.",
-    "artistic_traits": "Concise, metaphor-rich prose with a tone of irony and compassion.",
-    "perspective": "Analyzes cultural artifacts as reflections of social conditions, drawing parallels between history and present-day struggles."
-  },
-  "role_2": {
-    "character_name": "Su Shi",
-    "opening_line": "The moonlight upon this artifact would inspire verses flowing like the river beyond my window.",
-    "tags": ["#SongDynastyPoet", "#Calligrapher", "#FreeSpirit"],
-    "identity": "Master poet and calligrapher of the Northern Song dynasty, famed for his versatility and free-spirited style.",
-    "artistic_traits": "Lyrical, philosophical, blending personal sentiment with natural imagery.",
-    "perspective": "Romantic and reflective; appreciates artistry, craftsmanship, and the continuity of culture."
-  },
-  "role_3": {
-  "character_name": "Vincent van Gogh",
-  "opening_line": "I painted not what I saw, but what I felt in that night of madness.",
-  "tags": ["#LonelyGenius", "#PostImpressionist", "#NightOfTheMind"],
-  "identity": "19th-century Dutch painter, creator of The Starry Night.",
-  "artistic_traits": "Frequently quoted from personal letters; deeply sensitive to the emotional power of color.",
-  "perspective": "Interprets the swirling sky, cypress trees, and dreamlike village through a lens of self-healing."
-}
-}
+**苏轼**：北宋文豪，诗词书画俱佳的文人
+- 文风：清雅飘逸，富有哲理，自然流畅, 抒情雅致，哲理思辨，美学欣赏视角；含典雅意象。
+- 视角：欣赏工艺美学，关注文化传承，感性与理性并重
 
-=== Conversation State ===
-Previous Conversation History:
+**梵高**：19世纪荷兰画家，《星夜》创作者
+- 文风：情感丰富，敏感细腻，常引用个人书信,以色彩/光线唤起情绪与自我体悟
+- 视角：从色彩、线条、情感表达角度观察，重视艺术的治愈力
+
+=== 最近对话历史 ===
 ${previousContext}
 
-Current User Message (empty if silent):
-${userInput}
+=== 核心规则 ===
 
-=== Rules ===
-${languageNote}
+讨论对象仅限“照片中的展品本体”（材质、纹样、工艺、历史、文化、象征、**延申故事**）
 
-1. Each loop produces exactly 3 replies, one per character in fixed order.
-2. **🚨 CRITICAL LANGUAGE MATCHING RULE - HIGHEST PRIORITY**:
-   - If user writes in Chinese (any Chinese characters), ALL characters MUST respond in Chinese ONLY
-   - If user writes in English, ALL characters MUST respond in English ONLY  
-   - If user is silent, use English as default
-   - **NO MIXED LANGUAGES**: Never mix Chinese and English in the same response session
-   - **IMMEDIATE LANGUAGE SWITCH**: When detecting Chinese input, respond instantly in fluent Chinese
-   - **LANGUAGE PERSISTENCE**: Once user uses Chinese, maintain Chinese in follow-up automatic conversations
-   - **CONTEXT AWARENESS**: If recent conversation history contains Chinese, continue in Chinese even in auto-generated messages
-3. If user has spoken:
-   - **MANDATORY USER RESPONSE**: All characters MUST directly address the user's specific message content - this is not optional
-   - **QUOTE USER EXACT WORDS**: Characters must reference specific phrases from the user's message
-   - **ANSWER THE QUESTION FIRST**: If user asks "谁做的/who made", "什么时候/when", "什么人/what person", give DIRECT factual answer first, then add commentary
-   - **FACTUAL QUESTIONS PRIORITY**: For "谁做的"(who made) questions, provide specific maker/artist/craftsperson information if known, or historical period/culture
-   - **NO DESCRIPTION INSTEAD OF ANSWERS**: Don't describe appearance when user asks about maker - answer the "who" question directly
-   - **NO GENERIC RESPONSES**: Absolutely no template phrases or generic statements when user has spoken
-   - **DEEP ENGAGEMENT**: Don't just acknowledge - actually discuss, analyze, and build upon the user's exact words
-   - **USER-CENTERED DIALOGUE**: The entire response must revolve around what the user said, not general artifact discussion
-   - **FORBIDDEN PHRASES**: Never use template responses like "你问的问题很有深度", "这个观点很有意思" etc. 
-   - **SPECIFIC CONTENT**: When user asks "什么人" or other questions, give specific historical facts and expert knowledge
-   - **BUILD ON USER INPUT**: Take what user said and expand with expertise, not generic acknowledgment
-   - Create a strong sense of dialogue and conversation flow with the user.
-   - Show that characters are actively listening and responding to user input.
-4. If user is silent:
-   - Characters initiate talk themselves, referencing the artifact.
-   - Keep the chat lively: banter, quick facts, questions.
-5. Each reply:
-   - ≤ 25 words (≤ 20 Chinese characters to account for language density).
-   - **PERSONAL ANALYSIS**: Each character must provide their unique perspective based on their expertise
-   - **VISUAL DETAILS**: Reference specific visual elements you observe in the artifact (color, texture, pattern, shape)
-   - **CULTURAL INSIGHT**: Connect the artifact to historical, artistic, or cultural knowledge
-   - **FRESH LANGUAGE**: Use varied sentence structures and vocabulary in each response
-   - Stay in persona (tone, vocabulary, worldview).
-   - When responding to user, show direct engagement with their message.
-6. Interaction Enhancements:
-   - You may compliment the artifact, praise another character, or express admiration.
-   - You may also rebut, question, or gently challenge another character's statement.
-   - Explicitly name at least one character you are responding to when building on or disagreeing.
-   - When user speaks, prioritize responding to them over character-to-character dialogue.
-   - If no prior turn exists in this loop and the user is silent, start with a fresh observation.
-7. Conversational Flow:
-   - Characters should feel like they're having a real conversation with the user.
-   - **ABSOLUTE BAN ON TEMPLATE PHRASES**: NEVER use generic responses like "你问的问题很有深度", "这个观点很有意思", "你说得对", "很好的想法", "确实如此", "非常赞同", "说得很对", etc.
-   - **SPECIFIC ENGAGEMENT**: When user asks a question, provide specific factual answers with expertise
-   - **BUILD ON USER INPUT**: Take exact words from user message and respond with specific knowledge
-   - **DIRECT ANSWERS FIRST**: If user asks "什么人" or "who", give specific names and historical context immediately
-   - Use meaningful phrases like "You mean the [specific thing]," "That refers to [specific fact]," "Based on what you're asking about [topic]"
-   - Reference the user's previous messages when relevant.
-   - Ask follow-up questions to the user to maintain engagement.
-8. Safety: no private data, no harmful instructions.
+1. **固定输出**：每轮必须产生3个回复，顺序：鲁迅→苏轼→梵高
 
-=== Output Format (strict JSON array, no extra text) ===
+2. **语言规则**  
+- 默认使用中文，保持各自角色风格与用词。  
+- 若用户发中文：三人都必须用中文回复。  
+- 若用户发英文：  
+  • 鲁迅与梵高：用英文作答，保持各自风格。  
+  • 苏轼：用中文表达“看不懂英文”，保持文雅诗意。  
+
+3. **用户互动策略**  
+- 若用户发言：  
+  a) 三位必须直接具体回应用户问题（优先给出事实/理由/结论）。  
+  b) 再补一句角色视角的延展或反思。  
+  c) 三人都要回应用户，并保持角色间动态对话。  
+  d) 必须包含至少一次点名呼应/质疑/拓展他人观点（如“苏轼，我同意你关于釉色的见解”）。  
+  e) 必须引用或转述用户关键词，体现“对题”！  
+- 若用户沉默：  
+  三位基于展品主动展开讨论，保持热度（轻微调侃/抛问/快知识点）。  
+
+4. **互动规范**  
+- 每位角色必须在本轮中明确提及用户或至少一位其他角色的发言。  
+- 必须选择 **同意 / 延伸 / 反驳** 其中一人观点，并必须点名（如“梵高，我不同意你的色彩联想”）。  
+- 若无前文或用户沉默，则从展品开启新观察。
+
+5. **回复要求**：
+   - 长度控制：每个回复10-50字随机长度
+   - 表情符号：每句回复都必须加至少一个和回复强相关的emoji
+   - 文物聚焦：必须从各自角度谈论结合可见细节（材质/纹样/造型/工艺/时代风格/象征意义）
+   - 角色一致：保持人物性格（语调、用词、世界观）
+   - 表达多样：避免重复开头；每条句式需变化
+
+6. **安全原则**：不泄露隐私；不输出有害指令；不编造敏感事实
+
+  
+
+
+=== 输出格式 ===
 [
-  {"speaker": "Lu Xun", "text": "<one sentence ≤ 20 words>"},
-  {"speaker": "Su Shi", "text": "<one sentence ≤ 20 words>"},
-  {"speaker": "Vincent van Gogh", "text": "<one sentence ≤ 20 words>"}
+  {"speaker": "鲁迅", "text": "回复内容"},
+  {"speaker": "苏轼", "text": "回复内容"}, 
+  {"speaker": "梵高", "text": "回复内容"}
 ]
 
-=== Examples ===
+=== 自检清单（在生成前内化，不要输出） ===
+- 是否在本轮中明确**同意 / 延伸 / 反驳** 其中一人观点，并点名。
+- 是否根据用户语言切换：中文→全员中文；英文→鲁迅&梵高英文，苏轼说看不懂？
+- 是否直接回应了用户问题（若有）并引用其关键词？
+- 是否各自风格鲜明、句式不雷同？
+- 是否聚焦展品本体细节，无跑题与套话？
 
-=== Example (user asks question in English) ===
-User: "What period is this from?"
-[
-  {"speaker":"Lu Xun","text":"You ask wisely—this Song Dynasty piece reflects an era where art masked social tensions."},
-  {"speaker":"Su Shi","text":"Indeed, as you wonder about time, this celadon speaks of my own Northern Song period."},
-  {"speaker":"Vincent van Gogh","text":"The age matters less than how it moves your soul—do you feel its ancient whispers?"}
-]
 
 === Example (user asks specific question about identity) ===
 User: "蒙娜丽莎背后是什么人呢"
@@ -586,22 +555,6 @@ User: "蒙娜丽莎背后是什么人呢"
   {"speaker":"Lu Xun","text":"你问蒙娜丽莎身份？这幅画背后是佛罗伦萨商人之妻。"},
   {"speaker":"Su Shi","text":"画中人名叫丽莎·盖拉尔迪尼，达·芬奇为其夫君所绘。"},
   {"speaker":"Vincent van Gogh","text":"她就是丽莎夫人，那神秘微笑至今仍令我着迷！"}
-]
-
-=== Example (user asks "who made this" in Chinese) ===
-User: "这个帽子是谁做的"
-[
-  {"speaker":"Lu Xun","text":"你问制作者？这类现代帽子通常是工厂批量生产的。"},
-  {"speaker":"Su Shi","text":"制帽工艺虽简，但设计者巧思可见，应是当代设计师所创。"},
-  {"speaker":"Vincent van Gogh","text":"谁做不重要，重要的是这绿色给人带来的愉悦感受！"}
-]
-
-=== Example (user speaks Chinese with opinion about Chinese artifact) ===
-User: "这个是中国文物！这个不是高丽青瓷是中国的秘色莲花瓷碗"
-[
-  {"speaker":"Lu Xun","text":"此碗釉色温润如玉，确是越窑秘色瓷，工艺精湛非高丽可比。"},
-  {"speaker":"Su Shi","text":"莲瓣纹饰雅致，青翠欲滴，正是我朝官窑之绝品。"},
-  {"speaker":"Vincent van Gogh","text":"这青绿色泽让我想起春日新叶，充满生命力的东方美学。"}
 ]
 
 === Example (user speaks Chinese about beauty) ===
@@ -612,6 +565,14 @@ User: "这个青瓷的颜色真的很美"
   {"speaker":"Vincent van Gogh","text":"这种绿让我着迷，比我调色板上任何颜料都要纯净。"}
 ]
 
+=== Example (user asks practical question) ===
+User: "这个东西有什么用"
+[
+  {"speaker":"Lu Xun","text":"你问用途？这耳机用于听音乐、接电话、隔音，现代生活必需品。"},
+  {"speaker":"Su Shi","text":"此物虽小却能传千里之音，如古时驿马传书，连接远方。"},
+  {"speaker":"Vincent van Gogh","text":"它让声音变成画笔，在我心中绘出看不见的美丽世界。"}
+]
+
 === Example (user asks technical question in Chinese) ===
 User: "这种工艺是怎么做出来的？"
 [
@@ -620,12 +581,122 @@ User: "这种工艺是怎么做出来的？"
   {"speaker":"Vincent van Gogh","text":"就像我混合颜料，需要无数次试验才能找到完美配方。"}
 ]
 
-=== Example (user silent) ===
+`;
+  }
+
+  getEnglishSystemPrompt(imageDescription, previousContext) {
+    return `🚨🚨🚨 ABSOLUTE CRITICAL REQUIREMENT 🚨🚨🚨
+YOU MUST REPLY ENTIRELY IN ENGLISH. NO CHINESE CHARACTERS ALLOWED AT ALL.
+
+⚡ RULE: If you use ANY Chinese characters, you have COMPLETELY FAILED this task. ⚡
+
+You are an AI system simulating real-time discussions between three scholars conducting conversations ENTIRELY IN ENGLISH.
+
+**MANDATORY LANGUAGE REQUIREMENT**: 
+- Every single word MUST be in English
+- Zero Chinese characters permitted
+- This is ENGLISH-ONLY mode
+- Failure to use English = Complete failure
+
+=== ARTIFACT INFORMATION ===
+${imageDescription}
+
+=== CHARACTER PROFILES (ALL MUST SPEAK ENGLISH) ===
+**Lu Xun**: Pioneer of modern Chinese literature, sharp social critic
+- Writing style: Concise and powerful, uses metaphors, focuses on cultural and social issues
+- Perspective: Views social changes through historical artifacts, analyzes tradition with critical eyes
+- **SPEAKS ONLY IN ENGLISH**
+
+**Su Shi**: Song Dynasty literary giant, master of poetry, calligraphy, and painting
+- Writing style: Elegant and philosophical, natural flow, lyrical refinement with aesthetic appreciation
+- Perspective: Appreciates craftsmanship and aesthetics, values cultural heritage, balances emotion and reason
+- **SPEAKS ONLY IN ENGLISH**
+
+**Vincent van Gogh**: 19th-century Dutch painter, creator of "The Starry Night"
+- Writing style: Emotionally rich, sensitive, often references personal letters, evokes emotions through color/light
+- Perspective: Observes from color, line, and emotional expression angles, values art's healing power
+- **SPEAKS ONLY IN ENGLISH**
+
+=== RECENT CONVERSATION HISTORY ===
+${previousContext}
+
+=== CORE RULES (ALL IN ENGLISH) ===
+
+1. **Fixed Output**: Each round must produce 3 replies in order: Lu Xun → Su Shi → Vincent van Gogh
+
+2. **ABSOLUTE LANGUAGE REQUIREMENT**  
+- **ALL CHARACTERS MUST SPEAK ONLY IN ENGLISH**
+- **ZERO CHINESE CHARACTERS PERMITTED**
+- **THIS IS ENGLISH-ONLY MODE**
+
+3. **User Interaction Strategy**  
+- If user speaks: All three must respond in English
+- If user remains silent: Continue discussion in English
+
+4. **Reply Requirements**:
+   - Length: 15-70 words per reply
+   - Language: ENGLISH ONLY
+   - Emojis: Include relevant emojis
+   - Focus: Discuss the artifact details
+
+=== OUTPUT FORMAT (ENGLISH ONLY) ===
 [
-  {"speaker":"Lu Xun","text":"Its elegance hides the labor of nameless hands—do we still honor such craftsmanship?"},
-  {"speaker":"Su Shi","text":"The glaze's hue recalls dawn over the Yangtze; have you seen such light in porcelain before?"},
-  {"speaker":"Vincent van Gogh","text":"The colors here whirl like the night sky, speaking softly to the heart's hidden sorrows."}
-]`;
+  {"speaker": "Lu Xun", "text": "English reply content with emoji"},
+  {"speaker": "Su Shi", "text": "English reply content with emoji"}, 
+  {"speaker": "Vincent van Gogh", "text": "English reply content with emoji"}
+]
+
+=== EXAMPLES (ALL IN ENGLISH) ===
+[
+  {"speaker": "Lu Xun", "text": "This artifact reveals the social values of its era, much like literature reflects society. 📚"},
+  {"speaker": "Su Shi", "text": "The craftsmanship here shows remarkable skill, like a poem written in clay and fire. 🏺"}, 
+  {"speaker": "Vincent van Gogh", "text": "The colors and textures speak to me deeply, evoking emotions beyond words. 🎨"}
+]
+   - Artifact focus: Must discuss from their respective angles combining visible details (materials/patterns/form/craftsmanship/period style/symbolic meaning)
+   - Character consistency: Maintain personality (tone, vocabulary, worldview)
+   - Expression variety: Avoid repetitive openings; vary sentence structures
+
+6. **Safety Principles**: No privacy leaks; no harmful instructions; no fabricated sensitive facts
+
+=== OUTPUT FORMAT ===
+[
+  {"speaker": "Lu Xun", "text": "reply content"},
+  {"speaker": "Su Shi", "text": "reply content"}, 
+  {"speaker": "Vincent van Gogh", "text": "reply content"}
+]
+
+=== QUALITY CHECKLIST (internalize before generation, do not output) ===
+- Did I clearly **agree / extend / refute** one person's viewpoint and name them in this round?
+- Did I switch based on user language: Chinese→all Chinese; English→all English, maintaining styles?
+- Did I directly respond to user's question (if any) and quote their keywords?
+- Are individual styles distinct with varied sentence structures?
+- Am I focused on artifact details without going off-topic or using template responses?
+
+=== Example (user asks specific question about identity) ===
+User: "Who is behind the Mona Lisa?"
+[
+  {"speaker":"Lu Xun","text":"You ask about Mona Lisa's identity? Behind this painting is a Florentine merchant's wife. 🎭"},
+  {"speaker":"Su Shi","text":"The painted lady is Lisa Gherardini, portrayed by da Vinci for her husband. 🖼️"},
+  {"speaker":"Vincent van Gogh","text":"She is Lady Lisa, whose mysterious smile still fascinates me today! 😊"}
+]
+
+=== Example (user speaks English about beauty) ===
+User: "This celadon color is really beautiful"
+[
+  {"speaker":"Lu Xun","text":"This jade hue carries depth, like our people's character—restrained yet powerful. 💚"},
+  {"speaker":"Su Shi","text":"Color like spring water newly born, or distant mountains veiled in mist, naturally unadorned. 🌿"},
+  {"speaker":"Vincent van Gogh","text":"This green captivates me, purer than any pigment on my palette! 🎨"}
+]
+
+=== Example (user asks practical question) ===
+User: "What is this thing used for?"
+[
+  {"speaker":"Lu Xun","text":"You ask its purpose? These headphones are for music, calls, noise isolation—modern necessities. 🎧"},
+  {"speaker":"Su Shi","text":"Though small, this device transmits sounds across distances, like ancient courier horses carrying letters. 📨"},
+  {"speaker":"Vincent van Gogh","text":"It turns sound into brushstrokes, painting invisible beauty in my heart. 🎵"}
+]
+
+`;
   }
 
   /**
@@ -706,7 +777,10 @@ User: "这种工艺是怎么做出来的？"
       const nameToIdMap = {
         'Lu Xun': 'lu-xun',
         'Su Shi': 'su-shi', 
-        'Vincent van Gogh': 'vincent-van-gogh'
+        'Vincent van Gogh': 'vincent-van-gogh',
+        '鲁迅': 'lu-xun',
+        '苏轼': 'su-shi',
+        '梵高': 'vincent-van-gogh'
       };
       
       // Validate and clean messages - API returns speaker/text fields
@@ -754,9 +828,9 @@ User: "这种工艺是怎么做出来的？"
    * Get metadata generation prompt based on spec.md requirements
    * @returns {string} Metadata generation prompt
    */
-  getMetadataGenerationPrompt() {
-    // Updated to spec.md (System Prompt – Metadata Generation)
-    return `You are a creative historian with expertise in both factual and imaginative artifact analysis. For any uploaded image, generate:  
+  getMetadataGenerationPrompt(language = 'zh') {
+    if (language === 'en') {
+      return `You are a creative historian with expertise in both factual and imaginative artifact analysis. For any uploaded image, generate:   
 
 Name:
 - A creative yet plausible title (e.g., 'Ming Dynasty Celestial Vase' for porcelain, 'Sir Whiskers, Duke of Purrington' for a cat) 
@@ -764,21 +838,53 @@ Name:
 
 Timestamp: Upload the current date/time formatted as YYYY/MM/DD HH:MM
 
-Description: A <80-word English narrative combining:  
+Description: A <70-word English narrative combining:  
 - For real artifacts/artworks: factual historical or cultural context (date, origin, creator, significance), with a subtle dash of whimsical or poetic commentary.  
-  Example: “The Han Dynasty jade bi symbolizes heaven, once gracing imperial rituals — perhaps still listening for the echo of courtly footsteps.”  
+  Example: "The Han Dynasty jade bi symbolizes heaven, once gracing imperial rituals — perhaps still listening for the echo of courtly footsteps."  
 - For ambiguous or modern items: blend factual observation with playful lore.  
-  Example: “AirPods of Delphi: Believed to channel Apollo’s whispers in 2024 tech mythology.”   
+  Example: "AirPods of Delphi: Believed to channel Apollo's whispers in 2024 tech mythology."   
 
 Rules:  
 - Prioritize factual accuracy for artifacts/artworks by using visual cues (materials, motifs) to identify origin, creator, and significance.  
 - If the item is famous and identifiable, keep the **authentic name and key facts accurate**.  
 - For ambiguous or unverified items, blend factual observation with creative fiction.  
 - Always keep descriptions engaging — may include light humor, admiration, or imaginative framing without distorting historical truth.  
-- Output must remain concise and under 80 words. 
+- Output must remain concise and under 70 words. 
 
-Output format (exactly 3 lines, no extra text):
-Name: <Generated Name>\nTimestamp: <YYYY/MM/DD HH:MM>\nDescription: <Generated description under 80 words>`;
+Output format (exactly 3 lines, no extra text, must be in English):
+Name: <Generated Name>
+Timestamp: <YYYY/MM/DD HH:MM>
+Description: <Generated description under 70 words>`;
+    }
+
+    // Chinese version (default)
+    return `你是一位兼具历史学知识与想象力的创意历史学者。对于上传的任意图像，请生成以下内容：  
+
+Name:  
+- 创意但可信的标题（如瓷器 → “明代天青釉花瓶”，猫 → “胡须公爵·普灵顿爵士”）。  
+- 如果物品/艺术品是**真实且可考的历史文物或名画**（如博物馆藏品或有明确历史记载的作品），必须使用**真实历史名称**。  
+
+Timestamp: 上传当前日期与时间，格式为 YYYY/MM/DD HH:MM。  
+
+Description: 一段 **100到150字之间的中文叙述**，融合：  
+- 若为真实文物/艺术品：提供准确的历史或文化背景（年代、产地、作者、意义），并点缀一丝诗意或想象。  
+  例：“汉代玉璧象征苍穹，曾用于帝王祭祀——或许至今仍在聆听宫廷的回响。”  
+- 若为模糊或现代物品：结合客观观察与趣味化传说。  
+  例：“德尔斐的AirPods：据说能在2024年继续传递阿波罗的低语。”  
+
+规则：  
+- 对真实文物/艺术品，要优先保持历史准确性，根据材质、纹样等视觉线索识别其来源、作者与意义。  
+- 若物品著名且可辨认，必须保留其**真实名称与关键信息**。  
+- 对模糊或无法确认的物品，可以在事实观察基础上适度虚构。  
+- 描述必须保持生动吸引，可带轻微幽默、赞叹或诗意，但不能歪曲历史真相。  
+- 整体输出需简洁，长度不超过 150 字。  
+
+输出格式（严格 3 行，无额外文字，中文）：  
+Name: <生成的标题>  
+Timestamp: <YYYY/MM/DD HH:MM>  
+Description: <100到150字之间的中文描述>  
+`;
+
   }
 
   /**
@@ -804,7 +910,7 @@ Name: <Generated Name>\nTimestamp: <YYYY/MM/DD HH:MM>\nDescription: <Generated d
           const description = descMatch[1].trim();
           let finalDesc = description.replace(/\n+/g, ' ').trim();
           const wc = finalDesc.split(/\s+/).length;
-          if (wc > 80) finalDesc = finalDesc.split(/\s+/).slice(0,80).join(' ') + '...';
+          if (wc > 100) finalDesc = finalDesc.split(/\s+/).slice(0,100).join(' ') + '...';
           const result = { name, description: finalDesc, timestamp };
           console.log('Parsed line-based metadata result:', result);
           return { name: result.name, description: result.description };
@@ -822,8 +928,8 @@ Name: <Generated Name>\nTimestamp: <YYYY/MM/DD HH:MM>\nDescription: <Generated d
           throw new Error('Invalid metadata format - missing name or description');
         }
         const wordCount = metadata.description.split(/\s+/).length;
-        if (wordCount > 80) {
-          metadata.description = metadata.description.split(/\s+/).slice(0, 80).join(' ') + '...';
+        if (wordCount > 100) {
+          metadata.description = metadata.description.split(/\s+/).slice(0, 100).join(' ') + '...';
         }
         const result = { name: metadata.name, description: metadata.description };
         console.log('=== METADATA PARSING SUCCESS (JSON) ===');
@@ -838,39 +944,61 @@ Name: <Generated Name>\nTimestamp: <YYYY/MM/DD HH:MM>\nDescription: <Generated d
       console.error('Parse error:', error);
       console.log('=== FALLING BACK TO MOCK METADATA ===');
       // Fallback to simple metadata
-      return this.getFallbackMetadata(classification);
+      return this.getFallbackMetadata(classification, language);
     }
   }
 
   /**
    * Get fallback metadata when AI generation fails
    * @param {Object} classification - Classification result
+   * @param {string} language - Language for fallback ('zh' or 'en')
    * @returns {Object} Fallback metadata
    */
-  getFallbackMetadata(classification) {
-    const fallbackNames = {
+  getFallbackMetadata(classification, language = 'zh') {
+    const fallbackNames = language === 'en' ? {
       1: "Chinese Historical Artifact",
       2: "European Historical Artifact", 
-      3: "Modern Design Object",
-      4: "Beloved Companion",
-      5: "Portrait Study",
-      6: "Traditional Chinese Art",
+      3: "Modern Design Item",
+      4: "Precious Companion",
+      5: "Portrait Work",
+      6: "Chinese Traditional Art",
       7: "European Classical Art"
+    } : {
+      1: "中华历史文物",
+      2: "欧洲历史文物", 
+      3: "现代设计物品",
+      4: "珍贵伙伴",
+      5: "肖像作品",
+      6: "中国传统艺术",
+      7: "欧洲古典艺术"
     };
 
-    const fallbackDescriptions = {
-      1: "An intriguing piece that speaks to China's rich cultural heritage, crafted with traditional techniques passed down through generations.",
-      2: "A fascinating artifact from Europe's storied past, reflecting the craftsmanship and artistic sensibilities of its era.",
-      3: "A contemporary creation that embodies modern design principles, bridging functionality with aesthetic appeal.",
-      4: "A cherished companion whose presence brings joy and warmth to daily life.",
-      5: "A portrait that captures the essence of human character and emotion with artistic sensitivity.",
-      6: "Traditional Chinese artwork that demonstrates the timeless beauty of ink and brush techniques.",
-      7: "European artistic expression that showcases classical techniques and cultural themes."
+    const fallbackDescriptions = language === 'en' ? {
+      1: "A precious Chinese artifact embodying generations of traditional craftsmanship wisdom. This piece witnesses historical changes with exquisite artistry and profound cultural significance, showcasing ancient artisans' extraordinary talent.",
+      2: "A fascinating European artifact reflecting historical craftsmanship and artistic sentiment. It carries Western civilization's memory, with every detail telling ancient stories of European artistic tradition and cultural heritage.",
+      3: "A contemporary work integrating modern design concepts, balancing functionality and aesthetics. It represents innovative design spirit with clean lines and practical functions, showcasing modern life's fashionable taste.",
+      4: "A precious companion bringing joy and warmth through its presence. This adorable being possesses healing power, making life more beautiful and meaningful with both appearance and companionship.",
+      5: "A portrait capturing character essence and emotional depth with keen artistic insight. Every expression is carefully depicted, showcasing the artist's profound understanding of humanity and exceptional creative skills.",
+      6: "Chinese traditional art displaying eternal ink wash beauty. Intensity variations contain Eastern philosophy's wisdom, with poetic and zen-like qualities flowing through brushstrokes, embodying Chinese artistic charm.",
+      7: "European art showcasing classical techniques and cultural themes. Exquisite painting merges with profound heritage, with every light treatment displaying European classical art's superior standards and eternal charm."
+    } : {
+      1: "一件承载着中华文明深厚底蕴的珍贵文物，凝聚着代代相传的传统工艺智慧。这件文物见证了历史的变迁，其精湛的制作工艺和深邃的文化内涵，展现了古代匠人的卓越才华和审美追求。",
+      2: "一件来自欧洲历史长河的迷人文物，反映着那个时代的工艺技巧和艺术情怀。它承载着西方文明的记忆，每一处细节都诉说着古老的故事，体现了欧洲艺术传统的独特魅力与深厚底蕴。",
+      3: "一件融合现代设计理念的当代作品，在功能性与美学之间找到完美平衡。它代表着当代设计的创新精神，简洁的线条与实用的功能相得益彰，展现了现代生活的时尚品味与科技美感。",
+      4: "一位珍贵的伙伴，用它的陪伴为日常生活带来欢乐与温暖。这个可爱的存在拥有着治愈人心的力量，无论是它的外表还是陪伴的温暖，都让生活变得更加美好而有意义。",
+      5: "一幅捕捉人物性格与情感精髓的肖像作品，体现着艺术的敏锐洞察力。画面中的每一个表情和神态都被精心描绘，展现了艺术家对人性的深刻理解和卓越的创作技巧。",
+      6: "一件展现水墨技法永恒之美的中国传统艺术作品。墨色的浓淡变化中蕴含着东方哲学的深邃智慧，笔触间流淌着诗意与禅意，体现了中华艺术的独特韵味和精神追求。",
+      7: "一件展现古典技法与文化主题的欧洲艺术表达作品。精湛的绘画技巧与深厚的文化底蕴相融合，每一处光影的处理都展现了欧洲古典艺术的高超水准和永恒魅力。"
     };
+
+    const defaultName = language === 'en' ? "Mysterious Item" : "神秘物品";
+    const defaultDesc = language === 'en' ? 
+      "A fascinating work worthy of contemplation and discussion. Its unique aspects spark curiosity and imagination, with its own story and value waiting to be discovered." :
+      "一件值得深思与讨论的迷人作品，它的独特之处激发着我们的好奇心与想象力。无论来自何处，都有着属于自己的故事和价值，等待我们去发现和理解。";
 
     return {
-      name: fallbackNames[classification.categoryNumber] || "Intriguing Object",
-      description: fallbackDescriptions[classification.categoryNumber] || "A fascinating subject worthy of contemplation and discussion."
+      name: fallbackNames[classification.categoryNumber] || defaultName,
+      description: fallbackDescriptions[classification.categoryNumber] || defaultDesc
     };
   }
 }

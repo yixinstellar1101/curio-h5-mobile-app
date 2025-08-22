@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { PAGES } from '../constants/pages';
 import { generateCompositeFromAnalysis } from '../utils/imageComposition';
 import { analyzeImage } from '../services/interface'; // Use real interface instead of mock
+import { useLanguage } from '../context/LanguageContext';
+import { texts } from '../constants/texts';
 
 // Asset imports from Figma
 const imgBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
@@ -14,12 +16,13 @@ const imgViewfinder = "/src/assets/db6877c52f8f212513e0ebd034674ef3aa25f15a.svg"
 const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png";
 
 // Real API service for image analysis using Azure services
-const analyzeImageWithAzure = async (file) => {
+const analyzeImageWithAzure = async (file, language = 'zh') => {
   try {
     console.log('Analyzing image with Azure services...');
+    console.log('Language:', language);
     
     // Use the real interface implementation
-    const result = await analyzeImage(file, `req-${Date.now()}`);
+    const result = await analyzeImage(file, `req-${Date.now()}`, language);
     
     // Transform the result to match the expected format
     return {
@@ -47,11 +50,11 @@ const analyzeImageWithAzure = async (file) => {
     console.error('Azure image analysis failed:', error);
     
     // Provide user-friendly error messages
-    let errorMessage = 'Image analysis failed. Please try again.';
+    let errorMessage = t.imageAnalysis.analysisFailed[currentLanguage];
     if (error.code === 'UPLOAD_FAILED') {
-      errorMessage = 'Failed to upload image. Please check your connection.';
+      errorMessage = t.imageAnalysis.uploadFailedError[currentLanguage];
     } else if (error.code === 'CLASSIFICATION_FAILED') {
-      errorMessage = 'Unable to classify image. Please try a different image.';
+      errorMessage = t.imageAnalysis.classificationFailedError[currentLanguage];
     }
     
     throw new Error(errorMessage);
@@ -109,7 +112,10 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [progress, setProgress] = useState(0);
   const [compositeInfo, setCompositeInfo] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
   const { file } = data || {};
+  const { currentLanguage } = useLanguage();
+  const t = texts;
 
   useEffect(() => {
     if (file) {
@@ -131,7 +137,7 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
         });
       }, 200);
 
-      const result = await analyzeImageWithAzure(file);
+      const result = await analyzeImageWithAzure(file, currentLanguage);
       
       clearInterval(progressTimer);
       setProgress(100);
@@ -159,6 +165,15 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
       
     } catch (error) {
       console.error('Analysis failed:', error);
+      
+      // Set user-friendly error message based on error type
+      let message = t.imageAnalysis.analysisFailed[currentLanguage];
+      if (error.code === 'UPLOAD_FAILED') {
+        message = t.imageAnalysis.uploadFailedError[currentLanguage];
+      } else if (error.code === 'CLASSIFICATION_FAILED') {
+        message = t.imageAnalysis.classificationFailedError[currentLanguage];
+      }
+      setErrorMessage(message);
       setAnalysisState('error');
     }
   };
@@ -265,9 +280,9 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
         <>
           <AnalysisSpinner />
           <div className="absolute bg-[rgba(0,0,0,0.5)] box-border content-stretch flex flex-col gap-2.5 h-8 items-center justify-center left-1/2 px-[19px] py-[3px] rounded-[20px] translate-x-[-50%] translate-y-[-50%] w-[179px] z-20" style={{ top: "calc(50% + 47px)" }}>
-            <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0 w-full">
-              <div className="[grid-area:1_/_1] font-medium h-[22px] ml-0 mt-0 not-italic opacity-90 relative text-[#ffffff] text-[16px] text-left w-[141px]">
-                <p className="block leading-[1.6]">Analyzing picture...</p>
+            <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-center relative shrink-0 w-full">
+              <div className="[grid-area:1_/_1] font-medium h-[22px] ml-0 mt-0 not-italic opacity-90 relative text-[#ffffff] text-[16px] text-center w-[141px]">
+                <p className="block leading-[1.6] text-center">{t.imageAnalysis.analyzing[currentLanguage]}</p>
               </div>
             </div>
           </div>
@@ -282,10 +297,10 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
         <div className="absolute left-1/2 translate-x-[-50%] top-[600px] w-80 z-30">
           <div className="flex gap-3">
             <button onClick={handleRetake} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 px-6 rounded-lg transition-colors font-medium">
-              {data?.source === 'album' ? 'Choose Again' : 'Retake'}
+              {data?.source === 'album' ? t.imageAnalysis.chooseAgain[currentLanguage] : t.imageAnalysis.retake[currentLanguage]}
             </button>
             <button onClick={handleContinue} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg transition-colors font-medium">
-              Continue to Gallery
+              {t.imageAnalysis.continueToGallery[currentLanguage]}
             </button>
           </div>
         </div>
@@ -294,14 +309,14 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
       {/* Error State */}
       {analysisState === 'error' && (
         <div className="absolute left-1/2 translate-x-[-50%] translate-y-[-50%] w-80 bg-red-900/80 backdrop-blur-sm rounded-2xl p-6 z-30" style={{ top: "calc(50% + 100px)" }}>
-          <h3 className="text-white text-lg font-semibold mb-3">Analysis Failed</h3>
-          <p className="text-white/80 text-sm mb-4">Unable to analyze the image. Please try again.</p>
+          <h3 className="text-white text-lg font-semibold mb-3">{t.imageAnalysis.analysisFailed[currentLanguage]}</h3>
+          <p className="text-white/80 text-sm mb-4">{errorMessage}</p>
           <div className="flex gap-3">
             <button onClick={performAnalysis} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
-              Retry
+              {t.imageAnalysis.retry[currentLanguage]}
             </button>
             <button onClick={handleRetake} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors">
-              Retake
+              {data?.source === 'album' ? t.imageAnalysis.chooseAgain[currentLanguage] : t.imageAnalysis.retake[currentLanguage]}
             </button>
           </div>
         </div>

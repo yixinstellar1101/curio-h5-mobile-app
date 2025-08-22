@@ -1,7 +1,10 @@
 import React, { useState, useRef } from 'react';
 import StatusBar from '../components/common/StatusBar';
 import HomeIndicator from '../components/common/HomeIndicator';
+import LanguageModal from '../components/modals/LanguageModal';
 import { PAGES } from '../constants/pages';
+import { useLanguage } from '../context/LanguageContext';
+import { texts } from '../constants/texts';
 
 // Asset imports
 const imgImage176 = "/src/assets/dff6fe23fdbc66a95b73bccee1330324b70d1957.png";
@@ -14,13 +17,17 @@ const imgCellular = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
 
 /**
  * HomePage - Main entry screen with Upload button and picture frames
- * Entry button "Upload an Image" → Navigate to ImageUploadPage
+ * Entry button "上传图片" → Navigate to ImageUploadPage
  * Swipe right → Navigate to GalleryPage
  */
 const HomePage = ({ onNavigate }) => {
   const [startX, setStartX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const { currentLanguage } = useLanguage();
   const containerRef = useRef(null);
+
+  const t = texts.homePage;
 
   const handleUploadClick = () => {
     if (onNavigate) {
@@ -29,9 +36,7 @@ const HomePage = ({ onNavigate }) => {
   };
 
   const handleSettingsClick = () => {
-    if (onNavigate) {
-      onNavigate(PAGES.VOLUME_SETTINGS);
-    }
+    setShowLanguageModal(true);
   };
 
   // Handle swipe gestures
@@ -136,9 +141,15 @@ const HomePage = ({ onNavigate }) => {
       >
         <div className="absolute border border-[#c5c5c5] border-solid inset-0 pointer-events-none rounded-[20px]" />
         <div className="font-medium leading-[0] not-italic relative shrink-0 text-[#ffffff] text-[20px] text-center text-nowrap">
-          <p className="block leading-[40px] whitespace-pre">Upload an image</p>
+          <p className="block leading-[40px] whitespace-pre">{t.upload[currentLanguage]}</p>
         </div>
       </div>
+
+      {/* Language Modal */}
+      <LanguageModal 
+        isOpen={showLanguageModal} 
+        onClose={() => setShowLanguageModal(false)} 
+      />
     </div>
   );
 };

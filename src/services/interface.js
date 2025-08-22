@@ -79,9 +79,10 @@ function fileToBase64(file) {
  * @param {string} requestId - Optional correlation ID
  * @returns {Promise<AnalysisResult>}
  */
-export async function analyzeImage(imageInput, requestId = null) {
+export async function analyzeImage(imageInput, requestId = null, language = 'zh') {
   console.log('=== Starting Real Image Analysis ===');
   console.log('Request ID:', requestId);
+  console.log('Language:', language);
   
   try {
     const imageId = uuidv4();
@@ -120,7 +121,7 @@ export async function analyzeImage(imageInput, requestId = null) {
     
     // Step 3: Generate metadata using AI (name and description)
     console.log('Generating metadata with Azure OpenAI...');
-    const aiMetadata = await azureOpenAIService.generateMetadata(imageBase64, classification);
+    const aiMetadata = await azureOpenAIService.generateMetadata(imageBase64, classification, language);
     
     console.log('=== AI METADATA RECEIVED IN INTERFACE ===');
     console.log('AI Metadata:', aiMetadata);

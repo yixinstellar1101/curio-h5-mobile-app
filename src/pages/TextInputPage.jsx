@@ -6,7 +6,7 @@ import { PAGES } from '../constants/pages';
 /**
  * TextInputPage - Chat input interface with software keyboard
  */
-const TextInputPage = ({ onSend, placeholder = "Type your message...", characterName = "Character" }) => {
+const TextInputPage = ({ onSend, placeholder = "输入您的消息...", characterName = "角色" }) => {
   const [message, setMessage] = useState('');
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const textareaRef = useRef(null);
@@ -71,7 +71,7 @@ const TextInputPage = ({ onSend, placeholder = "Type your message...", character
               : 'text-gray-400 bg-gray-200'
           }`}
         >
-          Send
+          发送
         </button>
       </div>
 
@@ -223,7 +223,7 @@ const TextInputPage = ({ onSend, placeholder = "Type your message...", character
                 onClick={handleSend}
                 disabled={!message.trim()}
               >
-                Send
+                发送
               </button>
             </div>
           </div>

@@ -12,6 +12,8 @@ import {
 import CharacterDetailCardPage from '../components/CharacterDetailCardPage';
 import CharacterDetailFullPage from '../components/CharacterDetailFullPage';
 import TextInputBar from '../components/TextInputBar';
+import { useLanguage } from '../context/LanguageContext';
+import { texts } from '../constants/texts';
 
 // Asset imports from Figma
 const imgStatusBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
@@ -33,8 +35,8 @@ const imgAvatarVanGogh = "/src/assets/bb22518de19c944000484ee66f86147664b959a6.p
 const imgAvatarQianlong = "/src/assets/6b326c99ea19859605dd14cb228f024ce6a52c08.png";
 
 /**
- * LiveRoomPage - Real-time AI conversation interface
- * Based on exact Figma design with mock API integration
+ * 直播间页面 - 实时AI对话界面
+ * 基于精确的Figma设计，集成模拟API
  */
 const LiveRoomPage = ({ data = {}, onNavigate }) => {
   const { 
@@ -47,6 +49,9 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
     objects,
     backgroundId // 添加backgroundId以保持音乐一致性
   } = data || {};
+  
+  const { currentLanguage } = useLanguage();
+  const t = texts;
   
   // Create image object for compatibility with existing code
   const image = useMemo(() => ({
@@ -61,29 +66,29 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
     } : {}
   }), [imageUrl, originalImage, analysis]);
   
-  // 音乐控制 - 从GalleryPage继续播放相同音乐
+  // 音乐控制 - 从展间页继续播放相同音乐
   useEffect(() => {
     const handleLiveRoomMusic = async () => {
-      console.log('=== LIVE ROOM MUSIC CONTROL ===');
-      console.log('LiveRoom data:', { category, style, backgroundId });
+      console.log('=== 直播间音乐控制 ===');
+      console.log('直播间数据:', { category, style, backgroundId });
       
       const musicCategory = style || category || 'European';
       const musicBackgroundId = backgroundId || `${musicCategory}_live`;
       
-      // 等待足够长的时间确保GalleryPage完全卸载和音乐清理
+      // 等待足够长的时间确保展间页面完全卸载和音乐清理
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // 继续播放音乐（不重新开始）
       // 如果音乐管理器已经在播放相同分类的音乐，则继续
       const currentStatus = musicManager.getStatus();
-      console.log('Current music status after delay:', currentStatus);
+      console.log('延迟后的当前音乐状态:', currentStatus);
       
-      // 由于GalleryPage已经停止音乐，这里总是需要重新开始
-      console.log('Starting music for live room after GalleryPage cleanup');
+      // 由于展间页面已经停止音乐，这里总是需要重新开始
+      console.log('在展间页面清理后为直播间启动音乐');
       try {
         await musicManager.playMusic(musicCategory, musicBackgroundId, true); // 强制重新开始
       } catch (error) {
-        console.error('Error starting LiveRoom music:', error);
+        console.error('启动直播间音乐出错:', error);
       }
     };
 
@@ -131,32 +136,58 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   const continuousEmojiIntervalRef = useRef(null);
   
   // Available emojis from design (limited set)
-  const availableEmojis = ['😍', '👏', '🥳', '👍', '❤️', '😘'];
+  const availableEmojis = ['😍', '👏', '🥳', '👍', '🩷', '😘', '🌹', '💖', '🥰', '🌟'];
   const MAX_EMOJIS = 60; // Prevent frame drops
   
-  // Character avatar mapping
-  const characterAvatars = {
-    'Lu Xun': imgAvatarLuXun,
-    'Su Shi': imgAvatarSuShi,
-    'Vincent van Gogh': imgAvatarVanGogh
+  // Character avatar mapping - use language-aware keys
+  const getCharacterAvatarKey = (characterId) => {
+    const characterNames = t.liveRoom.characters;
+    if (characterNames[characterId]) {
+      return characterNames[characterId][currentLanguage];
+    }
+    return characterId;
   };
 
-  // Character ID to display name mapping
-  const characterIdToName = {
-    'lu-xun': 'Lu Xun',
-    'su-shi': 'Su Shi', 
-    'vincent-van-gogh': 'Vincent van Gogh',
-    'You': 'You'
+  const characterAvatars = {
+    [t.liveRoom.characters['lu-xun'][currentLanguage]]: imgAvatarLuXun,
+    [t.liveRoom.characters['su-shi'][currentLanguage]]: imgAvatarSuShi,
+    [t.liveRoom.characters['vincent-van-gogh'][currentLanguage]]: imgAvatarVanGogh
   };
 
   // Helper function to get character display name
   const getCharacterName = (message) => {
     if (message.speaker) return message.speaker;
-    if (message.character) return characterIdToName[message.character] || message.character;
-    return 'Unknown';
+    if (message.character) {
+      // Use language-aware character names
+      const characterNames = t.liveRoom.characters;
+      if (characterNames[message.character]) {
+        return characterNames[message.character][currentLanguage];
+      }
+      return message.character;
+    }
+    return t.liveRoom.characters.unknown[currentLanguage];
   };
 
-  // Helper function to get character avatar
+  // Helper function to get character click handler
+  const getCharacterClickHandler = (characterName) => {
+    const luXunName = t.liveRoom.characters['lu-xun'][currentLanguage];
+    const suShiName = t.liveRoom.characters['su-shi'][currentLanguage];
+    const vanGoghName = t.liveRoom.characters['vincent-van-gogh'][currentLanguage];
+    
+    if (characterName === luXunName) return handleLuXunClick;
+    if (characterName === suShiName) return handleSuShiClick;
+    if (characterName === vanGoghName) return handleVanGoghClick;
+    return undefined;
+  };
+
+  // Helper function to check if character is clickable
+  const isCharacterClickable = (characterName) => {
+    const luXunName = t.liveRoom.characters['lu-xun'][currentLanguage];
+    const suShiName = t.liveRoom.characters['su-shi'][currentLanguage];
+    const vanGoghName = t.liveRoom.characters['vincent-van-gogh'][currentLanguage];
+    
+    return characterName === luXunName || characterName === suShiName || characterName === vanGoghName;
+  };
   const getCharacterAvatar = (message) => {
     const displayName = getCharacterName(message);
     return characterAvatars[displayName];
@@ -194,7 +225,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       // 注意：不停止音乐，因为返回GalleryPage时需要继续播放
       console.log('LiveRoomPage unmounting, music continues playing');
     };
-  }, []);
+  }, [currentLanguage]); // 添加currentLanguage作为依赖，语言切换时重新初始化对话
 
   useEffect(() => {
     scrollToBottom();
@@ -211,8 +242,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       setMessages(prev => [...prev, nextMessage]);
       setMessageQueue(prev => prev.slice(1));
       
-      // Wait random 3-5 seconds before showing next message
-      const randomDelay = Math.random() * 2000 + 3000; // 3000ms-5000ms 随机间隔
+      // 统一所有消息为2-3秒间隔
+      const randomDelay = Math.random() * 1000 + 2000; // 2-3秒随机间隔
       await new Promise(resolve => setTimeout(resolve, randomDelay));
       
       setIsDisplayingMessages(false);
@@ -221,18 +252,37 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
     displayNextMessage();
   }, [messageQueue, isDisplayingMessages]);
 
+  // Helper function to clear message queue
+  const clearMessageQueue = () => {
+    console.log('🧹 Clearing message queue, current length:', messageQueue.length);
+    setMessageQueue([]);
+    setIsDisplayingMessages(false); // 确保消息显示不会被阻塞
+  };
+
   // Helper function to add messages to queue for sequential display
-  const addMessagesToQueue = (newMessages) => {
+  const addMessagesToQueue = (newMessages, isUserResponse = false) => {
     if (Array.isArray(newMessages)) {
-      setMessageQueue(prev => [...prev, ...newMessages]);
+      const markedMessages = newMessages.map(msg => ({ ...msg, isUserResponse }));
+      setMessageQueue(prev => [...prev, ...markedMessages]);
     } else {
-      setMessageQueue(prev => [...prev, newMessages]);
+      const markedMessage = { ...newMessages, isUserResponse };
+      setMessageQueue(prev => [...prev, markedMessage]);
     }
+  };
+
+  // Helper function to add messages immediately clearing queue first
+  const addMessagesImmediately = (newMessages) => {
+    console.log('🚀 Adding messages immediately, clearing queue first');
+    clearMessageQueue();
+    setTimeout(() => {
+      addMessagesToQueue(newMessages, true); // 标记为用户回复，优先显示
+    }, 100); // 短暂延迟确保队列已清空
   };
 
   const initializeConversation = async () => {
     try {
       console.log('=== INITIALIZING CONVERSATION ===');
+      console.log('Current Language:', currentLanguage);
       console.log('Data passed to LiveRoomPage:', {
         image,
         analysis,
@@ -245,19 +295,29 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         console.error('Missing required image data:', image);
         throw new Error('Missing required image data');
       }
-      
+
+      // 清理现有状态（语言切换时重置）
+      setMessages([]);
+      clearMessageQueue();
       setIsLoading(true);
       
-      // Create conversation stream with real interface
+      // 停止现有的自动循环
+      if (autoLoopIntervalRef.current) {
+        clearTimeout(autoLoopIntervalRef.current);
+        autoLoopIntervalRef.current = null;
+      }
+      
+      // Create conversation stream with real interface - 调整为9秒间隔
       const stream = createConversationStream(image.imageId, {
         autoLoop: true,
-        loopInterval: 8000
+        loopInterval: 9000
       });
       
       setConversationStream(stream);
       
       // Generate initial conversation using the real interface
       console.log('=== STARTING INITIAL CONVERSATION GENERATION ===');
+      console.log('Language for conversation:', currentLanguage);
       
       // 确保AI只看到原始文物，不是合成的背景图
       let apiImageUrl = imageUrl || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
@@ -322,7 +382,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         imageId: image.imageId,
         imageUrl: apiImageUrl, // Use the processed API-compatible URL
         description: image.metadata?.description || 'An interesting artifact for discussion',
-        characters: ['lu-xun', 'su-shi', 'vincent-van-gogh']
+        characters: ['lu-xun', 'su-shi', 'vincent-van-gogh'],
+        language: currentLanguage
       });
       
       console.log('Initial conversation result:', initialConversation);
@@ -377,8 +438,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
 
   const startAutoLoop = () => {
     const scheduleNextLoop = () => {
-      // Random interval between 3-5 seconds (3000-5000ms)
-      const randomInterval = Math.random() * 2000 + 3000;
+      // 调整间隔到8秒
+      const randomInterval = 8000;
       
       autoLoopIntervalRef.current = setTimeout(async () => {
         try {
@@ -435,7 +496,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
             imageUrl: apiImageUrl,
             description: image.metadata?.description || 'An interesting artifact for discussion',
             characters: ['lu-xun', 'su-shi', 'vincent-van-gogh'],
-            previousMessages: messages.slice(-5) // 传递最近5条消息作为上下文，包含用户消息
+            previousMessages: messages.slice(-5), // 传递最近5条消息作为上下文，包含用户消息
+            language: currentLanguage
           });
           
           if (result.messages && result.messages.length > 0) {
@@ -605,7 +667,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         description: image.metadata?.description || 'An interesting artifact for discussion',
         characters: ['lu-xun', 'su-shi', 'vincent-van-gogh'],
         userMessage: messageText, // 传递用户消息
-        previousMessages: messages.slice(-8) // 传递最近8条消息作为上下文
+        previousMessages: messages.slice(-8), // 传递最近8条消息作为上下文
+        language: currentLanguage
       });
       
       console.log('=== AI GENERATION RESULT ===');
@@ -617,13 +680,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       if (result && result.messages && result.messages.length > 0) {
         console.log('✅ SUCCESS: Generated AI responses to user message:', result.messages);
         
-        // 快速响应用户消息，特别是中文消息
-        const isChineseMessage = /[\u4e00-\u9fff]/.test(messageText);
-        const responseDelay = isChineseMessage ? 200 : 800;
-        
-        setTimeout(() => {
-          addMessagesToQueue(result.messages);
-        }, responseDelay);
+        // 清除队列中的堆积消息，立即显示AI回复
+        addMessagesImmediately(result.messages);
         
         // 在AI回应后重启自动对话循环
         setTimeout(() => {
@@ -702,9 +760,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         }
       ];
       
-      setTimeout(() => {
-        addMessagesToQueue(fallbackResponses);
-      }, 1000);
+      // 使用立即显示函数，清除堆积的消息
+      addMessagesImmediately(fallbackResponses);
     }
   };
 
@@ -737,16 +794,18 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       }
       
       const result = await generateConversation({
-        streamId: conversationStream.streamId,
+        imageId: image.imageId,
         imageUrl: apiImageUrl,
-        category: conversationStream.category,
-        generateNewLoop: true
+        description: image.metadata?.description || 'An interesting artifact for discussion',
+        characters: ['lu-xun', 'su-shi', 'vincent-van-gogh'],
+        previousMessages: messages.slice(-5),
+        language: currentLanguage
       });
       
       if (result.messages && result.messages.length > 0) {
         console.log(`Generated ${result.messages.length} new messages`);
         // 使用队列逐条显示新的消息
-        addMessagesToQueue(result.messages);
+        addMessagesToQueue(result.messages, true); // 标记为用户消息回复
       } else {
         console.warn('No new messages generated');
       }
@@ -913,18 +972,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       className="h-full w-full bg-cover bg-center relative overflow-hidden"
       style={{ backgroundImage: `url(${backgroundImageSrc})` }}
     >
-      {/* Status Bar */}
-      <div className="absolute top-0 left-0 right-0 flex justify-between items-center pt-3 pb-2 px-4 bg-transparent z-10">
-        <div className="text-white text-sm font-medium">9:41</div>
-        <div className="flex items-center space-x-1">
-          <img src={imgStatusCellular} alt="cellular" className="w-4 h-4" />
-          <img src={imgStatusWifi} alt="wifi" className="w-4 h-4" />
-          <img src={imgStatusBattery} alt="battery" className="w-6 h-3" />
-        </div>
-      </div>
-
-      {/* Header */}
-      <div className="flex justify-between items-center px-4 py-4 mt-8">
+      {/* Header - 上移，去掉mt-8 */}
+      <div className="flex justify-between items-center px-4 py-4 mt-4">
         <button 
           onClick={handleBack}
           className="w-8 h-8 flex items-center justify-center"
@@ -932,8 +981,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
           <img src={imgBackArrow} alt="back" className="w-6 h-6" />
         </button>
         
-        <div className="text-white text-lg font-semibold flex-1 text-center">
-          Live Discussion
+        <div className="text-white text-lg font-semibold flex-1 text-center ml-4">
+          {t.liveRoom.title[currentLanguage]}
         </div>
         
         <div className="flex items-center space-x-4">
@@ -946,26 +995,32 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         </div>
       </div>
 
-      {/* Character Avatars */}
-      <div className="flex justify-center space-x-12 px-4 mb-6">
-        {Object.entries(characterAvatars).map(([name, avatar]) => (
-          <div key={name} className={`flex flex-col items-center space-y-2 ${name === 'Su Shi' ? 'ml-6' : ''}`}>
-            <div className="relative">
-              <img 
-                src={avatar} 
-                alt={name}
-                className={`w-16 h-16 rounded-full border-2 border-white shadow-lg ${
-                  name === 'Vincent van Gogh' || name === 'Su Shi' || name === 'Lu Xun' ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
-                }`}
-                onClick={name === 'Vincent van Gogh' ? handleVanGoghClick : name === 'Su Shi' ? handleSuShiClick : name === 'Lu Xun' ? handleLuXunClick : undefined}
-              />
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
+      {/* Character Avatars - 下移一点点 */}
+      <div className="flex justify-center space-x-12 px-4 mb-6 mt-2">
+        {Object.entries(characterAvatars).map(([name, avatar]) => {
+          const suShiName = t.liveRoom.characters['su-shi'][currentLanguage];
+          const isClickable = isCharacterClickable(name);
+          const clickHandler = getCharacterClickHandler(name);
+          
+          return (
+            <div key={name} className={`flex flex-col items-center space-y-2 ${name === suShiName ? 'ml-6' : ''}`}>
+              <div className="relative">
+                <img 
+                  src={avatar} 
+                  alt={name}
+                  className={`w-16 h-16 rounded-full border-2 border-white shadow-lg ${
+                    isClickable ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                  }`}
+                  onClick={clickHandler}
+                />
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
+              </div>
+              <span className="text-white text-xs font-medium text-center">
+                {name}
+              </span>
             </div>
-            <span className="text-white text-xs font-medium text-center">
-              {name}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Messages Container - Above control panel */}
@@ -987,8 +1042,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                     isUserMessage ? 'flex-row-reverse' : ''
                   }`}>
                     {isUserMessage ? (
-                      // 用户消息：没有头像，使用不同的样式
-                      <div className="w-8 h-8 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center">
+                      // 用户消息：头像颜色与消息气泡一致
+                      <div className="w-8 h-8 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center">
                         <span className="text-white text-xs font-bold">You</span>
                       </div>
                     ) : (
@@ -1169,7 +1224,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                   className="font-bold leading-[0] not-italic opacity-90 text-[#232323] text-[18px] text-center w-full"
                   data-node-id="165:999"
                 >
-                  <p className="block leading-[1.4]">Lu Xun</p>
+                  <p className="block leading-[1.4]">{t.liveRoom.characterIntros['lu-xun'][currentLanguage].name}</p>
                 </div>
 
                 {/* 引言 - 严格按照Figma字体和样式 */}
@@ -1178,7 +1233,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                   data-node-id="165:1000"
                 >
                   <p className="block leading-[1.45]">
-                    "The pen is but a scalpel; it cuts through the illness beneath the skin of society."
+                    {t.liveRoom.characterIntros['lu-xun'][currentLanguage].quote}
                   </p>
                 </div>
 
@@ -1188,7 +1243,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                   data-node-id="165:1001"
                 >
                   <p className="block leading-[1.6]">
-                    #SharpSatirist #ModernChineseLiterature #SocialCritic
+                    {t.liveRoom.characterIntros['lu-xun'][currentLanguage].tags}
                   </p>
                 </div>
 
@@ -1201,14 +1256,14 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                     className="font-bold opacity-90 text-[15px] w-full"
                     data-node-id="165:1003"
                   >
-                    <p className="block leading-[1.6]">Identity</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['lu-xun'][currentLanguage].identityLabel}</p>
                   </div>
                   <div
                     className="font-medium opacity-90 text-[14px] w-full"
                     data-node-id="165:1004"
                   >
                     <p className="block leading-[1.6]">
-                      Pioneer of modern Chinese literature, known for sharp social commentary and reformist spirit.
+                      {t.liveRoom.characterIntros['lu-xun'][currentLanguage].identity}
                     </p>
                   </div>
                 </div>
@@ -1222,14 +1277,14 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                     className="font-bold opacity-90 text-[15px] w-full"
                     data-node-id="165:1006"
                   >
-                    <p className="block leading-[1.6]">Artistic Traits</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['lu-xun'][currentLanguage].artisticTraitsLabel}</p>
                   </div>
                   <div
                     className="font-medium opacity-90 text-[14px] w-full"
                     data-node-id="165:1007"
                   >
                     <p className="block leading-[1.6]">
-                      Concise, metaphor-rich prose with a tone of irony and compassion.
+                      {t.liveRoom.characterIntros['lu-xun'][currentLanguage].artisticTraits}
                     </p>
                   </div>
                 </div>
@@ -1243,14 +1298,14 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                     className="font-bold opacity-90 text-[15px] w-full"
                     data-node-id="165:1009"
                   >
-                    <p className="block leading-[1.6]">Perspective</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['lu-xun'][currentLanguage].perspectiveLabel}</p>
                   </div>
                   <div
                     className="font-medium opacity-90 text-[14px] w-full"
                     data-node-id="165:1010"
                   >
                     <p className="block leading-[1.6]">
-                      Critical and progressive; seeks to awaken society through literature, believing in the power of culture to transform minds.
+                      {t.liveRoom.characterIntros['lu-xun'][currentLanguage].perspective}
                     </p>
                   </div>
                 </div>
@@ -1258,22 +1313,22 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                 {/* 添加更多内容以展示滚动功能 */}
                 <div className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full">
                   <div className="font-bold opacity-90 text-[15px] w-full">
-                    <p className="block leading-[1.6]">Famous Works</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['lu-xun'][currentLanguage].worksLabel}</p>
                   </div>
                   <div className="font-medium opacity-90 text-[14px] w-full">
                     <p className="block leading-[1.6]">
-                      "The True Story of Ah Q", "Diary of a Madman", "Kong Yiji", "Medicine", and numerous essays on social reform.
+                      {t.liveRoom.characterIntros['lu-xun'][currentLanguage].works}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full">
                   <div className="font-bold opacity-90 text-[15px] w-full">
-                    <p className="block leading-[1.6]">Historical Context</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['lu-xun'][currentLanguage].backgroundLabel}</p>
                   </div>
                   <div className="font-medium opacity-90 text-[14px] w-full">
                     <p className="block leading-[1.6]">
-                      Lived during China's transition from imperial to republican era (1881-1936), and advocated for modernization and enlightenment.
+                      {t.liveRoom.characterIntros['lu-xun'][currentLanguage].background}
                     </p>
                   </div>
                 </div>
@@ -1329,7 +1384,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                   className="font-bold leading-[0] not-italic opacity-90 text-[#232323] text-[18px] text-center w-full"
                   data-node-id="165:971"
                 >
-                  <p className="block leading-[1.4]">Su Shi</p>
+                  <p className="block leading-[1.4]">{t.liveRoom.characterIntros['su-shi'][currentLanguage].name}</p>
                 </div>
 
                 {/* 引言 - 严格按照Figma字体和样式 */}
@@ -1338,7 +1393,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                   data-node-id="165:972"
                 >
                   <p className="block leading-[1.45]">
-                    "The moonlight upon this artifact would inspire verses flowing like the river beyond my window."
+                    {t.liveRoom.characterIntros['su-shi'][currentLanguage].quote}
                   </p>
                 </div>
 
@@ -1348,7 +1403,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                   data-node-id="165:973"
                 >
                   <p className="block leading-[1.6]">
-                    #SongDynastyPoet #Calligrapher #FreeSpirit
+                    {t.liveRoom.characterIntros['su-shi'][currentLanguage].tags}
                   </p>
                 </div>
 
@@ -1361,14 +1416,14 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                     className="font-bold opacity-90 text-[15px] w-full"
                     data-node-id="165:975"
                   >
-                    <p className="block leading-[1.6]">Identity</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['su-shi'][currentLanguage].identityLabel}</p>
                   </div>
                   <div
                     className="font-medium opacity-90 text-[14px] w-full"
                     data-node-id="165:976"
                   >
                     <p className="block leading-[1.6]">
-                      Master poet and calligrapher of the Northern Song dynasty, famed for his versatility and free-spirited style.
+                      {t.liveRoom.characterIntros['su-shi'][currentLanguage].identity}
                     </p>
                   </div>
                 </div>
@@ -1382,14 +1437,14 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                     className="font-bold opacity-90 text-[15px] w-full"
                     data-node-id="165:978"
                   >
-                    <p className="block leading-[1.6]">Artistic Traits</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['su-shi'][currentLanguage].artisticTraitsLabel}</p>
                   </div>
                   <div
                     className="font-medium opacity-90 text-[14px] w-full"
                     data-node-id="165:979"
                   >
                     <p className="block leading-[1.6]">
-                      Lyrical, philosophical, blending personal sentiment with natural imagery.
+                      {t.liveRoom.characterIntros['su-shi'][currentLanguage].artisticTraits}
                     </p>
                   </div>
                 </div>
@@ -1403,14 +1458,14 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                     className="font-bold opacity-90 text-[15px] w-full"
                     data-node-id="165:981"
                   >
-                    <p className="block leading-[1.6]">Perspective</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['su-shi'][currentLanguage].perspectiveLabel}</p>
                   </div>
                   <div
                     className="font-medium opacity-90 text-[14px] w-full"
                     data-node-id="165:982"
                   >
                     <p className="block leading-[1.6]">
-                      Romantic and reflective; appreciates artistry, craftsmanship, and the continuity of culture.
+                      {t.liveRoom.characterIntros['su-shi'][currentLanguage].perspective}
                     </p>
                   </div>
                 </div>
@@ -1418,22 +1473,22 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                 {/* 添加更多内容以展示滚动功能 */}
                 <div className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full">
                   <div className="font-bold opacity-90 text-[15px] w-full">
-                    <p className="block leading-[1.6]">Famous Works</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['su-shi'][currentLanguage].worksLabel}</p>
                   </div>
                   <div className="font-medium opacity-90 text-[14px] w-full">
                     <p className="block leading-[1.6]">
-                      "Remembering Red Cliff", "Water Melody Prelude", "Song of Divination", countless poems about nature and human emotion.
+                      {t.liveRoom.characterIntros['su-shi'][currentLanguage].works}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full">
                   <div className="font-bold opacity-90 text-[15px] w-full">
-                    <p className="block leading-[1.6]">Historical Context</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['su-shi'][currentLanguage].backgroundLabel}</p>
                   </div>
                   <div className="font-medium opacity-90 text-[14px] w-full">
                     <p className="block leading-[1.6]">
-                      Lived during the Northern Song dynasty (1037-1101), served in various government positions, and is considered one of the greatest poets in Chinese literature.
+                      {t.liveRoom.characterIntros['su-shi'][currentLanguage].background}
                     </p>
                   </div>
                 </div>
@@ -1489,7 +1544,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                   className="font-bold leading-[0] not-italic opacity-90 text-[#232323] text-[18px] text-center w-full"
                   data-node-id="164:943"
                 >
-                  <p className="block leading-[1.4]">Vincent van Gogh</p>
+                  <p className="block leading-[1.4]">{t.liveRoom.characterIntros['vincent-van-gogh'][currentLanguage].name}</p>
                 </div>
 
                 {/* 引言 - 严格按照Figma字体和样式 */}
@@ -1498,7 +1553,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                   data-node-id="164:944"
                 >
                   <p className="block leading-[1.45]">
-                    "I painted not what I saw, but what I felt in that night of madness."
+                    {t.liveRoom.characterIntros['vincent-van-gogh'][currentLanguage].quote}
                   </p>
                 </div>
 
@@ -1508,7 +1563,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                   data-node-id="164:945"
                 >
                   <p className="block leading-[1.6]">
-                    #LonelyGenius #PostImpressionist #NightOfTheMind
+                    {t.liveRoom.characterIntros['vincent-van-gogh'][currentLanguage].tags}
                   </p>
                 </div>
 
@@ -1521,14 +1576,14 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                     className="font-bold opacity-90 text-[15px] w-full"
                     data-node-id="164:947"
                   >
-                    <p className="block leading-[1.6]">Identity</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['vincent-van-gogh'][currentLanguage].identityLabel}</p>
                   </div>
                   <div
                     className="font-medium opacity-90 text-[14px] w-full"
                     data-node-id="164:948"
                   >
                     <p className="block leading-[1.6]">
-                      19th-century Dutch painter, creator of The Starry Night.
+                      {t.liveRoom.characterIntros['vincent-van-gogh'][currentLanguage].identity}
                     </p>
                   </div>
                 </div>
@@ -1542,14 +1597,14 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                     className="font-bold opacity-90 text-[15px] w-full"
                     data-node-id="164:950"
                   >
-                    <p className="block leading-[1.6]">Artistic Traits</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['vincent-van-gogh'][currentLanguage].artisticTraitsLabel}</p>
                   </div>
                   <div
                     className="font-medium opacity-90 text-[14px] w-full"
                     data-node-id="164:951"
                   >
                     <p className="block leading-[1.6]">
-                      Frequently quoted from personal letters; deeply sensitive to the emotional power of color.
+                      {t.liveRoom.characterIntros['vincent-van-gogh'][currentLanguage].artisticTraits}
                     </p>
                   </div>
                 </div>
@@ -1563,14 +1618,14 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                     className="font-bold opacity-90 text-[15px] w-full"
                     data-node-id="164:953"
                   >
-                    <p className="block leading-[1.6]">Perspective</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['vincent-van-gogh'][currentLanguage].perspectiveLabel}</p>
                   </div>
                   <div
                     className="font-medium opacity-90 text-[14px] w-full"
                     data-node-id="164:954"
                   >
                     <p className="block leading-[1.6]">
-                      Interprets the swirling sky, cypress trees, and dreamlike village through a lens of self-healing.
+                      {t.liveRoom.characterIntros['vincent-van-gogh'][currentLanguage].perspective}
                     </p>
                   </div>
                 </div>
@@ -1578,22 +1633,22 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                 {/* 添加更多内容以展示滚动功能 */}
                 <div className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full">
                   <div className="font-bold opacity-90 text-[15px] w-full">
-                    <p className="block leading-[1.6]">Famous Works</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['vincent-van-gogh'][currentLanguage].worksLabel}</p>
                   </div>
                   <div className="font-medium opacity-90 text-[14px] w-full">
                     <p className="block leading-[1.6]">
-                      The Starry Night, Sunflowers, The Potato Eaters, Café Terrace at Night, Self-Portrait with Bandaged Ear.
+                      {t.liveRoom.characterIntros['vincent-van-gogh'][currentLanguage].works}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-0.5 items-start justify-start leading-[0] not-italic text-[#232323] text-left w-full">
                   <div className="font-bold opacity-90 text-[15px] w-full">
-                    <p className="block leading-[1.6]">Historical Context</p>
+                    <p className="block leading-[1.6]">{t.liveRoom.characterIntros['vincent-van-gogh'][currentLanguage].backgroundLabel}</p>
                   </div>
                   <div className="font-medium opacity-90 text-[14px] w-full">
                     <p className="block leading-[1.6]">
-                      Lived during the Post-Impressionist period (1853-1890), struggled with mental health, and created most of his masterpieces in the final years of his life.
+                      {t.liveRoom.characterIntros['vincent-van-gogh'][currentLanguage].background}
                     </p>
                   </div>
                 </div>

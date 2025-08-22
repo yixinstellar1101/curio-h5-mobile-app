@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { PAGES } from '../constants/pages';
 import { getRandomBackgroundByCategory, createCompositeImage, ensureCompositeImage } from '../utils/imageComposition';
 import { musicManager } from '../utils/musicManager';
+import { useLanguage } from '../context/LanguageContext';
+import { texts } from '../constants/texts';
 
 // Asset imports from Figma
 const imgStatusBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
@@ -17,6 +19,8 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
   const [processedItems, setProcessedItems] = useState(galleryItems);
   const [isProcessingComposite, setIsProcessingComposite] = useState(false);
   const containerRef = useRef(null);
+  const { currentLanguage } = useLanguage();
+  const t = texts;
   
   // 处理合成图片生成
   useEffect(() => {
@@ -137,15 +141,15 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
     // If no current item, return default
     if (!currentItem || Object.keys(currentItem).length === 0) {
       return {
-        title: "Gallery Item",
-        timestamp: new Date().toLocaleString('en-US', { 
+        title: "展间物品",
+        timestamp: new Date().toLocaleString('zh-CN', { 
           month: 'long', 
           day: 'numeric', 
           hour: 'numeric',
           minute: '2-digit',
           hour12: true
         }),
-        description: "No description available."
+        description: "暂无描述信息。"
       };
     }
 
@@ -167,29 +171,29 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
       console.log('Meta timestamp:', meta.timestamp);
       
       return {
-        title: meta.name || cls.categoryLabel || 'Untitled Artifact',
-        timestamp: meta.timestamp || new Date().toLocaleString('en-US', { 
+        title: meta.name || cls.categoryLabel || '无标题文物',
+        timestamp: meta.timestamp || new Date().toLocaleString('zh-CN', { 
           month: 'long', 
           day: 'numeric', 
           hour: 'numeric',
           minute: '2-digit',
           hour12: true
         }),
-        description: meta.description || 'No description available.'
+        description: meta.description || '暂无描述信息。'
       };
     }
 
     // Legacy fallback removed: always prefer real metadata; show minimal fallback if absent
     return {
-      title: 'Untitled Artifact',
-      timestamp: new Date().toLocaleString('en-US', { 
+      title: '无标题文物',
+      timestamp: new Date().toLocaleString('zh-CN', { 
         month: 'long', 
         day: 'numeric', 
         hour: 'numeric',
         minute: '2-digit',
         hour12: true
       }),
-      description: 'No description available.'
+      description: '暂无描述信息。'
     };
   };
 
@@ -289,16 +293,16 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
       >
         <div className="text-center px-[40px]">
           <div className="text-white text-[24px] font-bold mb-[16px]">
-            No Gallery Items
+            {t.galleryPage.emptyState[currentLanguage]}
           </div>
           <div className="text-white/70 text-[16px] mb-[24px]">
-            Take a photo or upload an image to start building your gallery.
+            {t.galleryPage.emptyStateDesc[currentLanguage]}
           </div>
           <button
             onClick={() => onNavigate && onNavigate(PAGES.HOME)}
             className="bg-white text-black px-[24px] py-[12px] rounded-[12px] font-medium"
           >
-            Go Home
+            {t.galleryPage.backToHome[currentLanguage]}
           </button>
         </div>
       </div>
@@ -386,7 +390,7 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
           <div className="flex items-center gap-[8px] bg-blue-600/80 px-[12px] py-[6px] rounded-[20px] backdrop-blur-sm">
             <div className="w-[16px] h-[16px] border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             <span className="text-white text-[14px] font-medium">
-              Processing...
+              {t.galleryPage.processing[currentLanguage]}
             </span>
           </div>
         </div>
@@ -407,7 +411,7 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
       </div>
 
       {/* Text content - following Figma design exactly */}
-      <div className="absolute left-0 right-0 bottom-[90px] flex flex-col items-center gap-2 px-[24px]">
+      <div className="absolute left-0 right-0 bottom-[70px] flex flex-col items-center gap-2 px-[24px]">
         {/* Title */}
         <h1 className="text-white text-[28px] font-bold leading-[34px] font-sf-pro text-center">
           {metadata.title}
@@ -434,10 +438,10 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
             {/* Modal Header */}
             <div className="text-center mb-[20px]">
               <h3 className="text-[20px] font-bold text-gray-900 mb-[8px]">
-                Enter Live Room
+                {t.galleryPage.enterLiveRoom[currentLanguage]}
               </h3>
               <p className="text-[16px] text-gray-600 leading-[24px]">
-                Would you like to enter the live room and start a conversation about this image?
+                {t.galleryPage.enterLiveRoomDesc[currentLanguage]}
               </p>
             </div>
             
@@ -447,13 +451,13 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
                 onClick={handleClosePopup}
                 className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-[12px] px-[20px] rounded-[12px] font-medium transition-colors"
               >
-                Cancel
+                {t.galleryPage.cancel[currentLanguage]}
               </button>
               <button
                 onClick={handleEnterLiveRoom}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-[12px] px-[20px] rounded-[12px] font-medium transition-colors"
               >
-                Enter
+                {t.galleryPage.enter[currentLanguage]}
               </button>
             </div>
           </div>

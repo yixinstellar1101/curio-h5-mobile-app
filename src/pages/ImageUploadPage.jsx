@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { PAGES } from '../constants/pages';
+import { useLanguage } from '../context/LanguageContext';
+import { texts } from '../constants/texts';
 
 // Asset imports - 使用与HomePage一致的背景
 const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png"; // 与HomePage一致的背景
@@ -24,6 +26,8 @@ const imgRectangle346603543 = "/src/assets/9b6dc444b0feeb650edd472c766d9b00af5dd
  */
 const ImageUploadPage = ({ onNavigate }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const { currentLanguage } = useLanguage();
+  const t = texts;
 
   const handleChooseFromAlbum = async () => {
     try {
@@ -36,12 +40,12 @@ const ImageUploadPage = ({ onNavigate }) => {
         const file = e.target.files[0];
         if (file) {
           if (file.size > 5 * 1024 * 1024) {
-            alert('File size must be ≤ 5MB');
+            alert('文件大小必须≤5MB');
             return;
           }
           
           if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
-            alert('Please select a JPEG, PNG, or WebP image');
+            alert('请选择JPEG、PNG或WebP格式的图片');
             return;
           }
           
@@ -167,7 +171,7 @@ const ImageUploadPage = ({ onNavigate }) => {
             onClick={handleChooseFromAlbum}
             disabled={isProcessing}
           >
-            {isProcessing ? 'Processing...' : 'Choose from Album'}
+            {isProcessing ? t.imageUpload.processing[currentLanguage] : t.imageUpload.fromAlbum[currentLanguage]}
           </button>
           
           {/* Separator Line */}
@@ -179,7 +183,7 @@ const ImageUploadPage = ({ onNavigate }) => {
             onClick={handleCamera}
             disabled={isProcessing}
           >
-            Camera
+            {t.imageUpload.camera[currentLanguage]}
           </button>
         </div>
         
@@ -192,7 +196,7 @@ const ImageUploadPage = ({ onNavigate }) => {
             onClick={handleCancel}
             disabled={isProcessing}
           >
-            Cancel
+            {t.imageUpload.cancel[currentLanguage]}
           </button>
         </div>
       </div>
