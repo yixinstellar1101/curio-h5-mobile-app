@@ -10,6 +10,7 @@ import {
   LiveRoomPage
 } from './pages';
 import { PAGES } from './constants/pages';
+import { LanguageProvider } from './context/LanguageContext';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('splash');
@@ -79,46 +80,48 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="relative w-[393px] h-[852px] overflow-hidden">
-        {currentPage === 'splash' && (
-          <SplashAnimationPage onNavigate={handleNavigateToHome} />
-        )}
-        
-        {currentPage === 'home' && (
-          <HomePage onNavigate={handleNavigate} />
-        )}
-        
-        {currentPage === 'imageUpload' && (
-          <ImageUploadPage onNavigate={handleNavigate} />
-        )}
-        
-        {currentPage === 'cameraCapture' && (
-          <CameraCapturePage onNavigate={handleNavigate} data={pageData} />
-        )}
-        
-        {currentPage === 'cameraCapturing' && (
-          <CameraCapturingPage onNavigate={handleNavigate} data={pageData} />
-        )}
-        
-        {currentPage === 'imageAnalysis' && (
-          <ImageAnalysisPage onNavigate={handleNavigate} data={pageData} />
-        )}
-        
-        {currentPage === 'gallery' && (
-          <GalleryPage 
-            onNavigate={handleNavigate} 
-            galleryItems={galleryItems}
-            currentIndex={currentGalleryIndex}
-            onIndexChange={setCurrentGalleryIndex}
-          />
-        )}
-        
-        {currentPage === 'liveRoom' && (
-          <LiveRoomPage onNavigate={handleNavigate} data={pageData} />
-        )}
+    <LanguageProvider>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="relative w-[393px] h-[852px] overflow-hidden">
+          {currentPage === 'splash' && (
+            <SplashAnimationPage onNavigate={handleNavigateToHome} />
+          )}
+          
+          {currentPage === 'home' && (
+            <HomePage onNavigate={handleNavigate} />
+          )}
+          
+          {currentPage === 'imageUpload' && (
+            <ImageUploadPage onNavigate={handleNavigate} />
+          )}
+          
+          {currentPage === 'cameraCapture' && (
+            <CameraCapturePage onNavigate={handleNavigate} data={pageData} />
+          )}
+          
+          {currentPage === 'cameraCapturing' && (
+            <CameraCapturingPage onNavigate={handleNavigate} data={pageData} />
+          )}
+          
+          {currentPage === 'imageAnalysis' && (
+            <ImageAnalysisPage onNavigate={handleNavigate} data={pageData} />
+          )}
+          
+          {currentPage === 'gallery' && (
+            <GalleryPage 
+              onNavigate={handleNavigate} 
+              galleryItems={galleryItems}
+              currentIndex={currentGalleryIndex}
+              onIndexChange={setCurrentGalleryIndex}
+            />
+          )}
+          
+          {currentPage === 'liveRoom' && (
+            <LiveRoomPage onNavigate={handleNavigate} data={pageData} />
+          )}
+        </div>
       </div>
-    </div>
+    </LanguageProvider>
   );
 }
 

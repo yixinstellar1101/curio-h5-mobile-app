@@ -250,8 +250,12 @@ export async function generateConversation(params) {
       description, 
       characters = ['lu-xun', 'su-shi', 'vincent-van-gogh'],
       userMessage,
-      previousMessages: providedPreviousMessages
+      previousMessages: providedPreviousMessages,
+      language = 'zh' // Default to Chinese if not specified
     } = params;
+    
+    console.log('🔍 Interface.js DEBUG - Received language parameter:', language);
+    console.log('🔍 Interface.js DEBUG - Will pass language to Azure service:', language);
     
     // Get previous messages for context (if any)
     let previousMessages = providedPreviousMessages || getConversationHistory(imageId);
@@ -262,7 +266,8 @@ export async function generateConversation(params) {
       imageDescription: description,
       characters,
       previousMessages: previousMessages.slice(-5), // Use last 5 messages for context
-      userMessage // Pass user message for AI to respond to
+      userMessage, // Pass user message for AI to respond to
+      language // Pass language parameter to Azure service
     });
     
     // Save conversation to storage

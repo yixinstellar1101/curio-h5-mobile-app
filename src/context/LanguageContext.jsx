@@ -13,16 +13,22 @@ export const useLanguage = () => {
 export const LanguageProvider = ({ children }) => {
   const [currentLanguage, setCurrentLanguage] = useState(() => {
     // 从 localStorage 获取保存的语言设置，默认为中文
-    return localStorage.getItem('preferredLanguage') || 'zh';
+    const saved = localStorage.getItem('preferredLanguage') || 'zh';
+    console.log('🔍 LanguageProvider INIT - localStorage value:', saved);
+    return saved;
   });
 
   useEffect(() => {
     // 保存语言设置到 localStorage
+    console.log('🔍 LanguageProvider - Saving language to localStorage:', currentLanguage);
     localStorage.setItem('preferredLanguage', currentLanguage);
   }, [currentLanguage]);
 
   const switchLanguage = (language) => {
+    console.log('🔍 LanguageProvider - switchLanguage called with:', language);
+    console.log('🔍 LanguageProvider - before switch currentLanguage:', currentLanguage);
     setCurrentLanguage(language);
+    console.log('🔍 LanguageProvider - after switch call (async)');
   };
 
   const value = {

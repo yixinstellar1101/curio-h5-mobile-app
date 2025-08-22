@@ -12,6 +12,7 @@ import {
 import CharacterDetailCardPage from '../components/CharacterDetailCardPage';
 import CharacterDetailFullPage from '../components/CharacterDetailFullPage';
 import TextInputBar from '../components/TextInputBar';
+import LanguageModal from '../components/modals/LanguageModal';
 import { useLanguage } from '../context/LanguageContext';
 import { texts } from '../constants/texts';
 
@@ -21,7 +22,7 @@ const imgStatusWifi = "/src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg"
 const imgStatusCellular = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
 const imgBackground = "/src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png";
 const imgBackArrow = "/src/assets/02a9c17137ed17e4e423e148f47a120c213111eb.svg";
-const imgSettings = "/src/assets/897f897fc1bc39bd5029b1c130459a892fd38f31.svg";
+const imgVector = "/src/assets/1009f07f9dd6944bb263d745bad2a94943c5a897.svg"; // Settings icon (same as HomePage)
 const imgShare = "/src/assets/5477b83fa49bc1086b66f6e98ea33e17d7a7dcde.svg";
 const imgMicrophone = "/src/assets/076ad16a88cfddb5f6212dc8a0e121d73f2c0b24.svg";
 const imgKeyboard = "/src/assets/f0ca8d23de930dde65471ef8f667466d5bf4c10a.svg";
@@ -52,6 +53,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   
   const { currentLanguage } = useLanguage();
   const t = texts;
+  
+  // DEBUG: 在组件渲染时检查语言值
+  console.log('🔍 LiveRoomPage RENDER - currentLanguage:', currentLanguage);
+  console.log('🔍 LiveRoomPage RENDER - typeof currentLanguage:', typeof currentLanguage);
   
   // Create image object for compatibility with existing code
   const image = useMemo(() => ({
@@ -112,6 +117,9 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   
   // Text input state
   const [showTextInput, setShowTextInput] = useState(false);
+  
+  // Language modal state
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   
   // Message display queue for sequential appearance
   const [messageQueue, setMessageQueue] = useState([]);
@@ -282,7 +290,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   const initializeConversation = async () => {
     try {
       console.log('=== INITIALIZING CONVERSATION ===');
-      console.log('Current Language:', currentLanguage);
+      console.log('🔍 LiveRoomPage DEBUG - Current Language at start:', currentLanguage);
+      console.log('🔍 LiveRoomPage DEBUG - Expected: en for English, zh for Chinese');
       console.log('Data passed to LiveRoomPage:', {
         image,
         analysis,
@@ -386,6 +395,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         language: currentLanguage
       });
       
+      console.log('🔍 LiveRoomPage DEBUG - currentLanguage value:', currentLanguage);
+      console.log('🔍 LiveRoomPage DEBUG - language passed to generateConversation:', currentLanguage);
       console.log('Initial conversation result:', initialConversation);
       
       if (initialConversation.messages && initialConversation.messages.length > 0) {
@@ -561,6 +572,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
 
   const handleBack = () => {
     onNavigate && onNavigate(PAGES.GALLERY);
+  };
+
+  const handleSettings = () => {
+    setShowLanguageModal(true);
   };
 
   const handleVoiceInput = () => {
@@ -986,8 +1001,15 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <button className="w-6 h-6">
-            <img src={imgSettings} alt="settings" className="w-full h-full" />
+          <button 
+            onClick={handleSettings}
+            className="w-6 h-6 cursor-pointer hover:rotate-12 transition-transform duration-200"
+          >
+            <div className="relative size-full">
+              <div className="absolute inset-[5.31%_2.71%_5.31%_2.81%]">
+                <img alt="Settings" className="block max-w-none size-full" src={imgVector} />
+              </div>
+            </div>
           </button>
           <button className="w-6 h-6">
             <img src={imgShare} alt="share" className="w-full h-full" />
@@ -1034,7 +1056,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
             <>
               {messages.map((message, index) => {
                 const characterName = getCharacterName(message);
-                const isUserMessage = characterName === 'You';
+                // 使用isUser字段来判断是否是用户消息，而不是依赖characterName
+                const isUserMessage = message.isUser || message.character === 'You';
                 
                 return (
                 <div key={message.id} className="mb-3 animate-fade-in">
@@ -1042,9 +1065,11 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                     isUserMessage ? 'flex-row-reverse' : ''
                   }`}>
                     {isUserMessage ? (
-                      // 用户消息：头像颜色与消息气泡一致
+                      // 用户消息：头像颜色与消息气泡一致，显示当前语言的"您"字样
                       <div className="w-8 h-8 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">You</span>
+                        <span className="text-white text-xs font-bold">
+                          {t.liveRoom.characters['You'][currentLanguage]}
+                        </span>
                       </div>
                     ) : (
                       <img 
@@ -1670,6 +1695,12 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
           </div>
         </div>
       )}
+
+      {/* Language Modal */}
+      <LanguageModal 
+        isOpen={showLanguageModal} 
+        onClose={() => setShowLanguageModal(false)} 
+      />
     </div>
   );
 };
