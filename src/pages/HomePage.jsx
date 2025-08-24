@@ -39,6 +39,11 @@ const HomePage = ({ onNavigate }) => {
     setShowLanguageModal(true);
   };
 
+  // Handle right edge click to go to Gallery
+  const handleRightEdgeClick = () => {
+    onNavigate && onNavigate(PAGES.GALLERY);
+  };
+
   // Handle swipe gestures
   const handleTouchStart = (e) => {
     setStartX(e.touches[0].clientX);
@@ -121,9 +126,22 @@ const HomePage = ({ onNavigate }) => {
         />
       </div>
 
+      {/* Right edge click area for Gallery navigation */}
+      <div 
+        className="absolute right-0 top-0 w-[60px] h-full cursor-pointer z-10 flex items-center justify-end pr-3"
+        onClick={handleRightEdgeClick}
+      >
+        {/* Optional visual indicator */}
+        <div className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all duration-200 opacity-0 hover:opacity-100">
+          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+
       {/* Settings Icon */}
       <div
-        className="absolute left-[341px] overflow-clip size-[26px] top-[58px] cursor-pointer hover:rotate-12 transition-transform duration-200"
+        className="absolute left-[341px] overflow-clip size-[26px] top-[58px] cursor-pointer hover:rotate-12 transition-transform duration-200 z-20"
         onClick={handleSettingsClick}
       >
         <div className="relative size-full">

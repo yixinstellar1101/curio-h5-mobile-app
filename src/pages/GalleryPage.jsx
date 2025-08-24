@@ -284,6 +284,25 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
     setShowPopup(false);
   };
 
+  // Handle left/right edge clicks for navigation
+  const handleLeftEdgeClick = () => {
+    if (currentIndex > 0) {
+      // Navigate to previous gallery item
+      onIndexChange && onIndexChange(currentIndex - 1);
+    } else {
+      // At first item, go back to HomePage
+      onNavigate && onNavigate(PAGES.HOME);
+    }
+  };
+
+  const handleRightEdgeClick = () => {
+    if (currentIndex < processedItems.length - 1) {
+      // Navigate to next gallery item
+      onIndexChange && onIndexChange(currentIndex + 1);
+    }
+    // At last item, no action (or could go back to analysis/capture)
+  };
+
   // If no gallery items, show empty state
   if (processedItems.length === 0) {
     return (
@@ -408,6 +427,36 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
         }}
       >
         {/* This is an invisible clickable area */}
+      </div>
+
+      {/* Left edge click area for navigation */}
+      <div 
+        className="absolute left-0 top-0 w-[80px] h-full cursor-pointer z-20 flex items-center justify-start pl-4"
+        onClick={handleLeftEdgeClick}
+      >
+        {/* Optional visual indicator - only show if not at first item or if at first item (goes to home) */}
+        {(currentIndex > 0 || currentIndex === 0) && (
+          <div className="w-8 h-8 bg-black/20 hover:bg-black/40 rounded-full flex items-center justify-center transition-all duration-200 opacity-0 hover:opacity-100">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {/* Right edge click area for navigation */}
+      <div 
+        className="absolute right-0 top-0 w-[80px] h-full cursor-pointer z-20 flex items-center justify-end pr-4"
+        onClick={handleRightEdgeClick}
+      >
+        {/* Optional visual indicator - only show if not at last item */}
+        {currentIndex < processedItems.length - 1 && (
+          <div className="w-8 h-8 bg-black/20 hover:bg-black/40 rounded-full flex items-center justify-center transition-all duration-200 opacity-0 hover:opacity-100">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        )}
       </div>
 
       {/* Text content - following Figma design exactly */}

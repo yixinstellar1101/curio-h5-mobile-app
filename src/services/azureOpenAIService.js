@@ -597,6 +597,7 @@ You are an AI system simulating real-time discussions between three scholars con
 - Zero Chinese characters permitted
 - This is ENGLISH-ONLY mode
 - Failure to use English = Complete failure
+- Length: 15-40 words per reply
 
 === ARTIFACT INFORMATION ===
 ${imageDescription}
@@ -634,7 +635,7 @@ ${previousContext}
 - If user remains silent: Continue discussion in English
 
 4. **Reply Requirements**:
-   - Length: 15-70 words per reply
+   - Length: 15-40 words per reply
    - Language: ENGLISH ONLY
    - Emojis: Include relevant emojis
    - Focus: Discuss the artifact details
