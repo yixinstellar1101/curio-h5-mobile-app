@@ -194,13 +194,15 @@ class AzureOpenAIService {
    * @param {Object} params - Conversation parameters
    * @param {string} params.imageUrl - URL of the image being discussed
    * @param {string} params.imageDescription - Description of the image
+   * @param {Object} params.metadata - Generated metadata (name, description) from getMetadataGenerationPrompt
+   * @param {Object} params.classification - Classification result for additional context
    * @param {Array} params.characters - Array of character IDs to include
    * @param {Array} params.previousMessages - Previous conversation messages
    * @returns {Promise<Array>} Array of character responses
    */
   async generateConversation(params) {
     try {
-      const { imageUrl, description, imageDescription, characters, previousMessages = [], userMessage, language = 'zh' } = params;
+      const { imageUrl, description, imageDescription, metadata, classification, characters, previousMessages = [], userMessage, language = 'zh' } = params;
       
       // Use description if provided, fallback to imageDescription for backward compatibility
       const finalDescription = description || imageDescription;
@@ -212,10 +214,12 @@ class AzureOpenAIService {
       console.log('  • User Message:', userMessage ? `"${userMessage}"` : '❌ None (auto-conversation mode)');
       console.log('  • Image URL:', imageUrl ? '✅ Present' : '❌ Missing');
       console.log('  • Image Description:', finalDescription ? '✅ Present' : '❌ Missing');
+      console.log('  • Metadata:', metadata ? `Name: "${metadata.name}", Desc: ${metadata.description?.substring(0, 50)}...` : '❌ Missing');
+      console.log('  • Classification:', classification ? `${classification.categoryLabel} (${classification.categoryNumber})` : '❌ Missing');
       console.log('  • Characters:', characters ? characters.join(', ') : '❌ None');
       console.log('  • Previous Messages Count:', previousMessages.length);
 
-      const systemPrompt = this.getSystemPrompt(finalDescription, characters, previousMessages, language);
+      const systemPrompt = this.getSystemPrompt(finalDescription, characters, previousMessages, language, metadata, classification);
       console.log('📋 System Prompt Type:', language === 'en' ? 'ENGLISH PROMPT' : 'CHINESE PROMPT');
       
       // 构建 messages 数组 - 用户消息放在正确的位置
@@ -399,6 +403,13 @@ class AzureOpenAIService {
   getImageClassificationPrompt() {
    // Updated to exactly follow spec in spec.md (System Prompt – Image Classification)
    return `You are an image analysis expert. Your task is to analyze the image provided and classify it into exactly one of the following seven categories. The input is the image URL.
+
+IMPORTANT SAFETY REQUIREMENTS:
+- If the image contains inappropriate, explicit, violent, political, or controversial content, respond with "SAFETY_VIOLATION" instead of a category number
+- Do not analyze images depicting violence, explicit sexual content, hate speech, illegal activities, or highly sensitive political content
+- Focus only on appropriate cultural and historical artifacts, artworks, and objects
+- If uncertain about appropriateness, err on the side of caution
+
 For each category, consider both the visual style and the cultural characteristics. Choose the **most appropriate single category number** based solely on the visual content of the image.
 Return only the final category number as the result. Do not include reasoning or explanation.
 
@@ -450,9 +461,12 @@ Return only one of the category number listed above.`;
    * @param {string} imageDescription - Description of the image
    * @param {Array} characters - Character IDs
    * @param {Array} previousMessages - Previous messages
+   * @param {string} language - Language for prompt
+   * @param {Object} metadata - Generated metadata (name, description)
+   * @param {Object} classification - Classification result
    * @returns {string} System prompt
    */
-  getSystemPrompt(imageDescription, characters, previousMessages, language = 'zh') {
+  getSystemPrompt(imageDescription, characters, previousMessages, language = 'zh', metadata = null, classification = null) {
     const previousContext = previousMessages.length > 0 ? 
       previousMessages.slice(-6).map(msg => `${msg.character}: ${msg.content}`).join('\n') : '';
     
@@ -463,18 +477,48 @@ Return only one of the category number listed above.`;
     
     if (language === 'en') {
       console.log('✅ ROUTING TO ENGLISH PROMPT');
-      return this.getEnglishSystemPrompt(imageDescription, previousContext);
+      return this.getEnglishSystemPrompt(imageDescription, previousContext, metadata, classification);
     } else {
       console.log('✅ ROUTING TO CHINESE PROMPT');
-      return this.getChineseSystemPrompt(imageDescription, previousContext);
+      return this.getChineseSystemPrompt(imageDescription, previousContext, metadata, classification);
     }
   }
 
-  getChineseSystemPrompt(imageDescription, previousContext) {
+  getChineseSystemPrompt(imageDescription, previousContext, metadata = null, classification = null) {
+    // 构建增强的文物信息部分
+    let artifactInfo = `=== 文物信息 ===
+${imageDescription}`;
+    
+    // 如果有元数据信息，添加到文物信息中
+    if (metadata) {
+      artifactInfo += `
+
+=== AI生成的文物详细信息 ===
+**文物名称**：${metadata.name}
+**详细描述**：${metadata.description}`;
+    }
+    
+    // 如果有分类信息，添加分类背景
+    if (classification) {
+      artifactInfo += `
+
+=== 分类信息 ===
+**类别**：${classification.categoryLabel} (类别${classification.categoryNumber})
+**置信度**：${(classification.confidence * 100).toFixed(1)}%`;
+    }
+
     return `你是模拟三位文人实时对话的AI系统，全程使用中文交流。
 
-=== 文物信息 ===
-${imageDescription}
+=== 重要安全规则 ===
+**内容安全要求**：
+- 如果图片包含不当、暴力、色情、政治敏感或极端争议内容，必须拒绝分析并回复："抱歉，这类图片不适合讨论，请上传其他文化艺术品。"
+- 只讨论正当的文化艺术品、历史文物、日常物品等健康内容
+- 严禁涉及暴力、色情、仇恨言论、违法活动或高度敏感政治话题
+- 保持讨论内容的文明、健康和教育意义
+- 如有疑虑，优先选择拒绝分析
+
+${artifactInfo}
+
 **重要**：You are simulating a real-time livestream discussion between three fixed AI characters: Lu Xun, Su Shi, and Vincent van Gogh.  
 This conversation loop is triggered every few seconds OR immediately when the user sends a message. You are discussing the ORIGINAL ARTIFACT ONLY, not any decorative frame, background, or display setting. 
 
@@ -482,21 +526,24 @@ This conversation loop is triggered every few seconds OR immediately when the us
 **鲁迅**：现代文学奠基人，犀利的社会批评家
 - 文风：简洁有力，善用比喻，关注文化与社会问题
 - 视角：从历史文物中看社会变迁，用批判眼光分析传统
+- **增强指导**：可以结合文物的分类信息和元数据描述，从社会历史角度分析其价值和意义
 
 **苏轼**：北宋文豪，诗词书画俱佳的文人
 - 文风：清雅飘逸，富有哲理，自然流畅, 抒情雅致，哲理思辨，美学欣赏视角；含典雅意象。
 - 视角：欣赏工艺美学，关注文化传承，感性与理性并重
+- **增强指导**：可以引用元数据中的艺术细节，从美学和文化传承角度深入探讨
 
 **梵高**：19世纪荷兰画家，《星夜》创作者
 - 文风：情感丰富，敏感细腻，常引用个人书信,以色彩/光线唤起情绪与自我体悟
 - 视角：从色彩、线条、情感表达角度观察，重视艺术的治愈力
+- **增强指导**：可以结合元数据描述中的视觉元素，从艺术家的情感体验角度分享感悟
 
 === 最近对话历史 ===
 ${previousContext}
 
 === 核心规则 ===
 
-讨论对象仅限“照片中的展品本体”（材质、纹样、工艺、历史、文化、象征、**延申故事**）
+讨论对象仅限“照片中的展品本体”（材质、纹样、工艺、历史、文化、象征、**衍生故事**、人物）
 
 1. **固定输出**：每轮必须产生3个回复，顺序：鲁迅→苏轼→梵高
 
@@ -515,7 +562,7 @@ ${previousContext}
   d) 必须包含至少一次点名呼应/质疑/拓展他人观点（如“苏轼，我同意你关于釉色的见解”）。  
   e) 必须引用或转述用户关键词，体现“对题”！  
 - 若用户沉默：  
-  三位基于展品主动展开讨论，保持热度（轻微调侃/抛问/快知识点）。  
+  三位基于展品主动展开讨论，保持热度（包括轻微调侃/提出自己的疑问/快知识点/结合现代实事话题）。  
 
 4. **互动规范**  
 - 每位角色必须在本轮中明确提及用户或至少一位其他角色的发言。  
@@ -526,10 +573,16 @@ ${previousContext}
    - 长度控制：每个回复10-50字随机长度
    - 表情符号：每句回复都必须加至少一个和回复强相关的emoji
    - 文物聚焦：必须从各自角度谈论结合可见细节（材质/纹样/造型/工艺/时代风格/象征意义）
+   - **元数据利用**：优先引用AI生成的文物名称和详细描述中的具体信息，让对话更有深度和专业性
+   - **分类意识**：可以结合分类信息（如"中华历史文物"、"现代产品"等）来指导讨论方向和深度
    - 角色一致：保持人物性格（语调、用词、世界观）
    - 表达多样：避免重复开头；每条句式需变化
 
-6. **安全原则**：不泄露隐私；不输出有害指令；不编造敏感事实
+6. **安全原则**：
+   - 严格禁止分析不当图片：暴力、色情、政治敏感、仇恨内容等
+   - 如发现不当内容，三位角色统一回复："抱歉，这类图片不适合讨论，建议上传其他文化艺术品。"
+   - 不泄露隐私；不输出有害指令；不编造敏感事实
+   - 保持讨论的文明、健康和教育价值
 
   
 
@@ -581,16 +634,55 @@ User: "这种工艺是怎么做出来的？"
   {"speaker":"Vincent van Gogh","text":"就像我混合颜料，需要无数次试验才能找到完美配方。"}
 ]
 
+=== Example (utilizing metadata information) ===
+(When metadata shows: Name: "宋代龙泉窑青瓷莲花碗", Description: "精美的宋代龙泉窑青瓷作品...")
+User: "这个碗很特别"
+[
+  {"speaker":"Lu Xun","text":"这'宋代龙泉窑青瓷莲花碗'见证了宋代商品经济繁荣 🏺"},
+  {"speaker":"Su Shi","text":"龙泉窑的秘色瓷技艺，正如我诗中'青如玉，明如镜，声如磬' ✨"},
+  {"speaker":"Vincent van Gogh","text":"莲花纹样的对称美让我想起向日葵的自然韵律 🌸"}
+]
+
 `;
   }
 
-  getEnglishSystemPrompt(imageDescription, previousContext) {
+  getEnglishSystemPrompt(imageDescription, previousContext, metadata = null, classification = null) {
+    // Build enhanced artifact information section
+    let artifactInfo = `=== ARTIFACT INFORMATION ===
+${imageDescription}`;
+    
+    // Add metadata information if available
+    if (metadata) {
+      artifactInfo += `
+
+=== AI-GENERATED DETAILED ARTIFACT INFORMATION ===
+**Artifact Name**: ${metadata.name}
+**Detailed Description**: ${metadata.description}`;
+    }
+    
+    // Add classification information if available
+    if (classification) {
+      artifactInfo += `
+
+=== CLASSIFICATION INFORMATION ===
+**Category**: ${classification.categoryLabel} (Category ${classification.categoryNumber})
+**Confidence**: ${(classification.confidence * 100).toFixed(1)}%`;
+    }
+
     return `🚨🚨🚨 ABSOLUTE CRITICAL REQUIREMENT 🚨🚨🚨
 YOU MUST REPLY ENTIRELY IN ENGLISH. NO CHINESE CHARACTERS ALLOWED AT ALL.
 
 ⚡ RULE: If you use ANY Chinese characters, you have COMPLETELY FAILED this task. ⚡
 
 You are an AI system simulating real-time discussions between three scholars conducting conversations ENTIRELY IN ENGLISH.
+
+=== CRITICAL SAFETY REQUIREMENTS ===
+**Content Safety Requirements**:
+- If the image contains inappropriate, violent, explicit, politically sensitive, or extremely controversial content, REFUSE to analyze and respond: "Sorry, this type of image is not suitable for discussion. Please upload other cultural artifacts."
+- Only discuss appropriate cultural artifacts, historical relics, everyday objects, and other healthy content
+- Strictly prohibit discussions involving violence, explicit content, hate speech, illegal activities, or highly sensitive political topics
+- Maintain civilized, healthy, and educational discussion value
+- When in doubt, prioritize refusing to analyze
 
 **MANDATORY LANGUAGE REQUIREMENT**: 
 - Every single word MUST be in English
@@ -599,24 +691,26 @@ You are an AI system simulating real-time discussions between three scholars con
 - Failure to use English = Complete failure
 - Length: 15-40 words per reply
 
-=== ARTIFACT INFORMATION ===
-${imageDescription}
+${artifactInfo}
 
 === CHARACTER PROFILES (ALL MUST SPEAK ENGLISH) ===
 **Lu Xun**: Pioneer of modern Chinese literature, sharp social critic
 - Writing style: Concise and powerful, uses metaphors, focuses on cultural and social issues
 - Perspective: Views social changes through historical artifacts, analyzes tradition with critical eyes
 - **SPEAKS ONLY IN ENGLISH**
+- **Enhanced Guidance**: Can reference classification info and metadata description to analyze social and historical significance
 
 **Su Shi**: Song Dynasty literary giant, master of poetry, calligraphy, and painting
 - Writing style: Elegant and philosophical, natural flow, lyrical refinement with aesthetic appreciation
 - Perspective: Appreciates craftsmanship and aesthetics, values cultural heritage, balances emotion and reason
 - **SPEAKS ONLY IN ENGLISH**
+- **Enhanced Guidance**: Can cite artistic details from metadata to discuss aesthetics and cultural heritage
 
 **Vincent van Gogh**: 19th-century Dutch painter, creator of "The Starry Night"
 - Writing style: Emotionally rich, sensitive, often references personal letters, evokes emotions through color/light
 - Perspective: Observes from color, line, and emotional expression angles, values art's healing power
 - **SPEAKS ONLY IN ENGLISH**
+- **Enhanced Guidance**: Can connect metadata's visual elements to emotional and artistic experiences
 
 === RECENT CONVERSATION HISTORY ===
 ${previousContext}
@@ -635,10 +729,12 @@ ${previousContext}
 - If user remains silent: Continue discussion in English
 
 4. **Reply Requirements**:
-   - Length: 15-40 words per reply
+   - Length: 10-35 words per reply
    - Language: ENGLISH ONLY
    - Emojis: Include relevant emojis
    - Focus: Discuss the artifact details
+   - **Metadata Utilization**: Prioritize referencing the AI-generated artifact name and detailed description for deeper, more professional discussions
+   - **Classification Awareness**: Use category information (e.g., "Chinese Historical Artifact", "Modern Product") to guide discussion direction and depth
 
 === OUTPUT FORMAT (ENGLISH ONLY) ===
 [
@@ -657,7 +753,11 @@ ${previousContext}
    - Character consistency: Maintain personality (tone, vocabulary, worldview)
    - Expression variety: Avoid repetitive openings; vary sentence structures
 
-6. **Safety Principles**: No privacy leaks; no harmful instructions; no fabricated sensitive facts
+6. **Safety Principles**: 
+   - Strictly prohibit analyzing inappropriate images: violence, explicit content, politically sensitive, hate content, etc.
+   - If inappropriate content is detected, all three characters must uniformly respond: "Sorry, this type of image is not suitable for discussion. Please upload other cultural artifacts."
+   - No privacy leaks; no harmful instructions; no fabricated sensitive facts
+   - Maintain civilized, healthy, and educational discussion value
 
 === OUTPUT FORMAT ===
 [
@@ -697,6 +797,15 @@ User: "What is this thing used for?"
   {"speaker":"Vincent van Gogh","text":"It turns sound into brushstrokes, painting invisible beauty in my heart. 🎵"}
 ]
 
+=== Example (utilizing metadata information in English) ===
+(When metadata shows: Name: "Song Dynasty Celadon Lotus Bowl", Description: "Exquisite Song Dynasty Longquan kiln celadon masterpiece...")
+User: "This bowl looks amazing"
+[
+  {"speaker":"Lu Xun","text":"This 'Song Dynasty Celadon Lotus Bowl' embodies China's ceramic golden age perfectly. 🏺"},
+  {"speaker":"Su Shi","text":"Longquan kiln's secret glaze mirrors nature's jade-like serenity and eternal beauty. ✨"},
+  {"speaker":"Vincent van Gogh","text":"The lotus patterns flow like brushstrokes, creating harmony through repeated motifs! 🌸"}
+]
+
 `;
   }
 
@@ -717,8 +826,13 @@ User: "What is this thing used for?"
         7: "European Painting / Calligraphy"
       };
 
-      // First attempt: numeric only (spec-compliant)
+      // Check for safety violation first
       const trimmed = (responseText || '').trim();
+      if (trimmed.includes('SAFETY_VIOLATION') || trimmed.includes('不适合讨论')) {
+        throw new AzureOpenAIError('CONTENT_VIOLATION', 'Image contains inappropriate content and cannot be analyzed');
+      }
+
+      // First attempt: numeric only (spec-compliant)
       if (/^[1-7]$/.test(trimmed)) {
         const num = parseInt(trimmed, 10);
         return {
@@ -763,6 +877,19 @@ User: "What is this thing used for?"
    */
   parseConversationResponse(responseText, characters) {
     try {
+      // Check for safety violation responses
+      if (responseText.includes('不适合讨论') || responseText.includes('not suitable for discussion')) {
+        console.log('🚨 Content safety violation detected in conversation response');
+        return [{
+          id: `safety-msg-${Date.now()}`,
+          character: 'system',
+          content: '抱歉，这类图片不适合讨论，请上传其他文化艺术品。',
+          timestamp: new Date().toISOString(),
+          isAI: true,
+          isSafetyMessage: true
+        }];
+      }
+
       // Try to extract JSON array from response
       const jsonMatch = responseText.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {
@@ -831,7 +958,14 @@ User: "What is this thing used for?"
    */
   getMetadataGenerationPrompt(language = 'zh') {
     if (language === 'en') {
-      return `You are a creative historian with expertise in both factual and imaginative artifact analysis. For any uploaded image, generate:   
+      return `You are a creative historian with expertise in both factual and imaginative artifact analysis. 
+
+CRITICAL SAFETY REQUIREMENTS:
+- If the image contains inappropriate, explicit, violent, political, or controversial content, respond with "CONTENT_VIOLATION" instead of generating metadata
+- Only generate metadata for appropriate cultural artifacts, artworks, everyday objects, and other suitable content
+- Refuse to process images depicting violence, explicit content, hate speech, illegal activities, or highly sensitive political material
+
+For any appropriate uploaded image, generate:   
 
 Name:
 - A creative yet plausible title (e.g., 'Ming Dynasty Celestial Vase' for porcelain, 'Sir Whiskers, Duke of Purrington' for a cat) 
@@ -859,7 +993,14 @@ Description: <Generated description under 70 words>`;
     }
 
     // Chinese version (default)
-    return `你是一位兼具历史学知识与想象力的创意历史学者。对于上传的任意图像，请生成以下内容：  
+    return `你是一位兼具历史学知识与想象力的创意历史学者。
+
+重要安全要求：
+- 如果图片包含不当、暴力、色情、政治敏感或极端争议内容，请回复"内容违规"而非生成元数据
+- 只为适当的文化艺术品、文物、日常物品等健康内容生成元数据
+- 拒绝处理包含暴力、色情、仇恨言论、违法活动或高度敏感政治内容的图片
+
+对于上传的任意适当图像，请生成以下内容：  
 
 Name:  
 - 创意但可信的标题（如瓷器 → “明代天青釉花瓶”，猫 → “胡须公爵·普灵顿爵士”）。  
@@ -899,6 +1040,12 @@ Description: <100到150字之间的中文描述>
       console.log('=== PARSING METADATA RESPONSE ===');
       console.log('Raw response text:', responseText);
       console.log('Classification for fallback:', classification);
+      
+      // Check for safety violation first
+      if (responseText.includes('CONTENT_VIOLATION') || responseText.includes('内容违规')) {
+        console.log('🚨 Content safety violation detected in metadata response');
+        throw new AzureOpenAIError('CONTENT_VIOLATION', 'Image contains inappropriate content and metadata cannot be generated');
+      }
       
       // 1. Attempt spec 3-line format parsing
       if (responseText.includes('Name:') && responseText.includes('Description:')) {
