@@ -1059,8 +1059,11 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                 // 使用isUser字段来判断是否是用户消息，而不是依赖characterName
                 const isUserMessage = message.isUser || message.character === 'You';
                 
+                // Create unique key combining message id and index to prevent duplicates
+                const uniqueKey = message.id ? `${message.id}-${index}` : `msg-${index}-${Date.now()}`;
+                
                 return (
-                <div key={message.id} className="mb-3 animate-fade-in">
+                <div key={uniqueKey} className="mb-3 animate-fade-in">
                   <div className={`inline-flex items-center gap-3 ${
                     isUserMessage ? 'flex-row-reverse' : ''
                   }`}>
@@ -1088,10 +1091,26 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                           {characterName}
                         </span>
                         <span className="text-white/60 text-xs">
-                          {new Date(message.timestamp).toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
+                          {(() => {
+                            try {
+                              const date = new Date(message.timestamp);
+                              if (isNaN(date.getTime())) {
+                                return new Date().toLocaleTimeString([], { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit' 
+                                });
+                              }
+                              return date.toLocaleTimeString([], { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              });
+                            } catch (error) {
+                              return new Date().toLocaleTimeString([], { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              });
+                            }
+                          })()}
                         </span>
                       </div>
                       <p className="text-white text-sm leading-5">

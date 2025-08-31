@@ -176,7 +176,7 @@ class AzureOpenAIService {
       console.log('Response text:', metadataText);
       console.log('Response length:', metadataText ? metadataText.length : 'null');
       
-      const metadata = this.parseMetadataResponse(metadataText, classification);
+      const metadata = this.parseMetadataResponse(metadataText, classification, language);
       
       console.log('=== PARSED METADATA RESULT ===');
       console.log('Generated metadata:', metadata);
@@ -201,8 +201,25 @@ class AzureOpenAIService {
    * @returns {Promise<Array>} Array of character responses
    */
   async generateConversation(params) {
+    // Extract params at the top level so they're available in fallback
+    const { imageUrl, description, imageDescription, metadata, classification, characters, previousMessages = [], userMessage, language = 'zh' } = params;
+    
     try {
-      const { imageUrl, description, imageDescription, metadata, classification, characters, previousMessages = [], userMessage, language = 'zh' } = params;
+      // 🔥 FORCE REDIRECT TO BACKEND API 🔥
+      console.log('🔴 INTERCEPTED: azureOpenAIService.generateConversation called, redirecting to backend API!');
+      
+      // Import and use backend API instead
+      const { backendApiService } = await import('../config/backendEndpoints.js');
+      
+      try {
+        console.log('🚀 Calling backend API from azureOpenAIService redirect...');
+        const messages = await backendApiService.generateConversation(params);
+        console.log('✅ Backend API returned messages:', messages);
+        return messages;
+      } catch (error) {
+        console.error('❌ Backend API failed, using Azure OpenAI as fallback:', error);
+        // Continue with original Azure OpenAI logic below as fallback
+      }
       
       // Use description if provided, fallback to imageDescription for backward compatibility
       const finalDescription = description || imageDescription;
@@ -603,28 +620,6 @@ ${previousContext}
 
 
 === Example (user asks specific question about identity) ===
-User: "蒙娜丽莎背后是什么人呢"
-[
-  {"speaker":"Lu Xun","text":"你问蒙娜丽莎身份？这幅画背后是佛罗伦萨商人之妻。"},
-  {"speaker":"Su Shi","text":"画中人名叫丽莎·盖拉尔迪尼，达·芬奇为其夫君所绘。"},
-  {"speaker":"Vincent van Gogh","text":"她就是丽莎夫人，那神秘微笑至今仍令我着迷！"}
-]
-
-=== Example (user speaks Chinese about beauty) ===
-User: "这个青瓷的颜色真的很美"
-[
-  {"speaker":"Lu Xun","text":"这翠色中透着深沉，如国人性格——内敛却有力量。"},
-  {"speaker":"Su Shi","text":"色如春水初生，又似远山含黛，天然去雕饰。"},
-  {"speaker":"Vincent van Gogh","text":"这种绿让我着迷，比我调色板上任何颜料都要纯净。"}
-]
-
-=== Example (user asks practical question) ===
-User: "这个东西有什么用"
-[
-  {"speaker":"Lu Xun","text":"你问用途？这耳机用于听音乐、接电话、隔音，现代生活必需品。"},
-  {"speaker":"Su Shi","text":"此物虽小却能传千里之音，如古时驿马传书，连接远方。"},
-  {"speaker":"Vincent van Gogh","text":"它让声音变成画笔，在我心中绘出看不见的美丽世界。"}
-]
 
 === Example (user asks technical question in Chinese) ===
 User: "这种工艺是怎么做出来的？"
@@ -779,22 +774,6 @@ User: "Who is behind the Mona Lisa?"
   {"speaker":"Lu Xun","text":"You ask about Mona Lisa's identity? Behind this painting is a Florentine merchant's wife. 🎭"},
   {"speaker":"Su Shi","text":"The painted lady is Lisa Gherardini, portrayed by da Vinci for her husband. 🖼️"},
   {"speaker":"Vincent van Gogh","text":"She is Lady Lisa, whose mysterious smile still fascinates me today! 😊"}
-]
-
-=== Example (user speaks English about beauty) ===
-User: "This celadon color is really beautiful"
-[
-  {"speaker":"Lu Xun","text":"This jade hue carries depth, like our people's character—restrained yet powerful. 💚"},
-  {"speaker":"Su Shi","text":"Color like spring water newly born, or distant mountains veiled in mist, naturally unadorned. 🌿"},
-  {"speaker":"Vincent van Gogh","text":"This green captivates me, purer than any pigment on my palette! 🎨"}
-]
-
-=== Example (user asks practical question) ===
-User: "What is this thing used for?"
-[
-  {"speaker":"Lu Xun","text":"You ask its purpose? These headphones are for music, calls, noise isolation—modern necessities. 🎧"},
-  {"speaker":"Su Shi","text":"Though small, this device transmits sounds across distances, like ancient courier horses carrying letters. 📨"},
-  {"speaker":"Vincent van Gogh","text":"It turns sound into brushstrokes, painting invisible beauty in my heart. 🎵"}
 ]
 
 === Example (utilizing metadata information in English) ===
@@ -1035,7 +1014,7 @@ Description: <100到150字之间的中文描述>
    * @param {Object} classification - Classification result for fallback
    * @returns {Object} Parsed metadata result
    */
-  parseMetadataResponse(responseText, classification) {
+  parseMetadataResponse(responseText, classification, language = 'zh') {
     try {
       console.log('=== PARSING METADATA RESPONSE ===');
       console.log('Raw response text:', responseText);

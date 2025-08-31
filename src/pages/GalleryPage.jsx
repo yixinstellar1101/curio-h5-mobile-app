@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PAGES } from '../constants/pages';
-import { getRandomBackgroundByCategory, createCompositeImage, ensureCompositeImage } from '../utils/imageComposition';
+import { getRandomBackgroundByCategory, ensureCompositeImage } from '../utils/imageComposition';
 import { musicManager } from '../utils/musicManager';
 import { useLanguage } from '../context/LanguageContext';
 import { texts } from '../constants/texts';
@@ -22,7 +22,7 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
   const { currentLanguage } = useLanguage();
   const t = texts;
   
-  // 处理合成图片生成
+  // 处理图片合成 - 确保每个项目都有合成图片
   useEffect(() => {
     const processGalleryItems = async () => {
       if (galleryItems.length === 0) return;
@@ -31,12 +31,21 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
       try {
         const processedItemsArray = await Promise.all(
           galleryItems.map(async (item) => {
-            // 如果已经有合成图片，跳过处理
-            if (item.compositeImage || (item.analysis && item.analysis.compositeImage)) {
+            // 如果已经有合成图片URL（新的分析结果），直接使用
+            if (item.compositeImageUrl && item.compositeImageUrl !== item.imageUrl) {
+              console.log('Using existing compositeImageUrl for item:', item.compositeImageUrl);
               return item;
             }
             
+            // 如果有base64合成图片，也直接使用
+            if (item.compositeImage) {
+              console.log('Using existing compositeImage for item');
+              return item;
+            }
+            
+            // 否则需要生成合成图片
             try {
+              console.log('Generating composite image for item:', item);
               return await ensureCompositeImage(item);
             } catch (error) {
               console.error('Error processing gallery item:', error);
@@ -199,30 +208,36 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
 
   const metadata = getMetadata();
   
-  // Background image selection - 优先使用合成图片作为背景
+  // Background image selection - 优先使用合成图片
   const getBackgroundImage = () => {
-    // 第一优先级：使用合成图片作为背景
+    // 第一优先级：使用新的合成图片URL（base64编码的合成结果）
     if (currentItem.compositeImage) {
-      console.log('Using compositeImage as background:', currentItem.compositeImage);
+      console.log('Using compositeImage as background:', currentItem.compositeImage.substring(0, 50) + '...');
       return currentItem.compositeImage;
     }
     
     // 第二优先级：使用分析结果中的合成图片
     if (analysis?.analysis?.compositeImage) {
-      console.log('Using analysis.analysis.compositeImage as background:', analysis.analysis.compositeImage);
+      console.log('Using analysis.analysis.compositeImage as background:', analysis.analysis.compositeImage.substring(0, 50) + '...');
       return analysis.analysis.compositeImage;
     }
     
-    // 第三优先级：使用背景图片路径（非合成）
-    if (currentItem.backgroundImage) {
-      console.log('Using backgroundImage from item:', currentItem.backgroundImage);
-      return currentItem.backgroundImage;
+    // 第三优先级：使用合成图片URL（Azure Storage + 合成）
+    if (currentItem.compositeImageUrl && currentItem.compositeImageUrl !== currentItem.imageUrl) {
+      console.log('Using compositeImageUrl as background:', currentItem.compositeImageUrl);
+      return currentItem.compositeImageUrl;
     }
     
-    // 第四优先级：使用分析数据中的背景图片
-    if (analysis?.analysis?.backgroundImage) {
-      console.log('Using analysis.analysis.backgroundImage:', analysis.analysis.backgroundImage);
-      return analysis.analysis.backgroundImage;
+    // 第四优先级：使用分析结果中的合成图片URL
+    if (analysis?.compositeImageUrl && analysis.compositeImageUrl !== analysis.imageUrl) {
+      console.log('Using analysis.compositeImageUrl as background:', analysis.compositeImageUrl);
+      return analysis.compositeImageUrl;
+    }
+    
+    // 第五优先级：使用原始图片URL（Azure Storage）
+    if (currentItem.imageUrl) {
+      console.log('Using imageUrl as background (no composite available):', currentItem.imageUrl);
+      return currentItem.imageUrl;
     }
     
     // 第五优先级：根据分类动态生成背景（实时生成，不推荐但保留作为后备）

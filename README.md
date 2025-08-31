@@ -152,6 +152,37 @@ The application is built as a single HTML file with embedded CSS and JavaScript 
 
 ## 📦 Deployment
 
+## 🔑 Environment Variables (Updated Backend Integration)
+
+Create a `.env` file (or configure host env) for Vite:
+
+```
+VITE_BACKEND_API_BASE=http://localhost:8000
+# (Legacy — only needed if some dev utilities still test direct Azure access)
+VITE_AZURE_OPENAI_ENDPOINT=
+VITE_AZURE_OPENAI_API_KEY=
+VITE_AZURE_OPENAI_DEPLOYMENT_NAME=model-router
+VITE_AZURE_OPENAI_API_VERSION=2025-01-01-preview
+```
+
+`VITE_BACKEND_API_BASE` points to the FastAPI backend that now performs:
+1. Image classification `/api/classification/classify`
+2. Metadata generation `/api/metadata/generate`
+3. Multi-character conversation `/api/openai/conversation`
+4. Prompt retrieval `/api/prompts/*` (for debugging/versioning)
+
+Front-end no longer calls Azure OpenAI directly in production paths; logic is centralized server-side for security, prompt governance, and consistency.
+
+### Endpoint Switching
+To deploy against another environment (e.g. staging/production), only change `VITE_BACKEND_API_BASE` (no code changes required). Example:
+
+```
+VITE_BACKEND_API_BASE=https://curio-api.staging.example.com
+```
+
+If you need health verification, the app internally can hit `${VITE_BACKEND_API_BASE}/api/openai/health`.
+
+
 ### GitHub Pages
 1. Push to GitHub repository
 2. Enable GitHub Pages in repository settings

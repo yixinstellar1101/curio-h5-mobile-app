@@ -49,7 +49,26 @@ const analyzeImageWithAzure = async (file, language = 'zh') => {
   } catch (error) {
     console.error('Azure image analysis failed:', error);
     
-    // Provide user-friendly error messages
+    // Check for content violation errors first
+    const errorString = error.message || '';
+    const isContentViolation = errorString.includes('内容违规') || 
+                              errorString.includes('content violation') ||
+                              errorString.includes('rejected') ||
+                              errorString.includes('Content filtered') ||
+                              (error.code && error.code.includes('content'));
+    
+    if (isContentViolation) {
+      // Content violation - throw specific error for direct rejection
+      const contentViolationError = new Error(
+        currentLanguage === 'zh' ? 
+          '内容违规：Azure OpenAI 认为您上传的图像内容违规' : 
+          'Content violation: Azure OpenAI detected policy violation in the uploaded image'
+      );
+      contentViolationError.code = 'CONTENT_VIOLATION';
+      throw contentViolationError;
+    }
+    
+    // Provide user-friendly error messages for other errors
     let errorMessage = t.imageAnalysis.analysisFailed[currentLanguage];
     if (error.code === 'UPLOAD_FAILED') {
       errorMessage = t.imageAnalysis.uploadFailedError[currentLanguage];
@@ -168,11 +187,26 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
       
       // Set user-friendly error message based on error type
       let message = t.imageAnalysis.analysisFailed[currentLanguage];
-      if (error.code === 'UPLOAD_FAILED') {
+      
+      // Check for content violation errors
+      const errorString = error.message || '';
+      const isContentViolation = errorString.includes('内容违规') || 
+                                errorString.includes('content violation') ||
+                                errorString.includes('rejected') ||
+                                errorString.includes('Content filtered') ||
+                                (error.code && error.code.includes('content'));
+      
+      if (isContentViolation) {
+        // Content violation - direct rejection with user-friendly message
+        message = currentLanguage === 'zh' ? 
+          'Azure OpenAI 认为您上传的图像内容违规，请重新上传其他图片' : 
+          'The uploaded image content violates Azure OpenAI policies. Please upload a different image.';
+      } else if (error.code === 'UPLOAD_FAILED') {
         message = t.imageAnalysis.uploadFailedError[currentLanguage];
       } else if (error.code === 'CLASSIFICATION_FAILED') {
         message = t.imageAnalysis.classificationFailedError[currentLanguage];
       }
+      
       setErrorMessage(message);
       setAnalysisState('error');
     }
