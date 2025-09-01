@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import StatusBar from '../components/common/StatusBar';
-import HomeIndicator from '../components/common/HomeIndicator';
 import { PAGES } from '../constants/pages';
 
 /**
@@ -38,8 +36,6 @@ const SplashAnimationPage = ({ onNavigate }) => {
         }`}
         style={{ background: '#221400' }}
       >
-        <StatusBar />
-        
         {/* Background Museum Image */}
         <div 
           className="absolute h-[852px] left-[-133px] top-0 w-[642px] animate-pulse"
@@ -50,8 +46,6 @@ const SplashAnimationPage = ({ onNavigate }) => {
             animation: 'fadeInScale 500ms ease-out'
           }}
         />
-        
-        <HomeIndicator />
         
         {/* Gradient Overlay */}
         <div className="absolute h-[679px] left-0 top-0 w-[393px]">
@@ -72,8 +66,6 @@ const SplashAnimationPage = ({ onNavigate }) => {
         }`}
         style={{ background: '#221400' }}
       >
-        <StatusBar />
-        
         {/* Background Museum Image */}
         <div 
           className="absolute h-[852px] left-[-133px] top-0 w-[642px]"
@@ -84,8 +76,6 @@ const SplashAnimationPage = ({ onNavigate }) => {
             animation: 'fadeIn 500ms ease-out'
           }}
         />
-        
-        <HomeIndicator />
         
         {/* CURIO Title - positioned according to Figma design */}
         <div className="absolute left-1/2 top-[185px] transform -translate-x-1/2 text-center">

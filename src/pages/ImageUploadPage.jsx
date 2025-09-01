@@ -7,9 +7,6 @@ import { texts } from '../constants/texts';
 const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png"; // 与HomePage一致的背景
 const imgImage176 = "/src/assets/dff6fe23fdbc66a95b73bccee1330324b70d1957.png";
 const imgImage179 = "/src/assets/e956d03147a1ec74c8563980180fa452db51f275.png";
-const imgBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
-const imgWifi = "/src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg";
-const imgCellular = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
 const imgVector = "/src/assets/1009f07f9dd6944bb263d745bad2a94943c5a897.svg"; // 与HomePage一致的设置图标
 const imgRectangle346603543 = "/src/assets/9b6dc444b0feeb650edd472c766d9b00af5ddbb8.svg"; // 重要的背景覆盖层
 
@@ -92,37 +89,7 @@ const ImageUploadPage = ({ onNavigate }) => {
       data-name="ImageUploadPage"
       style={{ backgroundImage: `url('${imgHomePage}')` }}
     >
-      {/* 1. Status Bar */}
-      <div className="absolute box-border content-stretch flex flex-col items-start justify-start left-1/2 p-0 top-0 translate-x-[-50%] w-[393px]">
-        <div className="h-11 relative shrink-0 w-full">
-          <div className="absolute h-[22px] left-[26px] top-[15px] w-[54px]">
-            <div
-              className="absolute font-semibold leading-[0] left-0 not-italic right-0 text-[#ffffff] text-[17px] text-center"
-              style={{ top: "calc(50% - 11px)" }}
-            >
-              <p className="block leading-[22px]">12:15</p>
-            </div>
-          </div>
-          <div className="absolute h-[13px] right-[26.34px] top-[19.33px] w-[27.328px]">
-            <img alt="Battery" className="block max-w-none size-full" src={imgBattery} />
-          </div>
-          <div className="absolute h-3 right-[61px] top-5 w-[17px]">
-            <img alt="Wifi" className="block max-w-none size-full" src={imgWifi} />
-          </div>
-          <div className="absolute h-3 right-[85.4px] top-5 w-[19.2px]">
-            <img alt="Cellular" className="block max-w-none size-full" src={imgCellular} />
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Home Indicator */}
-      <div className="absolute box-border content-stretch flex flex-col items-center justify-start left-0 p-0 top-[818px] w-[393px]">
-        <div className="h-[34px] relative shrink-0 w-full">
-          <div className="absolute bg-[#919191] inset-[61.77%_32%_23.53%_32.27%] rounded-[2.5px]" />
-        </div>
-      </div>
-
-      {/* 3. Background Overlay Rectangle - Rectangle 346603543 */}
+      {/* Background Overlay Rectangle - Rectangle 346603543 */}
       <div className="absolute h-[852px] left-0 top-0 w-[393px]">
         <div className="absolute bottom-[-0.94%] left-[-1.02%] right-[-1.02%] top-0">
           <img

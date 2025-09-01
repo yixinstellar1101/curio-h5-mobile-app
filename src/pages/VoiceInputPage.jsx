@@ -1,6 +1,4 @@
 import React from 'react';
-import StatusBar from '../components/common/StatusBar';
-import HomeIndicator from '../components/common/HomeIndicator';
 
 /**
  * VoiceInputPage - Voice input interface (placeholder)
@@ -16,8 +14,6 @@ const VoiceInputPage = ({ onClose }) => {
 
   return (
     <div className="absolute inset-0 w-full h-full bg-gray-100">
-      <StatusBar />
-      
       <div className="flex flex-col items-center justify-center h-full p-4">
         <div className="text-6xl mb-4">🎤</div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Voice Input</h1>
@@ -30,8 +26,6 @@ const VoiceInputPage = ({ onClose }) => {
           Back
         </button>
       </div>
-      
-      <HomeIndicator />
     </div>
   );
 };

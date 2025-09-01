@@ -1,6 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import StatusBar from '../components/common/StatusBar';
-import HomeIndicator from '../components/common/HomeIndicator';
 import { PAGES } from '../constants/pages';
 
 /**
@@ -51,8 +49,6 @@ const TextInputPage = ({ onSend, placeholder = "输入您的消息...", characte
 
   return (
     <div className="absolute inset-0 w-full h-full bg-gray-50">
-      <StatusBar />
-      
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-white shadow-sm">
         <button 
@@ -229,8 +225,6 @@ const TextInputPage = ({ onSend, placeholder = "输入您的消息...", characte
           </div>
         </div>
       )}
-      
-      <HomeIndicator />
     </div>
   );
 };

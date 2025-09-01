@@ -1,6 +1,4 @@
 import React from 'react';
-import StatusBar from '../components/common/StatusBar';
-import HomeIndicator from '../components/common/HomeIndicator';
 
 /**
  * CharacterDetailCardPage - Character profile modal view (matches Page 15 from HTML)
@@ -45,8 +43,6 @@ const CharacterDetailCardPage = ({ character, onClose, onExpandToFull }) => {
       {/* Full screen overlay */}
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
       
-      <StatusBar />
-
       {/* Back Button */}
       <div 
         className="absolute left-[26px] w-[42px] h-[42px] top-[52px] cursor-pointer z-30"
@@ -203,8 +199,6 @@ const CharacterDetailCardPage = ({ character, onClose, onExpandToFull }) => {
           <div className="h-4 w-full"></div>
         </div>
       </div>
-
-      <HomeIndicator />
     </div>
   );
 };

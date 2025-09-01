@@ -28,8 +28,8 @@ class AzureOpenAIService {
       throw new Error('Azure OpenAI credentials not configured. Please set VITE_AZURE_OPENAI_ENDPOINT and VITE_AZURE_OPENAI_API_KEY');
     }
 
-    // Clean endpoint URL
-    this.endpoint = this.endpoint.replace(/\/$/, '');
+    // Clean endpoint URL - remove trailing slash and any existing path
+    this.endpoint = this.endpoint.replace(/\/$/, '').replace(/\/openai.*$/, '');
   }
 
   /**

@@ -6,9 +6,6 @@ import { useLanguage } from '../context/LanguageContext';
 import { texts } from '../constants/texts';
 
 // Asset imports from Figma
-const imgStatusBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
-const imgStatusWifi = "/src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg";
-const imgStatusCellular = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
 const imgBackground = "/src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png";
 const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png"; // HomePage背景图片
 
@@ -395,18 +392,6 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Status bar */}
-      <div className="absolute flex items-center justify-between w-full px-[24px] top-[12px]">
-        <div className="text-white text-[15px] font-semibold leading-[20px] font-sf-pro">
-          12:15
-        </div>
-        <div className="flex items-center gap-[5px]">
-          <img className="w-[17px] h-[10px]" src={imgStatusCellular} alt="Cellular" />
-          <img className="w-[15px] h-[11px]" src={imgStatusWifi} alt="WiFi" />
-          <img className="w-[24px] h-[11px]" src={imgStatusBattery} alt="Battery" />
-        </div>
-      </div>
-
       {/* Gallery navigation indicator */}
       {processedItems.length > 1 && (
         <div className="absolute top-[50px] left-1/2 transform -translate-x-1/2 z-20">
@@ -491,9 +476,6 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
           {metadata.description}
         </div>
       </div>
-
-      {/* Bottom indicator */}
-      <div className="absolute bottom-[8px] left-1/2 transform -translate-x-1/2 w-[134px] h-[5px] bg-white rounded-[2.5px]" />
 
       {/* Popup Modal */}
       {showPopup && (

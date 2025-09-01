@@ -2,9 +2,6 @@ import React from 'react';
 
 // Asset imports from Figma
 const imgVector = "/src/assets/d84d1463db2967ad16c63a138581a4d524675326.png";
-const imgBattery = "/src/assets/b939cc1b874d195c26939816cd53400a2e8b4c87.svg";
-const imgWifi = "/src/assets/9e9c3b3e9690915df33d6e0de894f1c5141290b1.svg";
-const imgCellular = "/src/assets/c5f03e2be0e817b2af3b2b51903f13f82eb6050b.svg";
 const imgBack = "/src/assets/8d8cbe981109a48150a98003a8693f5fbd8569a0.svg";
 const imgShare = "/src/assets/259391b1dd8a0c7c3d73db060c8f4aab38bff52e.svg";
 

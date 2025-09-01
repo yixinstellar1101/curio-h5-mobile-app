@@ -6,9 +6,6 @@ import { useLanguage } from '../context/LanguageContext';
 import { texts } from '../constants/texts';
 
 // Asset imports from Figma
-const imgBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
-const imgWifi = "/src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg";
-const imgCellular = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
 const imgBackArrow = "/src/assets/40807933db102c5ddfe145202e96cb747d9662c5.svg";
 const imgAnalysisButton = "/src/assets/2314863aa5b98c3561bbba15a029ce5d6b01faa6.svg";
 const imgViewfinder = "/src/assets/db6877c52f8f212513e0ebd034674ef3aa25f15a.svg";
@@ -16,7 +13,7 @@ const imgViewfinder = "/src/assets/db6877c52f8f212513e0ebd034674ef3aa25f15a.svg"
 const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png";
 
 // Real API service for image analysis using Azure services
-const analyzeImageWithAzure = async (file, language = 'zh') => {
+const analyzeImageWithAzure = async (file, language = 'zh', currentLanguage = 'zh') => {
   try {
     console.log('Analyzing image with Azure services...');
     console.log('Language:', language);
@@ -69,11 +66,11 @@ const analyzeImageWithAzure = async (file, language = 'zh') => {
     }
     
     // Provide user-friendly error messages for other errors
-    let errorMessage = t.imageAnalysis.analysisFailed[currentLanguage];
+    let errorMessage = currentLanguage === 'zh' ? '图像分析失败，请重试' : 'Image analysis failed, please try again';
     if (error.code === 'UPLOAD_FAILED') {
-      errorMessage = t.imageAnalysis.uploadFailedError[currentLanguage];
+      errorMessage = currentLanguage === 'zh' ? '图像上传失败，请重试' : 'Image upload failed, please try again';
     } else if (error.code === 'CLASSIFICATION_FAILED') {
-      errorMessage = t.imageAnalysis.classificationFailedError[currentLanguage];
+      errorMessage = currentLanguage === 'zh' ? '图像分类失败，请重试' : 'Image classification failed, please try again';
     }
     
     throw new Error(errorMessage);
@@ -156,7 +153,7 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
         });
       }, 200);
 
-      const result = await analyzeImageWithAzure(file, currentLanguage);
+      const result = await analyzeImageWithAzure(file, currentLanguage, currentLanguage);
       
       clearInterval(progressTimer);
       setProgress(100);
@@ -268,26 +265,6 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
       data-name="ImageAnalysisPage"
       style={{ backgroundImage: `url('${imgHomePage}')` }}
     >
-      {/* Status Bar */}
-      <div className="absolute box-border content-stretch flex flex-col items-start justify-start left-1/2 p-0 top-0 translate-x-[-50%] w-[393px] z-20">
-        <div className="h-11 relative shrink-0 w-full">
-          <div className="absolute h-[22px] left-[26px] top-[15px] w-[54px]">
-            <div className="absolute font-semibold leading-[0] left-0 not-italic right-0 text-[#ffffff] text-[17px] text-center" style={{ top: "calc(50% - 11px)" }}>
-              <p className="block leading-[22px]">12:15</p>
-            </div>
-          </div>
-          <div className="absolute h-[13px] right-[26.34px] top-[19.33px] w-[27.328px]">
-            <img alt="" className="block max-w-none size-full" src={imgBattery} />
-          </div>
-          <div className="absolute h-3 right-[61px] top-5 w-[17px]">
-            <img alt="" className="block max-w-none size-full" src={imgWifi} />
-          </div>
-          <div className="absolute h-3 right-[85.4px] top-5 w-[19.2px]">
-            <img alt="" className="block max-w-none size-full" src={imgCellular} />
-          </div>
-        </div>
-      </div>
-
       {/* Back Button */}
       <button className="absolute left-5 size-[42px] top-[53px] z-20 cursor-pointer hover:scale-110 transition-transform duration-200" onClick={handleBack}>
         <img alt="Back" className="block max-w-none size-full" src={imgBackArrow} />
@@ -360,17 +337,6 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
       <div className="absolute left-[164px] size-[66px] top-[715px] z-20">
         <div className="absolute inset-[-1.52%_-10.61%_-37.88%_-10.61%]">
           <img alt="Analysis" className="block max-w-none size-full" src={imgAnalysisButton} />
-        </div>
-      </div>
-
-      {/* Home Indicator */}
-      <div className="absolute box-border content-stretch flex flex-col items-center justify-start left-0 p-0 top-[826px] w-[393px] z-20">
-        <div className="h-[26px] relative shrink-0 w-[375px]">
-          <div className="absolute bottom-2 flex h-[5px] items-center justify-center left-1/2 translate-x-[-50%] w-36">
-            <div className="flex-none rotate-[180deg] scale-y-[-100%]">
-              <div className="bg-[#000000] h-[5px] rounded-[100px] w-36" />
-            </div>
-          </div>
         </div>
       </div>
     </div>

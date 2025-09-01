@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { PAGES } from '../constants/pages';
 
 // Asset imports from Figma
-const imgBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
-const imgWifi = "/src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg";
-const imgCellular = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
 const imgBackArrow = "/src/assets/40807933db102c5ddfe145202e96cb747d9662c5.svg";
 const imgWhiteDot = "/src/assets/5b05d68c3eb2bca3a02f5a3824a8ff08166d4c40.svg";
 const imgViewfinder = "/src/assets/7f7f4e9c0ff1336f239a058ecfbcb93598e33f94.svg";
@@ -98,47 +95,6 @@ const CameraCapturingPage = ({ onNavigate, data }) => {
       data-name="CameraCapturingPage"
       style={{ backgroundImage: `url('${imgHomePage}')` }}
     >
-      {/* Status Bar */}
-      <div
-        className="absolute box-border content-stretch flex flex-col items-start justify-start left-1/2 p-0 top-0 translate-x-[-50%] w-[393px] z-20"
-        data-name="Status bar V2"
-      >
-        <div
-          className="h-11 relative shrink-0 w-full"
-          data-name="Status Bar"
-        >
-          <div
-            className="absolute h-[22px] left-[26px] top-[15px] w-[54px]"
-            data-name="Time"
-          >
-            <div
-              className="absolute font-semibold leading-[0] left-0 not-italic right-0 text-[#ffffff] text-[17px] text-center"
-              style={{ top: "calc(50% - 11px)" }}
-            >
-              <p className="block leading-[22px]">12:15</p>
-            </div>
-          </div>
-          <div
-            className="absolute h-[13px] right-[26.34px] top-[19.33px] w-[27.328px]"
-            data-name="Battery"
-          >
-            <img alt="" className="block max-w-none size-full" src={imgBattery} />
-          </div>
-          <div
-            className="absolute h-3 right-[61px] top-5 w-[17px]"
-            data-name="Wifi"
-          >
-            <img alt="" className="block max-w-none size-full" src={imgWifi} />
-          </div>
-          <div
-            className="absolute h-3 right-[85.4px] top-5 w-[19.2px]"
-            data-name="Cellular Connection"
-          >
-            <img alt="" className="block max-w-none size-full" src={imgCellular} />
-          </div>
-        </div>
-      </div>
-
       {/* Back Button */}
       <button
         className="absolute left-5 size-[42px] top-[53px] z-20 cursor-pointer hover:scale-110 transition-transform duration-200"
@@ -218,25 +174,6 @@ const CameraCapturingPage = ({ onNavigate, data }) => {
           </div>
         </div>
       </button>
-
-      {/* Home Indicator */}
-      <div
-        className="absolute box-border content-stretch flex flex-col items-center justify-start left-0 p-0 top-[826px] w-[393px] z-20"
-      >
-        <div
-          className="h-[26px] relative shrink-0 w-[375px]"
-          data-name="Home Indicator"
-        >
-          <div className="absolute bottom-2 flex h-[5px] items-center justify-center left-1/2 translate-x-[-50%] w-36">
-            <div className="flex-none rotate-[180deg] scale-y-[-100%]">
-              <div
-                className="bg-[#000000] h-[5px] rounded-[100px] w-36"
-                data-name="Home Indicator"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

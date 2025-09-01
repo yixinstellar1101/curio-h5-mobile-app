@@ -8,7 +8,12 @@ const TextInputBar = ({ onSendMessage, onClose, placeholder = "Type here" }) => 
   // 自动聚焦到输入框
   useEffect(() => {
     if (inputRef.current) {
-      inputRef.current.focus();
+      // 小延迟确保DOM完全渲染
+      setTimeout(() => {
+        inputRef.current.focus();
+        // 滚动到输入框位置（移动设备上很重要）
+        inputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
     }
   }, []);
 
@@ -57,6 +62,11 @@ const TextInputBar = ({ onSendMessage, onClose, placeholder = "Type here" }) => 
             placeholder={placeholder}
             className="w-full bg-black/30 backdrop-blur-[1px] text-white placeholder-[#e5e0dc]/70 px-4 py-3 rounded-full border-none outline-none text-[13px] font-['Avenir_LT_Std:55_Roman',sans-serif]"
             data-node-id="2:2299"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            inputMode="text"
           />
         </div>
         

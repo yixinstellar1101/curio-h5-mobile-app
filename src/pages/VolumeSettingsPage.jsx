@@ -1,6 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import StatusBar from '../components/common/StatusBar';
-import HomeIndicator from '../components/common/HomeIndicator';
 
 /**
  * VolumeSettingsPage - Volume settings modal (matches Page 17 from HTML)
@@ -90,46 +88,6 @@ const VolumeSettingsPage = ({ onClose }) => {
       {/* Full screen overlay */}
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
       
-      {/* Status bar V2 */}
-      <div className="absolute flex flex-col items-start justify-start left-1/2 p-0 top-0 transform -translate-x-1/2 w-[393px] z-30">
-        <div className="h-11 relative w-full">
-          <div className="absolute h-[22px] left-[26px] top-[15px] w-[54px]">
-            <div 
-              className="absolute font-semibold leading-[0] left-0 not-italic right-0 text-[#ffffff] text-[17px] text-center" 
-              style={{ 
-                top: 'calc(50% - 11px)',
-                fontFamily: "'SF Pro Text', sans-serif" 
-              }}
-            >
-              <p className="block leading-[22px]">12:15</p>
-            </div>
-          </div>
-          <div className="absolute h-[13px] right-[26.339px] top-[19.333px] w-[27.328px]">
-            <img 
-              alt="Battery" 
-              className="block max-w-none w-full h-full" 
-              src="./src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg" 
-            />
-          </div>
-          <div className="absolute h-3 right-[61px] top-5 w-[17px]">
-            <img 
-              alt="Wifi" 
-              className="block max-w-none w-full h-full" 
-              src="./src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg" 
-            />
-          </div>
-          <div className="absolute h-3 right-[85.4px] top-5 w-[19.2px]">
-            <div className="absolute bottom-0 left-0 right-[-0.001%] top-0">
-              <img 
-                alt="Cellular" 
-                className="block max-w-none w-full h-full" 
-                src="./src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg" 
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Back Button */}
       <div 
         className="absolute left-[26px] w-[42px] h-[42px] top-[52px] cursor-pointer z-30"
@@ -201,8 +159,6 @@ const VolumeSettingsPage = ({ onClose }) => {
           </div>
         </div>
       </div>
-
-      <HomeIndicator />
     </div>
   );
 };

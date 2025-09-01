@@ -117,6 +117,8 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   
   // Text input state
   const [showTextInput, setShowTextInput] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
   
   // Language modal state
   const [showLanguageModal, setShowLanguageModal] = useState(false);
@@ -234,6 +236,60 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       console.log('LiveRoomPage unmounting, music continues playing');
     };
   }, [currentLanguage]); // 添加currentLanguage作为依赖，语言切换时重新初始化对话
+
+  // Keyboard detection for mobile input
+  useEffect(() => {
+    const handleResize = () => {
+      const currentHeight = window.innerHeight;
+      const heightDiff = Math.abs(viewportHeight - currentHeight);
+      
+      // If height reduced by more than 150px, likely keyboard is visible
+      if (currentHeight < viewportHeight - 150) {
+        setKeyboardVisible(true);
+        // Prevent body scrolling when keyboard is visible
+        document.body.style.overflow = 'hidden';
+      } else {
+        setKeyboardVisible(false);
+        // Restore body scrolling
+        document.body.style.overflow = '';
+      }
+    };
+
+    const handleVisualViewportChange = () => {
+      if (window.visualViewport) {
+        const currentHeight = window.visualViewport.height;
+        const heightDiff = Math.abs(viewportHeight - currentHeight);
+        
+        if (currentHeight < viewportHeight - 150) {
+          setKeyboardVisible(true);
+          document.body.style.overflow = 'hidden';
+        } else {
+          setKeyboardVisible(false);
+          document.body.style.overflow = '';
+        }
+      }
+    };
+
+    // Set initial viewport height
+    setViewportHeight(window.innerHeight);
+
+    // Listen for resize events
+    window.addEventListener('resize', handleResize);
+    
+    // Listen for Visual Viewport API changes (better for mobile)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleVisualViewportChange);
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleVisualViewportChange);
+      }
+      // Cleanup: restore body scrolling
+      document.body.style.overflow = '';
+    };
+  }, [viewportHeight]);
 
   useEffect(() => {
     scrollToBottom();
@@ -584,6 +640,11 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
 
   const handleTextInput = () => {
     setShowTextInput(true);
+    // Small delay to ensure TextInputBar is rendered before focusing
+    setTimeout(() => {
+      // Scroll to bottom to ensure input is visible
+      forceScrollToBottom();
+    }, 100);
   };
 
   const handleSendMessage = async (messageText) => {
@@ -984,8 +1045,13 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
 
   return (
     <div 
-      className="h-full w-full bg-cover bg-center relative overflow-hidden"
-      style={{ backgroundImage: `url(${backgroundImageSrc})` }}
+      className={`w-full bg-cover bg-center relative overflow-hidden ${
+        keyboardVisible ? 'h-screen' : 'h-full'
+      }`}
+      style={{ 
+        backgroundImage: `url(${backgroundImageSrc})`,
+        height: keyboardVisible && window.visualViewport ? `${window.visualViewport.height}px` : '100%'
+      }}
     >
       {/* Header - 上移，去掉mt-8 */}
       <div className="flex justify-between items-center px-4 py-4 mt-4">
@@ -1046,7 +1112,9 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       </div>
 
       {/* Messages Container - Above control panel */}
-      <div className="absolute bottom-20 left-4 right-16 h-64 pointer-events-auto">
+      <div className={`absolute left-4 right-16 h-64 pointer-events-auto ${
+        showTextInput || keyboardVisible ? 'bottom-32' : 'bottom-20'
+      }`}>
         <div className="h-full overflow-y-auto scrollbar-hide relative" style={{ scrollBehavior: 'smooth' }} onScroll={handleScroll}>
           {isLoading ? (
             <div className="flex items-center justify-start h-32">
@@ -1152,14 +1220,17 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         <div className="absolute bottom-8 left-5 right-5">
           <div className="flex items-center gap-3">
             {/* Voice input with text */}
-            <div className="backdrop-blur-[1px] bg-black/30 flex items-center gap-4 px-3 py-2 rounded-full flex-1">
+            <button 
+              onClick={handleVoiceInput}
+              className="backdrop-blur-[1px] bg-black/30 flex items-center gap-4 px-3 py-2 rounded-full flex-1 hover:bg-black/40 active:scale-95 transition-all"
+            >
               <div className="w-[22px] h-[22px] flex-shrink-0">
                 <img src={imgMicrophone} alt="microphone" className="w-full h-full" />
               </div>
               <span className="text-[#e5e0dc] text-[13px] font-['Avenir_LT_Std:55_Roman',sans-serif] leading-[22px]">
                 Press and hold to speak
               </span>
-            </div>
+            </button>
             
             {/* Keyboard button */}
             <button 
