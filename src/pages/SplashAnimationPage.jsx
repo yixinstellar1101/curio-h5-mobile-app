@@ -40,7 +40,7 @@ const SplashAnimationPage = ({ onNavigate }) => {
         <div 
           className="absolute h-[852px] left-[-133px] top-0 w-[642px] animate-pulse"
           style={{
-            backgroundImage: "url('./src/assets/5fc9e58748a0fa615330e68c877a6fb860ab55a4.png')",
+            backgroundImage: "url('../5fc9e58748a0fa615330e68c877a6fb860ab55a4.png')",
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             animation: 'fadeInScale 500ms ease-out'
@@ -53,7 +53,7 @@ const SplashAnimationPage = ({ onNavigate }) => {
             <img 
               alt="" 
               className="block max-w-none w-full h-full" 
-              src="./src/assets/dfe86cdbd174503d7f6537ed4fda64d4e43bd67e.svg" 
+              src="../dfe86cdbd174503d7f6537ed4fda64d4e43bd67e.svg" 
             />
           </div>
         </div>
@@ -70,7 +70,7 @@ const SplashAnimationPage = ({ onNavigate }) => {
         <div 
           className="absolute h-[852px] left-[-133px] top-0 w-[642px]"
           style={{
-            backgroundImage: "url('./src/assets/5fc9e58748a0fa615330e68c877a6fb860ab55a4.png')",
+            backgroundImage: "url('../5fc9e58748a0fa615330e68c877a6fb860ab55a4.png')",
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             animation: 'fadeIn 500ms ease-out'
@@ -82,9 +82,10 @@ const SplashAnimationPage = ({ onNavigate }) => {
           <h1 
             className="text-white text-[48px] font-black leading-[50px] tracking-normal animate-fadeIn"
             style={{ 
-              fontFamily: 'ABC Ginto Nord Unlicensed Trial, sans-serif',
+              fontFamily: '"ABC Ginto Nord Unlicensed Trial", "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
               fontWeight: 900,
-              animation: 'titleFadeIn 500ms ease-out'
+              animation: 'titleFadeIn 500ms ease-out',
+              letterSpacing: '0.02em'
             }}
           >
             CURIO
@@ -97,7 +98,7 @@ const SplashAnimationPage = ({ onNavigate }) => {
             <img 
               alt="" 
               className="block max-w-none w-full h-full" 
-              src="./src/assets/dfe86cdbd174503d7f6537ed4fda64d4e43bd67e.svg" 
+              src="../dfe86cdbd174503d7f6537ed4fda64d4e43bd67e.svg" 
             />
           </div>
         </div>

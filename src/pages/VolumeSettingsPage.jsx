@@ -82,7 +82,7 @@ const VolumeSettingsPage = ({ onClose }) => {
       {/* Background with museum artwork */}
       <div 
         className="absolute inset-0 bg-center bg-cover bg-no-repeat" 
-        style={{ backgroundImage: "url('./src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png')" }}
+        style={{ backgroundImage: "url('../2339a82e4b6020c219c18a48dca73ef3ba006ffe.png')" }}
       ></div>
       
       {/* Full screen overlay */}
@@ -96,7 +96,7 @@ const VolumeSettingsPage = ({ onClose }) => {
         <img 
           alt="Back" 
           className="block max-w-none w-full h-full" 
-          src="./src/assets/40807933db102c5ddfe145202e96cb747d9662c5.svg" 
+          src="../40807933db102c5ddfe145202e96cb747d9662c5.svg" 
         />
       </div>
 
@@ -113,7 +113,7 @@ const VolumeSettingsPage = ({ onClose }) => {
           <img 
             alt="Close" 
             className="block max-w-none w-full h-full" 
-            src="./src/assets/d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" 
+            src="../d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" 
           />
         </div>
         

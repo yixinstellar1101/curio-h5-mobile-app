@@ -7,7 +7,7 @@ const CharacterDetailCardPage = ({ character, onClose, onExpandToFull }) => {
   // Default character data matching HTML content
   const defaultCharacter = {
     name: 'Vincent van Gogh',
-    image: './src/assets/d84d1463db2967ad16c63a138581a4d524675326.png',
+    image: '../d84d1463db2967ad16c63a138581a4d524675326.png',
     quote: '"I painted not what I saw, but what I felt in that night of madness."',
     tags: '#LonelyGenius #PostImpressionist #NightOfTheMind',
     identity: '19th-century Dutch painter, creator of The Starry Night',
@@ -37,7 +37,7 @@ const CharacterDetailCardPage = ({ character, onClose, onExpandToFull }) => {
       {/* Background with museum artwork */}
       <div 
         className="absolute inset-0 bg-center bg-cover bg-no-repeat" 
-        style={{ backgroundImage: "url('./src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png')" }}
+        style={{ backgroundImage: "url('../2339a82e4b6020c219c18a48dca73ef3ba006ffe.png')" }}
       ></div>
       
       {/* Full screen overlay */}
@@ -51,7 +51,7 @@ const CharacterDetailCardPage = ({ character, onClose, onExpandToFull }) => {
         <img 
           alt="Back" 
           className="block max-w-none w-full h-full" 
-          src="./src/assets/40807933db102c5ddfe145202e96cb747d9662c5.svg" 
+          src="../40807933db102c5ddfe145202e96cb747d9662c5.svg" 
         />
       </div>
 
@@ -81,7 +81,7 @@ const CharacterDetailCardPage = ({ character, onClose, onExpandToFull }) => {
             <img 
               alt="Zoom" 
               className="block max-w-none w-full h-full" 
-              src="./src/assets/9403ffd15bd9a95db6a8488382897cc71b7212f7.svg" 
+              src="../9403ffd15bd9a95db6a8488382897cc71b7212f7.svg" 
             />
           </div>
         </div>
@@ -94,7 +94,7 @@ const CharacterDetailCardPage = ({ character, onClose, onExpandToFull }) => {
           <img 
             alt="Close" 
             className="block max-w-none w-full h-full" 
-            src="./src/assets/d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" 
+            src="../d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" 
           />
         </div>
         

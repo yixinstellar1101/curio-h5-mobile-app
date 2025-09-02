@@ -9,4 +9,21 @@ export default defineConfig({
     strictPort: true,
     host: 'localhost',
   },
+  base: './',
+  build: {
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          // 保持原始文件名
+          return `assets/${assetInfo.name}`;
+        }
+      }
+    }
+  },
+  publicDir: 'src/assets',
+  define: {
+    // 在构建时直接替换为生产环境的后端URL
+    'import.meta.env.VITE_BACKEND_API_BASE': JSON.stringify('https://curio-backend.kindstone-04fc122c.swedencentral.azurecontainerapps.io')
+  }
 })

@@ -75,6 +75,14 @@ export const texts = {
     }
   },
 
+  // CameraCapturingPage
+  cameraCapturing: {
+    takingPicture: {
+      zh: '正在拍照...',
+      en: 'Taking picture...'
+    }
+  },
+
   // GalleryPage
   galleryPage: {
     title: {
@@ -147,7 +155,7 @@ export const texts = {
         en: 'Su Shi'
       },
       'vincent-van-gogh': {
-        zh: '文森特·梵高',
+        zh: '梵高',
         en: 'Vincent van Gogh'
       },
       'You': {

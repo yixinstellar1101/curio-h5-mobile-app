@@ -6,25 +6,25 @@
 // 音乐文件映射
 const MUSIC_MAPPING = {
   Chinese: [
-    '/src/assets/Curio Music/Chinese/Chinese_1.mp3',
-    '/src/assets/Curio Music/Chinese/Chinese_2.mp3',
-    '/src/assets/Curio Music/Chinese/Chinese_3.mp3',
-    '/src/assets/Curio Music/Chinese/Chinese_4.mp3',
-    '/src/assets/Curio Music/Chinese/Chinese_5.mp3'
+    './Curio Music/Chinese/Chinese_1.mp3',
+    './Curio Music/Chinese/Chinese_2.mp3',
+    './Curio Music/Chinese/Chinese_3.mp3',
+    './Curio Music/Chinese/Chinese_4.mp3',
+    './Curio Music/Chinese/Chinese_5.mp3'
   ],
   European: [
-    '/src/assets/Curio Music/European/European_1.mp3',
-    '/src/assets/Curio Music/European/European_2.mp3',
-    '/src/assets/Curio Music/European/European_3.mp3',
-    '/src/assets/Curio Music/European/European_4.mp3',
-    '/src/assets/Curio Music/European/European_5.mp3',
-    '/src/assets/Curio Music/European/European_6.mp3'
+    './Curio Music/European/European_1.mp3',
+    './Curio Music/European/European_2.mp3',
+    './Curio Music/European/European_3.mp3',
+    './Curio Music/European/European_4.mp3',
+    './Curio Music/European/European_5.mp3',
+    './Curio Music/European/European_6.mp3'
   ],
   Modern: [
-    '/src/assets/Curio Music/Modern/Modern_1.mp3',
-    '/src/assets/Curio Music/Modern/Modern_2.mp3',
-    '/src/assets/Curio Music/Modern/Modern_3.mp3',
-    '/src/assets/Curio Music/Modern/Modern_4.mp3'
+    './Curio Music/Modern/Modern_1.mp3',
+    './Curio Music/Modern/Modern_2.mp3',
+    './Curio Music/Modern/Modern_3.mp3',
+    './Curio Music/Modern/Modern_4.mp3'
   ]
 };
 

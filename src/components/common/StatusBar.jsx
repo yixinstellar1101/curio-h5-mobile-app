@@ -19,7 +19,7 @@ const StatusBar = () => {
           <img 
             alt="Battery" 
             className="block max-w-none w-full h-full" 
-            src="./src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg" 
+            src="../c0c091687c62d7337bf318e17f3769ffc34d3a72.svg" 
           />
         </div>
         
@@ -28,7 +28,7 @@ const StatusBar = () => {
           <img 
             alt="Wifi" 
             className="block max-w-none w-full h-full" 
-            src="./src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg" 
+            src="../94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg" 
           />
         </div>
         
@@ -37,7 +37,7 @@ const StatusBar = () => {
           <img 
             alt="Cellular" 
             className="block max-w-none w-full h-full" 
-            src="./src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg" 
+            src="../a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg" 
           />
         </div>
       </div>

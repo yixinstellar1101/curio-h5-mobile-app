@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { PAGES } from '../constants/pages';
+import { useLanguage } from '../context/LanguageContext';
+import { texts } from '../constants/texts';
 
 // Asset imports from Figma
-const imgBackArrow = "/src/assets/40807933db102c5ddfe145202e96cb747d9662c5.svg";
-const imgWhiteDot = "/src/assets/5b05d68c3eb2bca3a02f5a3824a8ff08166d4c40.svg";
-const imgViewfinder = "/src/assets/7f7f4e9c0ff1336f239a058ecfbcb93598e33f94.svg";
-const imgGallery = "/src/assets/01e1d6ae9f47430674fe0f46b61392a43f9c8519.svg";
+const imgBackArrow = "./40807933db102c5ddfe145202e96cb747d9662c5.svg";
+const imgWhiteDot = "./5b05d68c3eb2bca3a02f5a3824a8ff08166d4c40.svg";
+const imgViewfinder = "./7f7f4e9c0ff1336f239a058ecfbcb93598e33f94.svg";
+const imgGallery = "./01e1d6ae9f47430674fe0f46b61392a43f9c8519.svg";
 // Background assets - 使用与ImageUploadPage一致的背景
-const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png";
+const imgHomePage = "./d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png";
 
 // Loading Spinner Component - exact Figma design
 const LoadingSpinner = () => {
@@ -58,6 +60,7 @@ const LoadingSpinner = () => {
  */
 const CameraCapturingPage = ({ onNavigate, data }) => {
   const [progress, setProgress] = useState(0);
+  const { currentLanguage } = useLanguage();
   const { file } = data || {};
 
   useEffect(() => {
@@ -122,12 +125,12 @@ const CameraCapturingPage = ({ onNavigate, data }) => {
 
       {/* Taking Picture Text */}
       <div
-        className="absolute bg-[rgba(0,0,0,0.5)] box-border content-stretch flex flex-col gap-2.5 h-8 items-center justify-center left-1/2 px-[19px] py-[3px] rounded-[20px] translate-x-[-50%] translate-y-[-50%] w-[165px] z-20"
+        className="absolute bg-[rgba(0,0,0,0.5)] box-border content-stretch flex flex-col gap-2.5 h-8 items-center justify-center left-1/2 px-[19px] py-[3px] rounded-[20px] translate-x-[-50%] translate-y-[-50%] w-auto min-w-[140px] z-20"
         style={{ top: "calc(50% + 47px)" }}
       >
-        <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0">
-          <div className="[grid-area:1_/_1] font-medium h-[22px] ml-0 mt-0 not-italic opacity-90 relative text-[#ffffff] text-[16px] text-left w-[116px]">
-            <p className="block leading-[1.6]">Taking picture...</p>
+        <div className="flex items-center justify-center w-full">
+          <div className="font-medium not-italic opacity-90 text-[#ffffff] text-[16px] text-center whitespace-nowrap">
+            <p className="block leading-[1.6]">{texts.cameraCapturing.takingPicture[currentLanguage]}</p>
           </div>
         </div>
       </div>

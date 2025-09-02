@@ -4,11 +4,11 @@ import { useLanguage } from '../context/LanguageContext';
 import { texts } from '../constants/texts';
 
 // Asset imports - 使用与HomePage一致的背景
-const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png"; // 与HomePage一致的背景
-const imgImage176 = "/src/assets/dff6fe23fdbc66a95b73bccee1330324b70d1957.png";
-const imgImage179 = "/src/assets/e956d03147a1ec74c8563980180fa452db51f275.png";
-const imgVector = "/src/assets/1009f07f9dd6944bb263d745bad2a94943c5a897.svg"; // 与HomePage一致的设置图标
-const imgRectangle346603543 = "/src/assets/9b6dc444b0feeb650edd472c766d9b00af5ddbb8.svg"; // 重要的背景覆盖层
+const imgHomePage = "./d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png"; // 与HomePage一致的背景
+const imgImage176 = "./dff6fe23fdbc66a95b73bccee1330324b70d1957.png";
+const imgImage179 = "./e956d03147a1ec74c8563980180fa452db51f275.png";
+const imgVector = "./1009f07f9dd6944bb263d745bad2a94943c5a897.svg"; // 与HomePage一致的设置图标
+const imgRectangle346603543 = "./9b6dc444b0feeb650edd472c766d9b00af5ddbb8.svg"; // 重要的背景覆盖层
 
 /**
  * ImageUploadPage - 与HomePage背景和画框完全一致，模态框在最上层

@@ -1,9 +1,9 @@
 import React from 'react';
 
 // Asset imports from Figma
-const imgVector = "/src/assets/d84d1463db2967ad16c63a138581a4d524675326.png";
-const imgBack = "/src/assets/8d8cbe981109a48150a98003a8693f5fbd8569a0.svg";
-const imgFrame = "/src/assets/259391b1dd8a0c7c3d73db060c8f4aab38bff52e.svg";
+const imgVector = "./d84d1463db2967ad16c63a138581a4d524675326.png";
+const imgBack = "./8d8cbe981109a48150a98003a8693f5fbd8569a0.svg";
+const imgFrame = "./259391b1dd8a0c7c3d73db060c8f4aab38bff52e.svg";
 
 /**
  * CharacterDetailFullPage - Full character profile page following Figma design

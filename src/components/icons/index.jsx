@@ -1,10 +1,10 @@
 import React from 'react';
 
 // Import icon assets
-const settingsIcon = "/src/assets/93a02d26a502971a89c3344708fc357ec3d89403.svg";
-const batteryIcon = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
-const wifiIcon = "/src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg";
-const cellularIcon = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
+const settingsIcon = "./93a02d26a502971a89c3344708fc357ec3d89403.svg";
+const batteryIcon = "./c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
+const wifiIcon = "./94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg";
+const cellularIcon = "./a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
 
 // Icon components for reuse across pages
 export const SettingsIcon = ({ onClick, className = "w-[26px] h-[26px] cursor-pointer hover:rotate-12 transition-transform duration-200" }) => (

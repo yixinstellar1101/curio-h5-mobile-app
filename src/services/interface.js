@@ -3,8 +3,9 @@
 // Integrates Azure Blob Storage and Azure OpenAI services
 
 import { azureBlobService, AzureBlobError } from './azureBlobService.js';
-import { azureOpenAIService, AzureOpenAIError } from './azureOpenAIService.js';
-import { getRandomBackgroundByCategory } from '../utils/imageComposition.js';
+// Removed direct Azure OpenAI dependency; now using backend APIs
+import { backendApiService, BackendAPIError } from '../config/backendEndpoints.js';
+import { getRandomBackgroundByCategory, createCompositeImage } from '../utils/imageComposition.js';
 import backgroundFrameMappings from '../../background_frames_mappings.json' with { type: 'json' };
 import { v4 as uuidv4 } from 'uuid';
 
@@ -60,20 +61,6 @@ const GALLERY_STORAGE_KEY = 'curio_gallery_items';
 const CONVERSATION_STORAGE_KEY = 'curio_conversations';
 
 /**
- * Convert File to base64 data URL
- * @param {File} file - File to convert
- * @returns {Promise<string>} Base64 data URL
- */
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-/**
  * Main image analysis interface - handles complete pipeline
  * @param {File|string} imageInput - Image file or image URL
  * @param {string} requestId - Optional correlation ID
@@ -86,8 +73,7 @@ export async function analyzeImage(imageInput, requestId = null, language = 'zh'
   
   try {
     const imageId = uuidv4();
-    let imageUrl;
-    let imageBase64;
+  let imageUrl;
 
     // Step 1: Handle image input (upload if File, use URL if string)
     if (imageInput instanceof File) {
@@ -98,30 +84,24 @@ export async function analyzeImage(imageInput, requestId = null, language = 'zh'
       });
       imageUrl = uploadResult.url;
       
-      // Convert file to base64 for Azure OpenAI
-      imageBase64 = await fileToBase64(imageInput);
-      console.log('Image uploaded and converted to base64 successfully');
+      console.log('Image uploaded successfully');
     } else if (typeof imageInput === 'string') {
       imageUrl = imageInput;
       console.log('Using provided image URL:', imageUrl);
-      // For string URLs, we'll pass the URL directly if it's a valid HTTP/HTTPS URL
-      // Otherwise, we need to fetch and convert to base64
-      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-        imageBase64 = imageUrl; // Use URL directly
-      } else {
+      if (!(imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))) {
         throw new Error('Invalid image URL: must be a valid HTTP/HTTPS URL');
       }
     } else {
       throw new Error('Invalid image input: must be File object or URL string');
     }
 
-    // Step 2: Classify image using Azure OpenAI
-    console.log('Classifying image with Azure OpenAI...');
-    const classification = await azureOpenAIService.classifyImage(imageBase64, requestId);
+    // Step 2: Classify image via backend API
+    console.log('Classifying image via backend API...');
+    const classification = await backendApiService.classifyImage(imageUrl);
     
-    // Step 3: Generate metadata using AI (name and description)
-    console.log('Generating metadata with Azure OpenAI...');
-    const aiMetadata = await azureOpenAIService.generateMetadata(imageBase64, classification, language);
+  // Step 3: Generate metadata via backend API
+  console.log('Generating metadata via backend API...');
+  const aiMetadata = await backendApiService.generateMetadata(imageUrl, language, classification);
     
     console.log('=== AI METADATA RECEIVED IN INTERFACE ===');
     console.log('AI Metadata:', aiMetadata);
@@ -153,8 +133,34 @@ export async function analyzeImage(imageInput, requestId = null, language = 'zh'
       console.warn(`No background found for category ${backgroundStyle}, using default`);
     }
 
-    // Step 5: Compose image (for now, return original URL - can implement composition later)
-    const compositeImageUrl = imageUrl; // TODO: Implement actual image composition
+    // Step 5: Create composite image with background frame
+    console.log('Creating composite image with background frame...');
+    let compositeImageUrl = imageUrl; // Fallback to original image
+    
+    if (backgroundData && backgroundData.backgroundPath && backgroundData.frameArea) {
+      try {
+        console.log('Compositing image:', {
+          userImage: imageUrl,
+          background: backgroundData.backgroundPath,
+          frameArea: backgroundData.frameArea
+        });
+        
+        // Create composite image with background frame
+        compositeImageUrl = await createCompositeImage(
+          imageUrl,
+          backgroundData.backgroundPath,
+          backgroundData.frameArea
+        );
+        
+        console.log('✅ Composite image created successfully:', compositeImageUrl.substring(0, 50) + '...');
+      } catch (error) {
+        console.error('❌ Failed to create composite image:', error);
+        // Keep using original image URL as fallback
+        compositeImageUrl = imageUrl;
+      }
+    } else {
+      console.log('⚠️ No background data available, using original image');
+    }
 
     // Step 6: Create result object
     const analysisResult = {
@@ -191,11 +197,24 @@ export async function analyzeImage(imageInput, requestId = null, language = 'zh'
   } catch (error) {
     console.error('Image analysis failed:', error);
     
+    // Check for content violation errors first
+    const isContentViolation = error.code === 'CONTENT_VIOLATION' || 
+                               (error.message && (
+                                 error.message.includes('内容违规') ||
+                                 error.message.includes('content violation') ||
+                                 error.message.includes('Content filtered')
+                               ));
+    
+    if (isContentViolation) {
+      throw new ImageAnalysisError('CONTENT_VIOLATION', error.message, error);
+    }
+    
     // Provide specific error messages based on error type
     if (error instanceof AzureBlobError) {
       throw new ImageAnalysisError('UPLOAD_FAILED', `Image upload failed: ${error.message}`, error);
-    } else if (error instanceof AzureOpenAIError) {
-      throw new ImageAnalysisError('CLASSIFICATION_FAILED', `Image classification failed: ${error.message}`, error);
+    } else if (error instanceof BackendAPIError) {
+      const code = error.code === 'CLASSIFICATION_FAILED' ? 'CLASSIFICATION_FAILED' : 'ANALYSIS_FAILED';
+      throw new ImageAnalysisError(code, `Backend API failed: ${error.message}`, error);
     } else {
       throw new ImageAnalysisError('ANALYSIS_FAILED', `Image analysis failed: ${error.message}`, error);
     }
@@ -242,7 +261,8 @@ export async function getGallery(options = {}) {
  */
 export async function generateConversation(params) {
   try {
-    console.log('Generating conversation with Azure OpenAI...');
+    console.log('🎯 === GENERATE CONVERSATION START (Using Backend API) ===');
+    console.log('🔍 Parameters:', params);
     
     const { 
       imageId, 
@@ -255,20 +275,24 @@ export async function generateConversation(params) {
     } = params;
     
     console.log('🔍 Interface.js DEBUG - Received language parameter:', language);
-    console.log('🔍 Interface.js DEBUG - Will pass language to Azure service:', language);
+    console.log('🔍 Interface.js DEBUG - Will pass language to backend API:', language);
     
     // Get previous messages for context (if any)
     let previousMessages = providedPreviousMessages || getConversationHistory(imageId);
     
-    // Generate conversation using Azure OpenAI
-    const messages = await azureOpenAIService.generateConversation({
+    // Generate conversation via backend API
+    console.log('🚀 Calling backendApiService.generateConversation...');
+    const messages = await backendApiService.generateConversation({
+      imageId,
       imageUrl,
-      imageDescription: description,
+      description,
       characters,
-      previousMessages: previousMessages.slice(-5), // Use last 5 messages for context
-      userMessage, // Pass user message for AI to respond to
-      language // Pass language parameter to Azure service
+      previousMessages: previousMessages.slice(-5),
+      userMessage,
+      language
     });
+    
+    console.log('✅ Backend API returned messages:', messages);
     
     // Save conversation to storage
     saveConversationMessages(imageId, messages);
@@ -281,6 +305,9 @@ export async function generateConversation(params) {
     
   } catch (error) {
     console.error('Generate conversation failed:', error);
+    if (error instanceof BackendAPIError) {
+      throw new ConversationError(error.code || 'GENERATION_FAILED', error.message, error);
+    }
     throw new ConversationError('GENERATION_FAILED', error.message, error);
   }
 }

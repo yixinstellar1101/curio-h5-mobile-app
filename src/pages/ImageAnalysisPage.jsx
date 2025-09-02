@@ -6,11 +6,11 @@ import { useLanguage } from '../context/LanguageContext';
 import { texts } from '../constants/texts';
 
 // Asset imports from Figma
-const imgBackArrow = "/src/assets/40807933db102c5ddfe145202e96cb747d9662c5.svg";
-const imgAnalysisButton = "/src/assets/2314863aa5b98c3561bbba15a029ce5d6b01faa6.svg";
-const imgViewfinder = "/src/assets/db6877c52f8f212513e0ebd034674ef3aa25f15a.svg";
+const imgBackArrow = "./40807933db102c5ddfe145202e96cb747d9662c5.svg";
+const imgAnalysisButton = "./2314863aa5b98c3561bbba15a029ce5d6b01faa6.svg";
+const imgViewfinder = "./db6877c52f8f212513e0ebd034674ef3aa25f15a.svg";
 // Background assets - 使用与ImageUploadPage一致的背景
-const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png";
+const imgHomePage = "./d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png";
 
 // Real API service for image analysis using Azure services
 const analyzeImageWithAzure = async (file, language = 'zh', currentLanguage = 'zh') => {
@@ -24,6 +24,7 @@ const analyzeImageWithAzure = async (file, language = 'zh', currentLanguage = 'z
     // Transform the result to match the expected format
     return {
       success: true,
+      imageUrl: result.imageUrl, // Add the Azure Blob Storage URL here
       analysis: {
         objects: [], // Will be filled based on category
         category: result.background?.category || 'Modern',
@@ -234,7 +235,7 @@ const ImageAnalysisPage = ({ onNavigate, data }) => {
     const galleryData = {
       analysis: analysisResult,
       originalImage: file,
-      imageUrl: data?.imageUrl || URL.createObjectURL(file),
+      imageUrl: analysisResult?.imageUrl || data?.imageUrl || URL.createObjectURL(file), // Use Azure Blob Storage URL from analysis result
       backgroundImage: compositeInfo?.backgroundPath || analysisResult?.analysis?.backgroundImage,
       compositeImage: compositeInfo?.compositeImage || analysisResult?.analysis?.compositeImage, // Use generated composite image
       category: analysisResult?.analysis?.category || 'default',

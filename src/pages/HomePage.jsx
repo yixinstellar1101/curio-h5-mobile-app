@@ -5,10 +5,10 @@ import { useLanguage } from '../context/LanguageContext';
 import { texts } from '../constants/texts';
 
 // Asset imports
-const imgImage176 = "/src/assets/dff6fe23fdbc66a95b73bccee1330324b70d1957.png";
-const imgImage179 = "/src/assets/e956d03147a1ec74c8563980180fa452db51f275.png";
-const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png";
-const imgVector = "/src/assets/1009f07f9dd6944bb263d745bad2a94943c5a897.svg";
+const imgImage176 = "./dff6fe23fdbc66a95b73bccee1330324b70d1957.png";
+const imgImage179 = "./e956d03147a1ec74c8563980180fa452db51f275.png";
+const imgHomePage = "./d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png";
+const imgVector = "./1009f07f9dd6944bb263d745bad2a94943c5a897.svg";
 
 /**
  * HomePage - Main entry screen with Upload button and picture frames

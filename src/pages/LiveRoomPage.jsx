@@ -17,23 +17,23 @@ import { useLanguage } from '../context/LanguageContext';
 import { texts } from '../constants/texts';
 
 // Asset imports from Figma
-const imgStatusBattery = "/src/assets/c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
-const imgStatusWifi = "/src/assets/94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg";
-const imgStatusCellular = "/src/assets/a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
-const imgBackground = "/src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png";
-const imgBackArrow = "/src/assets/02a9c17137ed17e4e423e148f47a120c213111eb.svg";
-const imgVector = "/src/assets/1009f07f9dd6944bb263d745bad2a94943c5a897.svg"; // Settings icon (same as HomePage)
-const imgShare = "/src/assets/5477b83fa49bc1086b66f6e98ea33e17d7a7dcde.svg";
-const imgMicrophone = "/src/assets/076ad16a88cfddb5f6212dc8a0e121d73f2c0b24.svg";
-const imgKeyboard = "/src/assets/f0ca8d23de930dde65471ef8f667466d5bf4c10a.svg";
-const imgRecheck = "/src/assets/15be4f7c5adf58b331f84aeb133ea7c7eb2eef70.svg";
-const imgLike = "/src/assets/a996fbaf85b7c9f17c8f104ff2ba4feb228e993b.svg";
+const imgStatusBattery = "./c0c091687c62d7337bf318e17f3769ffc34d3a72.svg";
+const imgStatusWifi = "./94bdfe1a8077b65bf75e0473782ae3df50cd473f.svg";
+const imgStatusCellular = "./a883d1003c9c8d00c12b4d64e84ed02fcbbf9603.svg";
+const imgBackground = "./2339a82e4b6020c219c18a48dca73ef3ba006ffe.png";
+const imgBackArrow = "./02a9c17137ed17e4e423e148f47a120c213111eb.svg";
+const imgVector = "./1009f07f9dd6944bb263d745bad2a94943c5a897.svg"; // Settings icon (same as HomePage)
+const imgShare = "./5477b83fa49bc1086b66f6e98ea33e17d7a7dcde.svg";
+const imgMicrophone = "./076ad16a88cfddb5f6212dc8a0e121d73f2c0b24.svg";
+const imgKeyboard = "./f0ca8d23de930dde65471ef8f667466d5bf4c10a.svg";
+const imgRecheck = "./15be4f7c5adf58b331f84aeb133ea7c7eb2eef70.svg";
+const imgLike = "./a996fbaf85b7c9f17c8f104ff2ba4feb228e993b.svg";
 
 // Character avatars from Figma
-const imgAvatarLuXun = "/src/assets/0a0aca255a6a424fd8f131455677b58d6309fa99.png";
-const imgAvatarSuShi = "/src/assets/855a8fe22b8b7ac5f293f93e60065e26a3efd17d.png"; 
-const imgAvatarVanGogh = "/src/assets/bb22518de19c944000484ee66f86147664b959a6.png";
-const imgAvatarQianlong = "/src/assets/6b326c99ea19859605dd14cb228f024ce6a52c08.png";
+const imgAvatarLuXun = "./0a0aca255a6a424fd8f131455677b58d6309fa99.png";
+const imgAvatarSuShi = "./855a8fe22b8b7ac5f293f93e60065e26a3efd17d.png"; 
+const imgAvatarVanGogh = "./bb22518de19c944000484ee66f86147664b959a6.png";
+const imgAvatarQianlong = "./6b326c99ea19859605dd14cb228f024ce6a52c08.png";
 
 /**
  * 直播间页面 - 实时AI对话界面
@@ -158,11 +158,12 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
     return characterId;
   };
 
-  const characterAvatars = {
+  // Character avatars mapping (reactive to language changes)
+  const characterAvatars = useMemo(() => ({
     [t.liveRoom.characters['lu-xun'][currentLanguage]]: imgAvatarLuXun,
     [t.liveRoom.characters['su-shi'][currentLanguage]]: imgAvatarSuShi,
     [t.liveRoom.characters['vincent-van-gogh'][currentLanguage]]: imgAvatarVanGogh
-  };
+  }), [currentLanguage, t.liveRoom.characters]);
 
   // Helper function to get character display name
   const getCharacterName = (message) => {
@@ -200,7 +201,23 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   };
   const getCharacterAvatar = (message) => {
     const displayName = getCharacterName(message);
-    return characterAvatars[displayName];
+    const avatar = characterAvatars[displayName];
+    
+    // Enhanced debug logging for avatar resolution
+    console.log('🖼️ Avatar Debug:', {
+      messageCharacter: message.character,
+      messageSpeaker: message.speaker,
+      displayName,
+      avatarFound: !!avatar,
+      avatar: avatar,
+      characterAvatarKeys: Object.keys(characterAvatars),
+      vanGoghKey: t.liveRoom.characters['vincent-van-gogh'][currentLanguage],
+      vanGoghAvatar: imgAvatarVanGogh,
+      currentLanguage: currentLanguage
+    });
+    
+    // Return avatar or fallback
+    return avatar || imgAvatarLuXun; // Use Lu Xun as fallback
   };
 
   // Get background image - use the same background as GalleryPage
@@ -389,47 +406,24 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       
       console.log('🖼️  Initial Image Processing:');
       console.log('  - imageUrl type:', typeof imageUrl, imageUrl);
+      console.log('  - image.imageUrl (Azure Blob):', image?.imageUrl);
       console.log('  - image.originalImage type:', typeof image?.originalImage, image?.originalImage);
       
-      // 如果有原始图像数据，需要转换为可用的URL
-      if (image.originalImage && image.originalImage instanceof File) {
-        console.log('Converting original image File to base64 for AI analysis');
-        try {
-          const reader = new FileReader();
-          apiImageUrl = await new Promise((resolve, reject) => {
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(image.originalImage);
-          });
-        } catch (error) {
-          console.error('Failed to convert original image File:', error);
-          apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
-        }
+      // 优先使用Azure Blob URL，这样AI可以直接访问
+      if (image.imageUrl && typeof image.imageUrl === 'string' && (image.imageUrl.startsWith('https://') || image.imageUrl.startsWith('blob:'))) {
+        console.log('Using Azure Blob URL for AI analysis:', image.imageUrl);
+        apiImageUrl = image.imageUrl;
       } else if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('blob:')) {
         console.log('Using provided imageUrl for AI analysis');
         apiImageUrl = imageUrl;
-      } else if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('blob:')) {
-        console.log('Converting blob URL to base64 for AI analysis of original artifact only');
-        // 这里应该转换原始blob URL，而不是使用合成的背景图
-        try {
-          const response = await fetch(imageUrl);
-          const blob = await response.blob();
-          const reader = new FileReader();
-          apiImageUrl = await new Promise((resolve, reject) => {
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-        } catch (error) {
-          console.error('Failed to convert blob to base64:', error);
-          // 使用样本图片作为最后的fallback
-          apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
-        }
+      } else {
+        console.log('Using fallback image URL');
+        apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
       }
       
-      // 确保 apiImageUrl 是有效字符串
+      // 确保 apiImageUrl 是有效字符串 (支持 Azure Blob URLs)
       if (!apiImageUrl || typeof apiImageUrl !== 'string' || 
-          (!apiImageUrl.startsWith('http') && !apiImageUrl.startsWith('data:'))) {
+          (!apiImageUrl.startsWith('http') && !apiImageUrl.startsWith('data:') && !apiImageUrl.startsWith('blob:'))) {
         console.log('⚠️ apiImageUrl validation failed in initializeConversation, using fallback');
         apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
       }
@@ -480,21 +474,36 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
           id: `msg-${baseTimestamp}-1-${Math.random().toString(36).substr(2, 9)}`,
           character: 'lu-xun',
           content: 'This artifact speaks to the depths of human creativity and cultural expression.',
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toLocaleString('zh-CN', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'Asia/Shanghai',
+            hour12: false
+          }),
           isAI: true
         },
         {
           id: `msg-${baseTimestamp}-2-${Math.random().toString(36).substr(2, 9)}`,
           character: 'su-shi',
           content: 'Indeed, like moonlight on water, it reflects the beauty of its time.',
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toLocaleString('zh-CN', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'Asia/Shanghai',
+            hour12: false
+          }),
           isAI: true
         },
         {
           id: `msg-${baseTimestamp}-3-${Math.random().toString(36).substr(2, 9)}`,
           character: 'vincent-van-gogh',
           content: 'The colors and forms here stir something profound in my artistic soul.',
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toLocaleString('zh-CN', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'Asia/Shanghai',
+            hour12: false
+          }),
           isAI: true
         }
       ];
@@ -517,41 +526,24 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
           
           console.log('🔄 Auto-loop Image Processing:');
           console.log('  - imageUrl type:', typeof imageUrl);
+          console.log('  - image.imageUrl (Azure Blob):', image?.imageUrl);
           console.log('  - image.originalImage type:', typeof image?.originalImage);
           
-          if (image.originalImage && image.originalImage instanceof File) {
-            console.log('Converting original image File to base64 for auto-loop');
-            try {
-              const reader = new FileReader();
-              apiImageUrl = await new Promise((resolve, reject) => {
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(image.originalImage);
-              });
-            } catch (error) {
-              console.error('Failed to convert original image File in auto-loop:', error);
-              apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
-            }
-          } else if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('blob:')) {
-            // 转换原始blob URL而不是使用合成背景
-            try {
-              const response = await fetch(imageUrl);
-              const blob = await response.blob();
-              const reader = new FileReader();
-              apiImageUrl = await new Promise((resolve, reject) => {
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-              });
-            } catch (error) {
-              console.error('Failed to convert blob:', error);
-              apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
-            }
+          // 优先使用Azure Blob URL，这样AI可以直接访问
+          if (image.imageUrl && typeof image.imageUrl === 'string' && (image.imageUrl.startsWith('https://') || image.imageUrl.startsWith('blob:'))) {
+            console.log('Using Azure Blob URL for auto-loop AI analysis:', image.imageUrl);
+            apiImageUrl = image.imageUrl;
+          } else if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('blob:')) {
+            console.log('Using provided imageUrl for auto-loop AI analysis');
+            apiImageUrl = imageUrl;
+          } else {
+            console.log('Using fallback image URL for auto-loop');
+            apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
           }
           
-          // 确保 apiImageUrl 是有效字符串
+          // 确保 apiImageUrl 是有效字符串 (支持 Azure Blob URLs)
           if (!apiImageUrl || typeof apiImageUrl !== 'string' || 
-              (!apiImageUrl.startsWith('http') && !apiImageUrl.startsWith('data:'))) {
+              (!apiImageUrl.startsWith('http') && !apiImageUrl.startsWith('data:') && !apiImageUrl.startsWith('blob:'))) {
             console.log('⚠️ apiImageUrl validation failed in auto-loop, using fallback');
             apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
           }
@@ -586,7 +578,12 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                 'Such craftsmanship deserves our continued admiration.',
                 'Every detail reveals new layers of meaning and beauty.'
               ][Math.floor(Math.random() * 3)],
-              timestamp: new Date().toISOString(),
+              timestamp: new Date().toLocaleString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                timeZone: 'Asia/Shanghai',
+                hour12: false
+              }),
               isAI: true
             }
           ];
@@ -659,7 +656,12 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         id: `user-msg-${Date.now()}`,
         character: 'You',
         content: messageText,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toLocaleString('zh-CN', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          timeZone: 'Asia/Shanghai',
+          hour12: false
+        }),
         isAI: false,
         isUser: true
       };
@@ -681,36 +683,19 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       
       console.log('🖼️  Image URL Processing:');
       console.log('  - Initial imageUrl:', typeof imageUrl, imageUrl);
-      console.log('  - Initial apiImageUrl:', typeof apiImageUrl, apiImageUrl);
+      console.log('  - image.imageUrl (Azure Blob):', image?.imageUrl);
       console.log('  - image.originalImage:', typeof image?.originalImage, image?.originalImage);
       
-      if (image.originalImage && image.originalImage instanceof File) {
-        console.log('Converting original image File to base64 for handleSendMessage');
-        try {
-          const reader = new FileReader();
-          apiImageUrl = await new Promise((resolve, reject) => {
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(image.originalImage);
-          });
-        } catch (error) {
-          console.error('Failed to convert original image File in handleSendMessage:', error);
-          apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
-        }
-      } else if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('blob:')) {
-        try {
-          const response = await fetch(imageUrl);
-          const blob = await response.blob();
-          const reader = new FileReader();
-          apiImageUrl = await new Promise((resolve, reject) => {
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-        } catch (error) {
-          console.error('Failed to convert blob:', error);
-          apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
-        }
+      // 优先使用Azure Blob URL，这样AI可以直接访问
+      if (image.imageUrl && typeof image.imageUrl === 'string' && (image.imageUrl.startsWith('https://') || image.imageUrl.startsWith('blob:'))) {
+        console.log('Using Azure Blob URL for handleSendMessage AI analysis:', image.imageUrl);
+        apiImageUrl = image.imageUrl;
+      } else if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('blob:')) {
+        console.log('Using provided imageUrl for handleSendMessage AI analysis');
+        apiImageUrl = imageUrl;
+      } else {
+        console.log('Using fallback image URL for handleSendMessage');
+        apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
       }
       
       // 确保 apiImageUrl 是字符串
@@ -719,7 +704,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
       console.log('  - apiImageUrl value:', apiImageUrl);
       
       if (!apiImageUrl || typeof apiImageUrl !== 'string' || 
-          (!apiImageUrl.startsWith('http') && !apiImageUrl.startsWith('data:'))) {
+          (!apiImageUrl.startsWith('http') && !apiImageUrl.startsWith('data:') && !apiImageUrl.startsWith('blob:'))) {
         console.log('⚠️  apiImageUrl failed validation, using fallback');
         apiImageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
       } else {
@@ -817,21 +802,36 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
           id: `response-${baseTimestamp}-1`,
           character: 'lu-xun',
           content: fallbackContent.luXun,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toLocaleString('zh-CN', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'Asia/Shanghai',
+            hour12: false
+          }),
           isAI: true
         },
         {
           id: `response-${baseTimestamp}-2`, 
           character: 'su-shi',
           content: fallbackContent.suShi,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toLocaleString('zh-CN', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'Asia/Shanghai',
+            hour12: false
+          }),
           isAI: true
         },
         {
           id: `response-${baseTimestamp}-3`,
           character: 'vincent-van-gogh',
           content: fallbackContent.vanGogh,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toLocaleString('zh-CN', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'Asia/Shanghai',
+            hour12: false
+          }),
           isAI: true
         }
       ];
@@ -1147,6 +1147,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                         src={getCharacterAvatar(message)}
                         alt={characterName}
                         className="w-8 h-8 rounded-full flex-shrink-0"
+                        onError={(e) => {
+                          console.error('Avatar failed to load:', e.target.src);
+                          e.target.src = imgAvatarLuXun; // Fallback to Lu Xun avatar
+                        }}
                       />
                     )}
                     <div className={`rounded-2xl px-3 py-2 max-w-xs ${
@@ -1161,21 +1165,33 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                         <span className="text-white/60 text-xs">
                           {(() => {
                             try {
+                              // If timestamp is already a formatted string (like "17:34"), use it directly
+                              if (message.timestamp && message.timestamp.length <= 10 && message.timestamp.includes(':')) {
+                                return message.timestamp;
+                              }
+                              
+                              // Otherwise try to parse as date
                               const date = new Date(message.timestamp);
                               if (isNaN(date.getTime())) {
-                                return new Date().toLocaleTimeString([], { 
+                                return new Date().toLocaleTimeString('zh-CN', { 
                                   hour: '2-digit', 
-                                  minute: '2-digit' 
+                                  minute: '2-digit',
+                                  timeZone: 'Asia/Shanghai',
+                                  hour12: false
                                 });
                               }
-                              return date.toLocaleTimeString([], { 
+                              return date.toLocaleTimeString('zh-CN', { 
                                 hour: '2-digit', 
-                                minute: '2-digit' 
+                                minute: '2-digit',
+                                timeZone: 'Asia/Shanghai',
+                                hour12: false
                               });
                             } catch (error) {
-                              return new Date().toLocaleTimeString([], { 
+                              return new Date().toLocaleTimeString('zh-CN', { 
                                 hour: '2-digit', 
-                                minute: '2-digit' 
+                                minute: '2-digit',
+                                timeZone: 'Asia/Shanghai',
+                                hour12: false
                               });
                             }
                           })()}
@@ -1325,7 +1341,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                   className="bg-no-repeat bg-cover bg-center h-[175.174px] ml-[5px] rounded-[26px] w-[252.333px]"
                   data-name="Vector"
                   data-node-id="165:992"
-                  style={{ backgroundImage: `url('/src/assets/1185dfe3ed5446ee8a00fd39bef04880678bfc5a.png')` }}
+                  style={{ backgroundImage: `url('./1185dfe3ed5446ee8a00fd39bef04880678bfc5a.png')` }}
                 />
               </div>
 
@@ -1460,7 +1476,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
               data-name="返回 1"
               data-node-id="165:996"
             >
-              <img alt="返回" className="block max-w-none size-full" src="/src/assets/d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" />
+              <img alt="返回" className="block max-w-none size-full" src="./d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" />
             </button>
           </div>
         </div>
@@ -1485,7 +1501,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                   className="bg-no-repeat bg-cover bg-[center_10%] h-[175.174px] ml-[5px] rounded-[26px] w-[252.333px]"
                   data-name="Vector"
                   data-node-id="165:964"
-                  style={{ backgroundImage: `url('/src/assets/506fd9bda269153d8d02ca5992650f763a3d1255.png')` }}
+                  style={{ backgroundImage: `url('./506fd9bda269153d8d02ca5992650f763a3d1255.png')` }}
                 />
               </div>
 
@@ -1620,7 +1636,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
               data-name="返回 1"
               data-node-id="165:968"
             >
-              <img alt="返回" className="block max-w-none size-full" src="/src/assets/d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" />
+              <img alt="返回" className="block max-w-none size-full" src="./d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" />
             </button>
           </div>
         </div>
@@ -1645,7 +1661,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                   className="bg-no-repeat bg-cover bg-[center_30%] h-[175.174px] ml-[5px] rounded-[26px] w-[252.333px]"
                   data-name="Vector"
                   data-node-id="164:936"
-                  style={{ backgroundImage: `url('/src/assets/d84d1463db2967ad16c63a138581a4d524675326.png')` }}
+                  style={{ backgroundImage: `url('./d84d1463db2967ad16c63a138581a4d524675326.png')` }}
                 />
               </div>
 
@@ -1780,7 +1796,7 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
               data-name="返回 1"
               data-node-id="164:940"
             >
-              <img alt="返回" className="block max-w-none size-full" src="/src/assets/d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" />
+              <img alt="返回" className="block max-w-none size-full" src="./d23e0c72b637adf4346f1d26038aa38e3d04555c.svg" />
             </button>
           </div>
         </div>

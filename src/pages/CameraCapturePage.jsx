@@ -2,13 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { PAGES } from '../constants/pages';
 
 // Asset imports from Figma
-const imgGroup2018781189 = "/src/assets/a50b78e69bd84e986612b63ceaef3914b979e32f.svg";
-const imgBackArrow = "/src/assets/40807933db102c5ddfe145202e96cb747d9662c5.svg";
-const imgWhiteDot = "/src/assets/3a56d57eec3f941a5df78a985a87aa7235c2181a.svg";
+const imgGroup2018781189 = "./a50b78e69bd84e986612b63ceaef3914b979e32f.svg";
+const imgBackArrow = "./40807933db102c5ddfe145202e96cb747d9662c5.svg";
+const imgWhiteDot = "./3a56d57eec3f941a5df78a985a87aa7235c2181a.svg";
 // Background assets - 使用与ImageUploadPage一致的背景
-const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png"; // 与ImageUploadPage一致的背景
-const imgRectangle346603543 = "/src/assets/9b6dc444b0feeb650edd472c766d9b00af5ddbb8.svg"; // 重要的背景覆盖层
-const imgGallery = "/src/assets/01e1d6ae9f47430674fe0f46b61392a43f9c8519.svg";
+const imgHomePage = "./d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png"; // 与ImageUploadPage一致的背景
+const imgRectangle346603543 = "./9b6dc444b0feeb650edd472c766d9b00af5ddbb8.svg"; // 重要的背景覆盖层
 
 // Camera Frame Component - exact Figma design
 const CameraFrame = () => {
@@ -34,7 +33,7 @@ const CameraFrame = () => {
  * - Live camera preview in viewfinder frame
  * - Capture photo functionality
  * - Back button → ImageUploadPage
- * - Gallery button → GalleryPage
+ * - Camera flip functionality in bottom-right corner
  */
 const CameraCapturePage = ({ onNavigate }) => {
   const videoRef = useRef(null);
@@ -42,8 +41,9 @@ const CameraCapturePage = ({ onNavigate }) => {
   const [stream, setStream] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState(null);
+  const [facingMode, setFacingMode] = useState('environment'); // 'environment' for back, 'user' for front
 
-  // Initialize camera on component mount
+  // Initialize camera on component mount and when facingMode changes
   useEffect(() => {
     initializeCamera();
     
@@ -53,17 +53,22 @@ const CameraCapturePage = ({ onNavigate }) => {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [facingMode]); // Re-initialize when facingMode changes
 
   const initializeCamera = async () => {
     try {
+      // Stop existing stream if any
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+
       // Request camera access with 3:4 aspect ratio
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1080 },  // 3:4 ratio - width
           height: { ideal: 1440 }, // 3:4 ratio - height
           aspectRatio: { ideal: 0.75 }, // 3:4 = 0.75
-          facingMode: 'environment' // Use back camera if available
+          facingMode: facingMode // Use current facing mode
         },
         audio: false
       });
@@ -165,9 +170,9 @@ const CameraCapturePage = ({ onNavigate }) => {
     onNavigate && onNavigate(PAGES.IMAGE_UPLOAD);
   };
 
-  const handleGallery = () => {
-    // Navigate to GalleryPage
-    onNavigate && onNavigate(PAGES.GALLERY);
+  const handleFlipCamera = () => {
+    // Toggle between front and back camera
+    setFacingMode(prevMode => prevMode === 'environment' ? 'user' : 'environment');
   };
 
   return (
@@ -271,21 +276,26 @@ const CameraCapturePage = ({ onNavigate }) => {
         )}
       </button>
 
-      {/* Gallery Button */}
+      {/* Camera Flip Button - Bottom Right (replaced gallery button) */}
       <button
         className="absolute left-[290px] top-[727px] z-20 cursor-pointer hover:scale-110 transition-transform duration-200"
-        onClick={handleGallery}
+        onClick={handleFlipCamera}
+        title={facingMode === 'environment' ? 'Switch to Front Camera' : 'Switch to Back Camera'}
+        data-name="flip-camera-bottom"
       >
-        <div className="backdrop-blur-[0.778px] backdrop-filter bg-[rgba(0,0,0,0.3)] rounded-[7.778px] size-[42px]">
-          <div className="absolute contents inset-[20.37%_18.52%]">
-            <div className="absolute inset-[20.37%_18.52%]">
-              <img
-                alt="Gallery"
-                className="block max-w-none size-full"
-                src={imgGallery}
-              />
-            </div>
-          </div>
+        <div className="backdrop-blur-[0.778px] backdrop-filter bg-[rgba(0,0,0,0.3)] rounded-[7.778px] size-[42px] flex items-center justify-center">
+          <svg 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            className="text-white"
+          >
+            <path 
+              d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zM12 18c-2.76 0-5-2.24-5-5h1.5l-2.5-3-2.5 3H5c0 3.87 3.13 7 7 7s7-3.13 7-7h-1.5l2.5-3 2.5 3H19c0 2.76-2.24 5-5 5z" 
+              fill="currentColor"
+            />
+          </svg>
         </div>
       </button>
 

@@ -35,7 +35,7 @@ export const getRandomBackgroundByCategory = (category) => {
       const [backgroundId, backgroundInfo] = fallbackBackgrounds[randomIndex];
       
       const result = {
-        backgroundPath: `/src/assets/backgrounds/${getActualFolderName(backgroundInfo.category)}/${backgroundInfo.filename}`,
+        backgroundPath: `./backgrounds/${getActualFolderName(backgroundInfo.category)}/${backgroundInfo.filename}`,
         frameArea: backgroundInfo.boundingBox,
         backgroundId
       };
@@ -46,7 +46,7 @@ export const getRandomBackgroundByCategory = (category) => {
     // 最终回退 - 使用一个测试坐标
     console.log('Using final fallback with test coordinates');
     return {
-      backgroundPath: '/src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png',
+      backgroundPath: './2339a82e4b6020c219c18a48dca73ef3ba006ffe.png',
       frameArea: { x: 100, y: 300, width: 200, height: 250 },
       backgroundId: 'fallback'
     };
@@ -57,7 +57,7 @@ export const getRandomBackgroundByCategory = (category) => {
   const [backgroundId, backgroundInfo] = categoryBackgrounds[randomIndex];
   
   const result = {
-    backgroundPath: `/src/assets/backgrounds/${getActualFolderName(backgroundInfo.category)}/${backgroundInfo.filename}`,
+    backgroundPath: `./backgrounds/${getActualFolderName(backgroundInfo.category)}/${backgroundInfo.filename}`,
     frameArea: backgroundInfo.boundingBox, // 使用原始坐标，将在createCompositeImage中进行缩放
     backgroundId
   };

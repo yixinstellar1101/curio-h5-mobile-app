@@ -6,8 +6,8 @@ import { useLanguage } from '../context/LanguageContext';
 import { texts } from '../constants/texts';
 
 // Asset imports from Figma
-const imgBackground = "/src/assets/2339a82e4b6020c219c18a48dca73ef3ba006ffe.png";
-const imgHomePage = "/src/assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png"; // HomePage背景图片
+const imgBackground = "./2339a82e4b6020c219c18a48dca73ef3ba006ffe.png";
+const imgHomePage = "./d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png"; // HomePage背景图片
 
 const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNavigate }) => {
   const [startX, setStartX] = useState(0);
