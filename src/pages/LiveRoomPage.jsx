@@ -115,6 +115,14 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [conversationStream, setConversationStream] = useState(null);
   
+  // 3分钟计时器状态
+  const [timeRemaining, setTimeRemaining] = useState(180); // 3分钟 = 180秒
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
+  const [showTimeUp, setShowTimeUp] = useState(false);
+  const [isSessionActive, setIsSessionActive] = useState(true);
+  const timerRef = useRef(null);
+  const startTimeRef = useRef(Date.now());
+  
   // Text input state
   const [showTextInput, setShowTextInput] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
@@ -238,6 +246,71 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
     console.log('Using default background fallback');
     return imgBackground;
   }, [backgroundImage]);
+
+  // 3分钟计时器逻辑
+  useEffect(() => {
+    console.log('⏰ 启动3分钟计时器');
+    // 启动计时器
+    startTimeRef.current = Date.now();
+    
+    timerRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      const remaining = Math.max(0, 180 - elapsed); // 3分钟 = 180秒
+      setTimeRemaining(remaining);
+      
+      // 每30秒或最后10秒打印日志
+      if (remaining % 30 === 0 || remaining <= 10) {
+        console.log(`⏰ 计时器运行中 - 剩余时间: ${remaining}秒`);
+      }
+      
+      // 最后30秒显示警告
+      if (remaining <= 30 && remaining > 0 && !showTimeWarning) {
+        console.log('⚠️ 显示30秒警告');
+        setShowTimeWarning(true);
+      }
+      
+      // 时间结束
+      if (remaining === 0 && isSessionActive) {
+        console.log('🔚 时间结束，调用handleTimeUp');
+        handleTimeUp();
+      }
+    }, 1000);
+
+    return () => {
+      console.log('⏰ 清理计时器');
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+
+  // 时间结束处理
+  const handleTimeUp = () => {
+    console.log('⏰ 3分钟体验时间结束');
+    setIsSessionActive(false);
+    setShowTimeUp(true);
+    
+    // 停止所有正在进行的对话生成
+    setIsLoading(false);
+    if (autoLoopIntervalRef.current) {
+      clearTimeout(autoLoopIntervalRef.current);
+    }
+    
+    // 3秒后跳转到GalleryPage (与handleBack相同的方式)
+    setTimeout(() => {
+      console.log('🔄 跳转到相册页面');
+      if (onNavigate) {
+        onNavigate(PAGES.GALLERY); // 简化跳转，不传递额外数据
+      }
+    }, 3000);
+  };
+
+  // 时间格式化函数
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     initializeConversation();
@@ -475,9 +548,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
           character: 'lu-xun',
           content: 'This artifact speaks to the depths of human creativity and cultural expression.',
           timestamp: new Date().toLocaleString('zh-CN', { 
-            hour: '2-digit', 
+            month: 'long', 
+            day: 'numeric', 
+            hour: '2-digit',
             minute: '2-digit',
-            timeZone: 'Asia/Shanghai',
             hour12: false
           }),
           isAI: true
@@ -487,9 +561,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
           character: 'su-shi',
           content: 'Indeed, like moonlight on water, it reflects the beauty of its time.',
           timestamp: new Date().toLocaleString('zh-CN', { 
-            hour: '2-digit', 
+            month: 'long', 
+            day: 'numeric', 
+            hour: '2-digit',
             minute: '2-digit',
-            timeZone: 'Asia/Shanghai',
             hour12: false
           }),
           isAI: true
@@ -499,9 +574,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
           character: 'vincent-van-gogh',
           content: 'The colors and forms here stir something profound in my artistic soul.',
           timestamp: new Date().toLocaleString('zh-CN', { 
-            hour: '2-digit', 
+            month: 'long', 
+            day: 'numeric', 
+            hour: '2-digit',
             minute: '2-digit',
-            timeZone: 'Asia/Shanghai',
             hour12: false
           }),
           isAI: true
@@ -514,10 +590,22 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
 
   const startAutoLoop = () => {
     const scheduleNextLoop = () => {
+      // 检查会话是否仍然活跃
+      if (!isSessionActive || timeRemaining <= 10) {
+        console.log('⏰ 会话已过期或即将过期，停止自动循环对话');
+        return;
+      }
+      
       // 调整间隔到8秒
       const randomInterval = 8000;
       
       autoLoopIntervalRef.current = setTimeout(async () => {
+        // 再次检查会话状态
+        if (!isSessionActive || timeRemaining <= 5) {
+          console.log('⏰ 执行前检查：会话已过期，停止对话生成');
+          return;
+        }
+        
         try {
           console.log('Generating new conversation loop...');
           
@@ -579,9 +667,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                 'Every detail reveals new layers of meaning and beauty.'
               ][Math.floor(Math.random() * 3)],
               timestamp: new Date().toLocaleString('zh-CN', { 
-                hour: '2-digit', 
+                month: 'long', 
+                day: 'numeric', 
+                hour: '2-digit',
                 minute: '2-digit',
-                timeZone: 'Asia/Shanghai',
                 hour12: false
               }),
               isAI: true
@@ -591,8 +680,12 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
           addMessagesToQueue(fallbackMessages);
         }
         
-        // Schedule next loop with random interval
-        scheduleNextLoop();
+        // 只有会话仍然活跃时才调度下一轮
+        if (isSessionActive && timeRemaining > 15) {
+          scheduleNextLoop();
+        } else {
+          console.log('⏰ 会话即将结束或已结束，不再调度新的对话循环');
+        }
       }, randomInterval);
     };
     
@@ -632,7 +725,12 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
   };
 
   const handleVoiceInput = () => {
-    onNavigate && onNavigate(PAGES.VOICE_INPUT, { returnTo: PAGES.LIVE_ROOM });
+    setShowTextInput(true);
+    // Small delay to ensure TextInputBar is rendered before focusing
+    setTimeout(() => {
+      // Scroll to bottom to ensure input is visible
+      forceScrollToBottom();
+    }, 100);
   };
 
   const handleTextInput = () => {
@@ -646,6 +744,12 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
 
   const handleSendMessage = async (messageText) => {
     if (!messageText.trim()) return;
+    
+    // 检查会话是否仍然活跃
+    if (!isSessionActive || timeRemaining <= 5) {
+      console.log('⏰ 会话已结束或即将结束，无法发送消息');
+      return;
+    }
 
     console.log('=== USER MESSAGE SENT ===');
     console.log('Message:', messageText);
@@ -657,9 +761,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         character: 'You',
         content: messageText,
         timestamp: new Date().toLocaleString('zh-CN', { 
-          hour: '2-digit', 
+          month: 'long', 
+          day: 'numeric', 
+          hour: '2-digit',
           minute: '2-digit',
-          timeZone: 'Asia/Shanghai',
           hour12: false
         }),
         isAI: false,
@@ -803,9 +908,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
           character: 'lu-xun',
           content: fallbackContent.luXun,
           timestamp: new Date().toLocaleString('zh-CN', { 
-            hour: '2-digit', 
+            month: 'long', 
+            day: 'numeric', 
+            hour: '2-digit',
             minute: '2-digit',
-            timeZone: 'Asia/Shanghai',
             hour12: false
           }),
           isAI: true
@@ -815,9 +921,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
           character: 'su-shi',
           content: fallbackContent.suShi,
           timestamp: new Date().toLocaleString('zh-CN', { 
-            hour: '2-digit', 
+            month: 'long', 
+            day: 'numeric', 
+            hour: '2-digit',
             minute: '2-digit',
-            timeZone: 'Asia/Shanghai',
             hour12: false
           }),
           isAI: true
@@ -827,9 +934,10 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
           character: 'vincent-van-gogh',
           content: fallbackContent.vanGogh,
           timestamp: new Date().toLocaleString('zh-CN', { 
-            hour: '2-digit', 
+            month: 'long', 
+            day: 'numeric', 
+            hour: '2-digit',
             minute: '2-digit',
-            timeZone: 'Asia/Shanghai',
             hour12: false
           }),
           isAI: true
@@ -1173,24 +1281,27 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
                               // Otherwise try to parse as date
                               const date = new Date(message.timestamp);
                               if (isNaN(date.getTime())) {
-                                return new Date().toLocaleTimeString('zh-CN', { 
-                                  hour: '2-digit', 
+                                return new Date().toLocaleString('zh-CN', { 
+                                  month: 'long', 
+                                  day: 'numeric', 
+                                  hour: '2-digit',
                                   minute: '2-digit',
-                                  timeZone: 'Asia/Shanghai',
                                   hour12: false
                                 });
                               }
-                              return date.toLocaleTimeString('zh-CN', { 
-                                hour: '2-digit', 
+                              return date.toLocaleString('zh-CN', { 
+                                month: 'long', 
+                                day: 'numeric', 
+                                hour: '2-digit',
                                 minute: '2-digit',
-                                timeZone: 'Asia/Shanghai',
                                 hour12: false
                               });
                             } catch (error) {
-                              return new Date().toLocaleTimeString('zh-CN', { 
-                                hour: '2-digit', 
+                              return new Date().toLocaleString('zh-CN', { 
+                                month: 'long', 
+                                day: 'numeric', 
+                                hour: '2-digit',
                                 minute: '2-digit',
-                                timeZone: 'Asia/Shanghai',
                                 hour12: false
                               });
                             }
@@ -1807,6 +1918,39 @@ const LiveRoomPage = ({ data = {}, onNavigate }) => {
         isOpen={showLanguageModal} 
         onClose={() => setShowLanguageModal(false)} 
       />
+
+      {/* 30秒时间警告提示 - 不阻挡界面 */}
+      {showTimeWarning && timeRemaining > 0 && !showTimeUp && (
+        <div className="absolute top-20 left-4 right-4 z-40 pointer-events-none">
+          <div className="bg-orange-500/90 text-white text-sm px-4 py-3 rounded-lg shadow-lg backdrop-blur-sm">
+            <div className="flex items-center justify-center space-x-2">
+              <span className="text-lg">⏰</span>
+              <span>还有 {timeRemaining} 秒体验时间</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 时间结束优雅提示模态框 */}
+      {showTimeUp && (
+        <div className="absolute inset-0 z-50 bg-black/70 flex items-center justify-center backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 mx-6 text-center max-w-sm shadow-2xl animate-fade-in">
+            <div className="text-6xl mb-6 animate-bounce">🎭</div>
+            <h3 className="text-2xl font-bold mb-4 text-gray-800">
+              精彩对话落下帷幕
+            </h3>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              3分钟的AI艺术对话之旅结束了
+              <br />
+              希望您喜欢与大师们的交流！
+            </p>
+            <div className="flex items-center justify-center space-x-2 text-blue-500 text-sm">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              <span>正在保存您的精彩瞬间...</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

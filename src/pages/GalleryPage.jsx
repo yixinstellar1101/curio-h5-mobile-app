@@ -15,7 +15,9 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
   const [showPopup, setShowPopup] = useState(false);
   const [processedItems, setProcessedItems] = useState(galleryItems);
   const [isProcessingComposite, setIsProcessingComposite] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const containerRef = useRef(null);
+  const hintTimerRef = useRef(null);
   const { currentLanguage } = useLanguage();
   const t = texts;
   
@@ -119,6 +121,33 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
     };
   }, []);
   
+  // 点击进入直播间的提示逻辑
+  useEffect(() => {
+    const startHintCycle = () => {
+      hintTimerRef.current = setTimeout(() => {
+        setShowHint(true);
+        
+        // 3秒后淡出提示
+        setTimeout(() => {
+          setShowHint(false);
+        }, 3000);
+        
+        // 6秒后重新开始循环
+        setTimeout(() => {
+          startHintCycle();
+        }, 6000);
+      }, 1000); // 首次延迟1秒
+    };
+    
+    startHintCycle();
+    
+    return () => {
+      if (hintTimerRef.current) {
+        clearTimeout(hintTimerRef.current);
+      }
+    };
+  }, []);
+  
   // Get current gallery item or default (使用处理后的items)
   const currentItem = processedItems[currentIndex] || {};
   
@@ -151,9 +180,9 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
         timestamp: new Date().toLocaleString('zh-CN', { 
           month: 'long', 
           day: 'numeric', 
-          hour: 'numeric',
+          hour: '2-digit',
           minute: '2-digit',
-          hour12: true
+          hour12: false
         }),
         description: "暂无描述信息。"
       };
@@ -181,9 +210,9 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
         timestamp: meta.timestamp || new Date().toLocaleString('zh-CN', { 
           month: 'long', 
           day: 'numeric', 
-          hour: 'numeric',
+          hour: '2-digit',
           minute: '2-digit',
-          hour12: true
+          hour12: false
         }),
         description: meta.description || '暂无描述信息。'
       };
@@ -195,9 +224,9 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
       timestamp: new Date().toLocaleString('zh-CN', { 
         month: 'long', 
         day: 'numeric', 
-        hour: 'numeric',
+        hour: '2-digit',
         minute: '2-digit',
-        hour12: true
+        hour12: false
       }),
       description: '暂无描述信息。'
     };
@@ -474,6 +503,19 @@ const GalleryPage = ({ galleryItems = [], currentIndex = 0, onIndexChange, onNav
         {/* Description */}
         <div className="text-white/90 text-[16px] font-normal leading-[24px] font-sf-pro text-center max-w-[345px]">
           {metadata.description}
+        </div>
+      </div>
+
+      {/* Click to enter live room hint */}
+      <div 
+        className={`absolute left-1/2 transform -translate-x-1/2 top-[200px] z-30 pointer-events-none transition-all duration-1000 ease-in-out ${
+          showHint ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+        }`}
+      >
+        <div className="bg-black/40 backdrop-blur-md rounded-full px-4 py-2 shadow-lg border border-white/20">
+          <div className="text-white text-[14px] font-medium text-center whitespace-nowrap">
+            {currentLanguage === 'zh' ? '点击进入直播间' : 'Tap to enter live room'}
+          </div>
         </div>
       </div>
 

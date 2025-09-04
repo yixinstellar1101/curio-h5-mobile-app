@@ -1,13 +1,40 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PAGES } from '../constants/pages';
 
-// Asset imports from Figma
-const imgGroup2018781189 = "./a50b78e69bd84e986612b63ceaef3914b979e32f.svg";
-const imgBackArrow = "./40807933db102c5ddfe145202e96cb747d9662c5.svg";
-const imgWhiteDot = "./3a56d57eec3f941a5df78a985a87aa7235c2181a.svg";
-// Background assets - 使用与ImageUploadPage一致的背景
-const imgHomePage = "./d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png"; // 与ImageUploadPage一致的背景
-const imgRectangle346603543 = "./9b6dc444b0feeb650edd472c766d9b00af5ddbb8.svg"; // 重要的背景覆盖层
+// Asset imports from Figma - 使用ES6 import语法确保正确的路径解析
+import imgGroup2018781189 from "../assets/a50b78e69bd84e986612b63ceaef3914b979e32f.svg";
+import imgBackArrow from "../assets/40807933db102c5ddfe145202e96cb747d9662c5.svg";
+import imgWhiteDot from "../assets/3a56d57eec3f941a5df78a985a87aa7235c2181a.svg";
+import imgHomePage from "../assets/d8253cac2e39f67fcc735a3c279bbb3caac59cc5.png";
+import imgRectangle346603543 from "../assets/9b6dc444b0feeb650edd472c766d9b00af5ddbb8.svg";
+
+// Camera Switch Icon Component (Inline SVG matching LiveRoom reroll style)
+const CameraSwitchIcon = () => (
+  <div className="backdrop-blur-[1px] bg-black/30 flex items-center justify-center rounded-full size-full">
+    <div className="w-[22px] h-[22px]">
+      <svg
+        preserveAspectRatio="none"
+        width="100%"
+        height="100%"
+        overflow="visible"
+        style={{ display: 'block' }}
+        viewBox="0 0 22 22"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="block max-w-none size-full"
+        aria-label="Switch Camera"
+        role="img"
+      >
+        <g>
+          <path
+            d="M12.3922 17.7096C10.2008 18.1543 7.8375 17.5377 6.15957 15.8619C3.65879 13.3633 3.48906 9.46172 5.64609 6.79336V8.05879C5.64609 8.43477 5.95547 8.74199 6.33145 8.74199C6.70957 8.74199 7.01465 8.43477 7.0168 8.05879V5.32168C7.0168 5.11543 6.94805 4.9457 6.81055 4.84258C6.67305 4.70508 6.50117 4.63633 6.33145 4.63633H3.59219C3.21406 4.63633 2.90898 4.94355 2.90684 5.32168C2.90684 5.69766 3.21621 6.00703 3.59219 6.00703H4.55039C1.98086 9.18887 2.22148 13.8424 5.16699 16.8201C7.2209 18.874 10.0633 19.5916 12.7016 19.0438C12.8047 19.0094 12.9422 18.9406 13.0109 18.8719C13.2838 18.599 13.2838 18.1865 13.0109 17.9137C12.8713 17.7096 12.5984 17.6408 12.3922 17.7096ZM18.4207 16.0338H17.4969C19.9977 12.8176 19.7914 8.16191 16.8115 5.18633C14.893 3.26992 12.2891 2.51582 9.79043 2.85742C9.61855 2.85742 9.48105 2.92617 9.3457 3.06367C9.07285 3.33652 9.07285 3.74687 9.3457 4.02187C9.51758 4.19375 9.75605 4.26035 9.99668 4.19375C12.0506 3.88652 14.2441 4.53535 15.8189 6.11016C18.3197 8.60879 18.4895 12.5104 16.3324 15.1787V13.9133C16.3324 13.5373 16.023 13.2279 15.6471 13.2279C15.2689 13.2279 14.9639 13.5352 14.9617 13.9133V16.6504C14.9617 16.8566 15.0305 17.0264 15.168 17.1295C15.3055 17.267 15.4773 17.3357 15.6471 17.3357H18.3863C18.7645 17.3357 19.0695 17.0285 19.0717 16.6504C19.0717 16.2723 18.7967 16.0338 18.4207 16.0338Z"
+            fill="#E4E4E4"
+          />
+        </g>
+      </svg>
+    </div>
+  </div>
+);
 
 // Camera Frame Component - exact Figma design
 const CameraFrame = () => {
@@ -41,7 +68,14 @@ const CameraCapturePage = ({ onNavigate }) => {
   const [stream, setStream] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState(null);
-  const [facingMode, setFacingMode] = useState('environment'); // 'environment' for back, 'user' for front
+  
+  // 检测设备类型，电脑端默认使用前置摄像头
+  const getDefaultFacingMode = () => {
+    const isDesktop = !navigator.userAgent.match(/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i);
+    return isDesktop ? 'user' : 'environment'; // 电脑端默认前置，移动端默认后置
+  };
+  
+  const [facingMode, setFacingMode] = useState(getDefaultFacingMode());
 
   // Initialize camera on component mount and when facingMode changes
   useEffect(() => {
@@ -122,12 +156,24 @@ const CameraCapturePage = ({ onNavigate }) => {
       const cropX = (videoWidth - outputWidth) / 2;
       const cropY = (videoHeight - outputHeight) / 2;
 
+      // 如果是前置摄像头，需要水平翻转画布
+      if (facingMode === 'user') {
+        context.save();
+        context.scale(-1, 1); // 水平翻转
+        context.translate(-outputWidth, 0); // 调整位置
+      }
+
       // Draw cropped video frame to canvas with 3:4 ratio
       context.drawImage(
         video,
         cropX, cropY, outputWidth, outputHeight, // Source rectangle (cropped from video)
         0, 0, outputWidth, outputHeight          // Destination rectangle (full canvas)
       );
+
+      // 恢复canvas状态
+      if (facingMode === 'user') {
+        context.restore();
+      }
 
       // Convert to blob
       canvas.toBlob(async (blob) => {
@@ -194,7 +240,10 @@ const CameraCapturePage = ({ onNavigate }) => {
           height: '100%',
           aspectRatio: '3/4', // Force 3:4 aspect ratio
           objectFit: 'cover',
-          maxWidth: '100%'
+          maxWidth: '100%',
+          transform: facingMode === 'user' 
+            ? 'translate(-50%, -50%) scaleX(-1)' // 前置摄像头水平翻转
+            : 'translate(-50%, -50%)'
         }}
       />
 
@@ -276,27 +325,14 @@ const CameraCapturePage = ({ onNavigate }) => {
         )}
       </button>
 
-      {/* Camera Flip Button - Bottom Right (replaced gallery button) */}
+      {/* Camera Flip Button - Bottom Right (Matching LiveRoom style) */}
       <button
-        className="absolute left-[290px] top-[727px] z-20 cursor-pointer hover:scale-110 transition-transform duration-200"
+        className="absolute left-[290px] top-[727px] z-20 cursor-pointer hover:scale-110 active:scale-95 transition-transform duration-200 size-[38px]"
         onClick={handleFlipCamera}
         title={facingMode === 'environment' ? 'Switch to Front Camera' : 'Switch to Back Camera'}
         data-name="flip-camera-bottom"
       >
-        <div className="backdrop-blur-[0.778px] backdrop-filter bg-[rgba(0,0,0,0.3)] rounded-[7.778px] size-[42px] flex items-center justify-center">
-          <svg 
-            width="20" 
-            height="20" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            className="text-white"
-          >
-            <path 
-              d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zM12 18c-2.76 0-5-2.24-5-5h1.5l-2.5-3-2.5 3H5c0 3.87 3.13 7 7 7s7-3.13 7-7h-1.5l2.5-3 2.5 3H19c0 2.76-2.24 5-5 5z" 
-              fill="currentColor"
-            />
-          </svg>
-        </div>
+        <CameraSwitchIcon />
       </button>
 
       {/* Home Indicator */}
