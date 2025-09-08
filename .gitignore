@@ -1,3 +1,8 @@
 node_modules
 
 .env
+
+# Large files
+*.zip
+curio-frontend-dist.zip
+b5ede5d2-*.zip
